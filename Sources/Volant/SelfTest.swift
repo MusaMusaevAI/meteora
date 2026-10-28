@@ -173,7 +173,7 @@ final class SelfTest {
     /// Renders the window's view hierarchy (WebKit video surfaces may come
     /// out black — the actual video frame is saved separately).
     private func snapshotWindow(_ name: String) {
-        guard let window = NSApp.windows.first(where: { $0.contentView != nil && $0.frame.width > 300 }),
+        guard let window = NSApp.windows.first(where: { $0.contentView is NSHostingView<ContentView> }),
               let view = window.contentView?.superview ?? window.contentView,
               let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {
             errors.append("no window for snapshot \(name)")

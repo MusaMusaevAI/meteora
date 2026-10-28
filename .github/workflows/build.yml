@@ -29,10 +29,13 @@ jobs:
           XC=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1 || true)
           [ -n "$XC" ] && sudo xcode-select -s "$XC" || true
           { sw_vers; xcodebuild -version; swift --version; } 2>&1 | tee logs/toolchain.txt
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ci-fixtures
+          path: ci-fixtures
+          persist-credentials: false
       - name: Large fixture
-        run: |
-          git fetch --depth 1 "https://github.com/${GITHUB_REPOSITORY}.git" ci-fixtures \
-            && git show FETCH_HEAD:long-1920.webm > /tmp/long-1920.webm || echo "no large fixture"
+        run: mv ci-fixtures/long-1920.webm /tmp/long-1920.webm && rm -rf ci-fixtures
       - name: Unit tests
         id: tests
         continue-on-error: true

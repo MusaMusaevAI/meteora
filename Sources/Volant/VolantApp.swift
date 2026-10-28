@@ -1,18 +1,21 @@
 import SwiftUI
 import AppKit
+import Combine
 import VolantCore
 
 @main
 struct VolantApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
+    // The main window is created by the app delegate (AppKit) so it exists
+    // deterministically however the app is launched. This scene only carries
+    // the menu commands.
     var body: some Scene {
-        Window("Volant", id: "main") {
-            ContentView(model: delegate.model)
-        }
-        .defaultSize(width: 1200, height: 780)
-        .windowToolbarStyle(.unifiedCompact(showsTitle: true))
-        .commands { AppCommands(model: delegate.model) }
+        Settings { EmptyView() }
+            .commands {
+                CommandGroup(replacing: .appSettings) {}
+                AppCommands(model: delegate.model)
+            }
     }
 }
 
@@ -63,8 +66,44 @@ struct AppCommands: Commands {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let model = MeetingModel()
     private var selfTest: SelfTest?
+    private var mainWindow: NSWindow?
+    private var titleWatch: AnyCancellable?
+
+    func showMainWindow() {
+        if let w = mainWindow {
+            w.makeKeyAndOrderFront(nil)
+            return
+        }
+        let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1200, height: 780),
+                         styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+                         backing: .buffered, defer: false)
+        w.title = "Volant"
+        w.titlebarAppearsTransparent = true
+        w.titleVisibility = .visible
+        w.isReleasedWhenClosed = false
+        w.minSize = NSSize(width: 940, height: 640)
+        w.backgroundColor = NSColor(name: nil) { a in
+            a.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? NSColor(hex: 0x1F1E1D) : NSColor(hex: 0xFAF9F5)
+        }
+        w.contentView = NSHostingView(rootView: ContentView(model: model))
+        w.setFrameAutosaveName("VolantMain")
+        if !w.setFrameUsingName("VolantMain") { w.center() }
+        mainWindow = w
+        titleWatch = model.$url.sink { [weak w] url in
+            w?.title = url.map { sanitizedBaseName($0) } ?? "Volant"
+            w?.representedURL = url
+        }
+        w.makeKeyAndOrderFront(nil)
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag { showMainWindow() }
+        return true
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        showMainWindow()
+        NSApp.activate(ignoringOtherApps: true)
         NSApp.servicesProvider = self
         NSUpdateDynamicServices()
         let args = CommandLine.arguments
@@ -80,6 +119,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func application(_ application: NSApplication, open urls: [URL]) {
         guard let url = urls.first(where: { $0.pathExtension.lowercased() == "webm" }) else { return }
+        showMainWindow()
         model.open(url)
         NSApp.activate(ignoringOtherApps: true)
     }
@@ -99,6 +139,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         NSApp.activate(ignoringOtherApps: true)
+        showMainWindow()
         model.open(url) { [weak self] in
             Task { await self?.model.sendToMacWhisper() }
         }

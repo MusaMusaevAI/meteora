@@ -37,6 +37,7 @@ enum PlayerPage {
       let last = 0;
       v.addEventListener('timeupdate', () => { const n = performance.now(); if (n - last > 100) { last = n; state('time'); } });
       v.src = '\(mediaURLString)';
+      v.load();
 
       const thumbCanvas = document.createElement('canvas');
       thumbCanvas.width = \(FrameThumb.width); thumbCanvas.height = \(FrameThumb.height);
@@ -95,7 +96,11 @@ enum PlayerPage {
           g.drawImage(v, 0, 0, w, h);
           try { return c.toDataURL('image/png'); } catch (e) { return ''; }
         },
-        info: () => ({ w: v.videoWidth, h: v.videoHeight, d: v.duration, rs: v.readyState, err: v.error ? v.error.code : 0 })
+        info: () => ({ w: v.videoWidth, h: v.videoHeight, d: v.duration, rs: v.readyState, ns: v.networkState,
+          err: v.error ? v.error.code : 0, msg: v.error ? v.error.message : '', src: v.currentSrc,
+          vis: document.visibilityState, vp8: v.canPlayType('video/webm; codecs="vp8, opus"'),
+          vp9: v.canPlayType('video/webm; codecs="vp9, opus"'), webm: v.canPlayType('video/webm'),
+          mse: typeof MediaSource !== 'undefined' && MediaSource.isTypeSupported('video/webm; codecs="vp8, opus"') })
       };
       state('init');
     })();

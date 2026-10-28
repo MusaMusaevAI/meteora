@@ -35,7 +35,6 @@ struct ContentView: View {
             return true
         }
         .overlay(alignment: .bottom) { ToastView(model: model) }
-        .navigationTitle(model.loadState == .empty ? "Volant" : model.title)
     }
 }
 
@@ -168,7 +167,9 @@ struct MainView: View {
             Sidebar(model: model, player: player)
                 .frame(width: 300)
         }
-        .padding(16)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 16)
+        .padding(.top, 6)
         .animation(.easeOut(duration: 0.2), value: model.frames.count)
     }
 }
