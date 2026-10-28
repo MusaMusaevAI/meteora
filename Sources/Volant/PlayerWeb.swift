@@ -86,10 +86,13 @@ enum PlayerPage {
         },
         // Full-resolution PNG of the current frame (data URL).
         grab: async () => {
-          const w = v.videoWidth, h = v.videoHeight;
-          if (!w || !h || w > 8192 || h > 8192) return '';
+          const vw = v.videoWidth, vh = v.videoHeight;
+          if (!vw || !vh || vw > 16384 || vh > 16384) return '';
+          const k = Math.min(1, 2560 / Math.max(vw, vh));
+          const w = Math.round(vw * k), h = Math.round(vh * k);
           const c = document.createElement('canvas'); c.width = w; c.height = h;
-          c.getContext('2d').drawImage(v, 0, 0, w, h);
+          const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
+          g.drawImage(v, 0, 0, w, h);
           try { return c.toDataURL('image/png'); } catch (e) { return ''; }
         },
         info: () => ({ w: v.videoWidth, h: v.videoHeight, d: v.duration, rs: v.readyState, err: v.error ? v.error.code : 0 })

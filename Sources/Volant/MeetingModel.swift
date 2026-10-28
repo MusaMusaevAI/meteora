@@ -246,17 +246,21 @@ final class MeetingModel: ObservableObject {
         }
         // Reuse a fresh export of the same recording and settings.
         let fm = FileManager.default
-        let srcDate = (try? src.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
-        let reusable = (try? dest.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey])).map {
-            ($0.fileSize ?? 0) > 0 && ($0.contentModificationDate ?? .distantPast) > srcDate
-        } ?? false
+        // Reuse only an export made from *this very file* with the same settings.
+        let srcValues = try? src.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey, .fileResourceIdentifierKey])
+        let identity = [
+            src.path,
+            String(srcValues?.fileSize ?? -1),
+            String(srcValues?.contentModificationDate?.timeIntervalSince1970 ?? 0),
+            srcValues?.fileResourceIdentifier.map { "\($0)" } ?? "",
+            quality.rawValue, String(normalize),
+        ].joined(separator: "|")
+        let destSize = (try? dest.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
         var remembered = UserDefaults.standard.dictionary(forKey: "exportSettings") as? [String: String] ?? [:]
-        let currentSettings = "\(quality.rawValue)|\(normalize)"
-        let sameSettings = remembered[dest.path] == currentSettings
-        if !(reusable && sameSettings && fm.fileExists(atPath: dest.path)) {
+        if !(destSize > 0 && remembered[dest.path] == identity && fm.fileExists(atPath: dest.path)) {
             guard await exportAudio(to: dest, reveal: false) else { return }
             if remembered.count > 200 { remembered.removeAll() }
-            remembered[dest.path] = currentSettings
+            remembered[dest.path] = identity
             UserDefaults.standard.set(remembered, forKey: "exportSettings")
         }
         if await MacWhisper.handOff(dest) {
@@ -296,6 +300,10 @@ final class MeetingModel: ObservableObject {
 
             for (i, t) in times.enumerated() {
                 if token.isCancelled { break }
+                if frames.count >= Self.maxFrames {
+                    sceneError = "Показаны первые \(Self.maxFrames) кадров — уменьшите чувствительность, чтобы охватить всю запись."
+                    break
+                }
                 // A hair after the keyframe so the decoder lands exactly on it.
                 let thumb = try await player.sample(at: t + 0.02)
                 if let change = collector.consider(time: t, thumb: thumb, spikes: spikes),
@@ -323,6 +331,8 @@ final class MeetingModel: ObservableObject {
 
     func cancelScenes() { sceneToken?.cancel() }
 
+    static let maxFrames = 300
+
     static func preview(_ image: CGImage) -> NSImage {
         let scale = min(1, 480.0 / Double(max(1, image.width)))
         let w = max(1, Int(Double(image.width) * scale)), h = max(1, Int(Double(image.height) * scale))
@@ -344,7 +354,7 @@ final class MeetingModel: ObservableObject {
     func copyFramesText() {
         guard !frames.isEmpty else { return }
         let text = ReportExporter.plainText(frames.map(\.frame), meta: reportMeta)
-        NSPasteboard.general.clearContents()
+        NSPasteboard.general.prepareForNewContents(with: .currentHostOnly)
         NSPasteboard.general.setString(text, forType: .string)
         toast = Toast(message: "Текст \(frames.count) кадров скопирован")
     }

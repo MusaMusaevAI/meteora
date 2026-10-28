@@ -113,7 +113,11 @@ public final class WebMDemuxer {
         static let topLevel: Set<UInt32> = [seekHead, info, tracks, cluster, cues, tags, chapters, attachments]
     }
 
-    static let maxPackets = 30_000_000
+    static let maxPackets = 8_000_000
+    static let maxTracks = 64
+    static let maxDuration: Double = 48 * 3600
+    /// Accepted block timestamps: from −1 hour to +48 hours.
+    static let timeWindowNs: ClosedRange<Int64> = (-3_600_000_000_000) ... 172_800_000_000_000
     static let maxStringLength = 4096
     static let maxCodecPrivate = 64 * 1024
 
@@ -215,11 +219,13 @@ public final class WebMDemuxer {
 
         guard videoTrack != nil || audioTrack != nil else { throw MediaError.malformed("нет дорожек") }
 
-        let durationFromPackets = Double(max(0, lastTimeNs - (firstTimeNs ?? 0))) / 1e9
+        // Differences in Double: Int64 subtraction could overflow on hostile input.
+        let span = (Double(lastTimeNs) - Double(firstTimeNs ?? 0)) / 1e9
+        let durationFromPackets = min(max(0, span), Self.maxDuration)
         var duration = durationFromPackets
         if let ticks = declaredDurationTicks, ticks.isFinite, ticks > 0 {
             let d = ticks * Double(timecodeScale) / 1e9
-            if d.isFinite, d > 0, d < 60 * 60 * 48 { duration = max(d, durationFromPackets) }
+            if d.isFinite, d > 0, d < Self.maxDuration { duration = max(d, durationFromPackets) }
         }
 
         let v = videoTrack.map { VideoTrackInfo(codecID: $0.codecID, width: $0.width, height: $0.height) }
@@ -244,7 +250,7 @@ public final class WebMDemuxer {
             n += 1
             if n & 1023 == 0, isCancelled?() == true { throw MediaError.cancelled }
             let payload = try src.read(at: b.payloadOffset, count: b.payloadSize)
-            let t = Double(b.timeNs - origin) / 1e9
+            let t = (Double(b.timeNs) - Double(origin)) / 1e9
             if b.lacing == 0 {
                 try body(t, payload)
             } else {
@@ -256,6 +262,11 @@ public final class WebMDemuxer {
     }
 
     public var audioPacketCount: Int { audioBlocks.count }
+
+    /// Time span covered by the indexed packets, seconds (bounded).
+    public var packetSpan: Double {
+        min(Self.maxDuration, max(0, (Double(lastTimeNs) - Double(firstTimeNs ?? 0)) / 1e9))
+    }
 
     // MARK: Element parsing
 
@@ -302,6 +313,7 @@ public final class WebMDemuxer {
                 }
             }
             guard t.number > 0 else { return }
+            guard tracks.count < Self.maxTracks else { throw MediaError.malformed("слишком много дорожек") }
             tracks.append(t)
             if t.type == 1, videoTrack == nil {
                 guard (1...16384).contains(t.width), (1...16384).contains(t.height) else {
@@ -369,18 +381,23 @@ public final class WebMDemuxer {
         let payloadSize = Int(size) - headerLen
         guard payloadSize >= 0 else { throw MediaError.malformed("пустой блок") }
 
-        let ticks = clusterTime &+ Int64(rel)
-        let (ns, overflow) = ticks.multipliedReportingOverflow(by: Int64(timecodeScale))
-        guard !overflow else { throw MediaError.malformed("неверная метка времени") }
+        let (ticks, o1) = clusterTime.addingReportingOverflow(Int64(rel))
+        let (ns, o2) = ticks.multipliedReportingOverflow(by: Int64(timecodeScale))
+        // Blocks with absurd timestamps are skipped, not trusted.
+        guard !o1, !o2, Self.timeWindowNs.contains(ns) else { return }
+
+        let isVideo = videoTrack.map { track == $0.number } ?? false
+        let isAudio = audioTrack.map { track == $0.number } ?? false
+        guard isVideo || isAudio else { return }
         if firstTimeNs == nil || ns < firstTimeNs! { firstTimeNs = ns }
         if ns > lastTimeNs { lastTimeNs = ns }
 
         guard videoBlocks.count + audioBlocks.count < Self.maxPackets else { throw MediaError.malformed("слишком много пакетов") }
 
-        if let v = videoTrack, track == v.number {
+        if isVideo {
             let key = simple ? (flags & 0x80) != 0 : !hasReference
             videoBlocks.append(VideoPacket(time: Double(ns) / 1e9, size: payloadSize, isKey: key))
-        } else if let a = audioTrack, track == a.number {
+        } else {
             audioBlocks.append(BlockRef(timeNs: ns, payloadOffset: offset + UInt64(headerLen),
                                         payloadSize: payloadSize, lacing: (flags >> 1) & 0x03))
         }

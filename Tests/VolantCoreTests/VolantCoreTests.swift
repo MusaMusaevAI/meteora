@@ -305,3 +305,48 @@ struct SplitMix64 {
         return z ^ (z >> 31)
     }
 }
+
+/// Regression tests for findings of the security review (PoC files).
+final class SecurityRegressionTests: XCTestCase {
+    func fixture(_ name: String) -> URL {
+        Bundle.module.url(forResource: name, withExtension: nil, subdirectory: "Fixtures")!
+    }
+
+    func testTimestampOverflowDoesNotCrash() {
+        // Used to trap on Int64 subtraction of first/last timestamps.
+        if let (info, _) = try? WebMDemuxer.analyze(url: fixture("overflow-crash.webm")) {
+            XCTAssertLessThanOrEqual(info.duration, WebMDemuxer.maxDuration)
+        }
+    }
+
+    func testSilenceBombIsBounded() throws {
+        guard let (info, d) = try? WebMDemuxer.analyze(url: fixture("silence-bomb.webm")), let a = info.audio,
+              let dec = try? OpusTrackDecoder(demuxer: d, info: a) else { return }
+        let start = Date()
+        var total: Int64 = 0
+        _ = try? dec.decode { buf in total += Int64(buf.frameLength) }
+        XCTAssertLessThan(Double(total) / 48_000, 3 * 3600, "decoded audio must stay bounded")
+        XCTAssertLessThan(Date().timeIntervalSince(start), 60)
+        XCTAssertLessThan(ScenePlanner.primaryTimes(packets: info.videoPackets, duration: 1e12).count, ScenePlanner.maxSamples + 2)
+    }
+
+    func testFileNamesAreSafe() {
+        let evil = URL(fileURLWithPath: "/tmp/x\n\n<img src=x onerror=alert(1)>![](https:evil.example)\u{202E}gpj.webm")
+        let name = sanitizedBaseName(evil)
+        XCTAssertFalse(name.contains("\n"))
+        XCTAssertFalse(name.contains("<"))
+        XCTAssertFalse(name.contains("\u{202E}"))
+        let md = ReportExporter.markdown([], meta: .init(title: name, sourceName: evil.lastPathComponent, duration: 10), imageNames: [:])
+        XCTAssertFalse(md.contains("<img"))
+        XCTAssertFalse(md.contains("](https"))
+        let long = URL(fileURLWithPath: "/tmp/" + String(repeating: "Встреча ", count: 60) + ".webm")
+        XCTAssertLessThanOrEqual(sanitizedBaseName(long).utf8.count, 150)
+    }
+
+    func testFIFOIsRejected() throws {
+        let path = FileManager.default.temporaryDirectory.appendingPathComponent("fifo-\(UUID()).webm").path
+        XCTAssertEqual(mkfifo(path, 0o600), 0)
+        defer { unlink(path) }
+        XCTAssertThrowsError(try ByteSource(url: URL(fileURLWithPath: path)))
+    }
+}

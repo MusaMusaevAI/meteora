@@ -21,21 +21,23 @@ public final class ByteSource {
 
     public init(url: URL) throws {
         self.url = url
-        do {
-            let values = try url.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey])
-            guard values.isRegularFile == true else { throw MediaError.notARegularFile }
-            let h = try FileHandle(forReadingFrom: url)
-            let end = try h.seekToEnd()
-            self.handle = h
-            self.size = end
-        } catch let error as MediaError {
-            throw error
-        } catch {
-            throw MediaError.io(error.localizedDescription)
+        // Open first, then check what we actually opened (fstat) — so a file
+        // swapped for a FIFO/device between check and open can't block us.
+        let fd = url.withUnsafeFileSystemRepresentation { path -> Int32 in
+            guard let path else { return -1 }
+            return open(path, O_RDONLY | O_NONBLOCK | O_CLOEXEC)
         }
+        guard fd >= 0 else { throw MediaError.io(String(cString: strerror(errno))) }
+        var st = stat()
+        guard fstat(fd, &st) == 0, (st.st_mode & S_IFMT) == S_IFREG else {
+            close(fd)
+            throw MediaError.notARegularFile
+        }
+        _ = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) & ~O_NONBLOCK)
+        self.handle = FileHandle(fileDescriptor: fd, closeOnDealloc: true)
+        self.size = UInt64(max(0, st.st_size))
     }
 
-    deinit { try? handle.close() }
 
     /// Returns exactly `count` bytes starting at `offset` (as a fresh,
     /// zero-indexed `Data`), or throws `.truncated`.

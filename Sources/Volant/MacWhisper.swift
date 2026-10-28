@@ -1,5 +1,6 @@
 import AppKit
 import UniformTypeIdentifiers
+import Security
 
 /// Hand-off to MacWhisper (or any other transcription app).
 enum MacWhisper {
@@ -12,13 +13,26 @@ enum MacWhisper {
 
     static func appURL() -> URL? {
         for id in bundleIDs {
-            if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: id) { return url }
+            for url in NSWorkspace.shared.urlsForApplications(withBundleIdentifier: id) where isGenuine(url, bundleID: id) {
+                return url
+            }
         }
-        // Fallback: any installed app that opens audio and is called "…Whisper…".
-        return NSWorkspace.shared.urlsForApplications(toOpen: .audio).first { url in
-            let name = url.deletingPathExtension().lastPathComponent.lowercased()
-            return name.contains("macwhisper") || name.contains("whisper transcription")
-        }
+        return nil
+    }
+
+    /// Meeting audio is sensitive: only hand it to an app whose signature is
+    /// valid, issued by Apple to a real developer (Developer ID or Mac App
+    /// Store) and whose signing identifier matches the expected bundle ID.
+    /// A look-alike app with a copied bundle ID cannot pass this.
+    static func isGenuine(_ url: URL, bundleID: String) -> Bool {
+        var code: SecStaticCode?
+        guard SecStaticCodeCreateWithPath(url as CFURL, [], &code) == errSecSuccess, let code else { return false }
+        let req = "identifier \"\(bundleID)\" and anchor apple generic and " +
+            "(certificate leaf[field.1.2.840.113635.100.6.1.9] or " +
+            "(certificate 1[field.1.2.840.113635.100.6.2.6] and certificate leaf[field.1.2.840.113635.100.6.1.13]))"
+        var requirement: SecRequirement?
+        guard SecRequirementCreateWithString(req as CFString, [], &requirement) == errSecSuccess, let requirement else { return false }
+        return SecStaticCodeCheckValidity(code, SecCSFlags(rawValue: kSecCSCheckAllArchitectures), requirement) == errSecSuccess
     }
 
     static var isInstalled: Bool { appURL() != nil }
@@ -28,7 +42,7 @@ enum MacWhisper {
     @MainActor
     static func handOff(_ file: URL) async -> Bool {
         let pb = NSPasteboard.general
-        pb.clearContents()
+        pb.prepareForNewContents(with: .currentHostOnly) // don't sync to other devices
         pb.writeObjects([file as NSURL])
 
         guard let app = appURL() else { return false }

@@ -18,6 +18,7 @@ final class PlayerController: NSObject, ObservableObject {
     /// Short event log for diagnostics (self-test report).
     private(set) var diagnostics: [String] = []
     private var seenMessageTypes = Set<String>()
+    private var crashCount = 0
 
     func log(_ s: String) {
         if diagnostics.count < 300 { diagnostics.append(s) }
@@ -68,7 +69,21 @@ final class PlayerController: NSObject, ObservableObject {
         handler.logger = { [weak self] s in self?.log(s) }
         webView.navigationDelegate = self
         webView.uiDelegate = self
-        if fileURL != nil { webView.load(URLRequest(url: PlayerPage.pageURL)) }
+        guard fileURL != nil else { return }
+        Task { [weak self] in
+            // Defence in depth on top of CSP and the navigation policy: the
+            // content blocker refuses every load that is not our own scheme.
+            let rules = #"[{"trigger":{"url-filter":".*"},"action":{"type":"block"}},"# +
+                #"{"trigger":{"url-filter":"^volant-media:"},"action":{"type":"ignore-previous-rules"}}]"#
+            if let list = try? await WKContentRuleListStore.default()
+                .compileContentRuleList(forIdentifier: "volant-offline-v1", encodedContentRuleList: rules) {
+                ucc.add(list)
+                self?.log("rules:installed")
+            } else {
+                self?.log("rules:failed")
+            }
+            self?.webView.load(URLRequest(url: PlayerPage.pageURL))
+        }
     }
 
     func tearDown() {
@@ -148,7 +163,7 @@ final class PlayerController: NSObject, ObservableObject {
            let s = try await eval("return await volant.grab()") as? String,
            let comma = s.firstIndex(of: ","), s.hasPrefix("data:image/png;base64"),
            let data = Data(base64Encoded: String(s[s.index(after: comma)...])),
-           data.count < 200 * 1024 * 1024,
+           data.count < 64 * 1024 * 1024,
            let src = CGImageSourceCreateWithData(data as CFData, [kCGImageSourceShouldCache: false] as CFDictionary),
            CGImageSourceGetCount(src) == 1,
            let img = CGImageSourceCreateImageAtIndex(src, 0, nil) {
@@ -222,9 +237,15 @@ extension PlayerController: WKNavigationDelegate, WKUIDelegate {
 
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
         log("webcontent:terminated")
-        // Recover from a crashed renderer by reloading our page.
         isReady = false
-        if fileURL != nil { webView.load(URLRequest(url: PlayerPage.pageURL)) }
+        // Recover from a crashed renderer at most twice, then give up with an
+        // error instead of looping on a file that keeps crashing it.
+        crashCount += 1
+        if crashCount <= 2, fileURL != nil {
+            webView.load(URLRequest(url: PlayerPage.pageURL))
+        } else {
+            mediaErrorCode = -1
+        }
     }
 }
 

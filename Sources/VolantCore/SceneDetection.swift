@@ -37,6 +37,7 @@ public struct FrameThumb: Equatable, Sendable {
 public enum ScenePlanner {
     public static let minSpacing = 4.0
     public static let maxGap = 20.0
+    public static let maxSamples = 5_000
 
     public static func primaryTimes(packets: [VideoPacket], duration: Double) -> [Double] {
         var times: [Double] = []
@@ -50,16 +51,21 @@ public enum ScenePlanner {
         if times.isEmpty { times = [0] }
         // Fill long stretches without keyframes with evenly spaced points.
         var filled: [Double] = []
-        let ends = times + [max(duration - 0.5, times.last!)]
+        let ends = times + [max(min(duration, 48 * 3600) - 0.5, times.last!)]
         for (a, b) in zip(ends, ends.dropFirst()) {
             filled.append(a)
             let gap = b - a
             if gap > maxGap {
-                let steps = Int((gap / maxGap).rounded(.up))
+                let steps = min(Int((gap / maxGap).rounded(.up)), maxSamples)
                 for k in 1 ..< steps { filled.append(a + gap * Double(k) / Double(steps)) }
             }
         }
         if let lastEnd = ends.last, lastEnd - (filled.last ?? 0) >= minSpacing { filled.append(lastEnd) }
+        if filled.count > maxSamples {
+            // Thin out evenly rather than run for hours.
+            let step = Double(filled.count) / Double(maxSamples)
+            filled = (0 ..< maxSamples).map { filled[min(filled.count - 1, Int(Double($0) * step))] }
+        }
         return filled
     }
 
@@ -186,6 +192,10 @@ public func sanitizedBaseName(_ url: URL) -> String {
     let bad = CharacterSet(charactersIn: "/\\:?%*|\"<>\0").union(.controlCharacters).union(.newlines)
     name = name.components(separatedBy: bad).joined(separator: " ")
     name = name.trimmingCharacters(in: .whitespaces.union(CharacterSet(charactersIn: ".")))
+    // Remove bidi overrides and other invisible format characters.
+    name = String(name.unicodeScalars.filter { $0.properties.generalCategory != .format }.map(Character.init))
     if name.isEmpty { name = "Запись" }
-    return String(name.prefix(120))
+    // Keep room for suffixes: file names are limited to 255 bytes.
+    while name.utf8.count > 150 { name.removeLast() }
+    return name
 }

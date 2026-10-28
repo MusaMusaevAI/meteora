@@ -68,7 +68,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.servicesProvider = self
         NSUpdateDynamicServices()
         let args = CommandLine.arguments
-        if let i = args.firstIndex(of: "--selftest"), args.count > i + 2 {
+        // Self-test is for CI only: it needs an explicit environment switch.
+        if ProcessInfo.processInfo.environment["VOLANT_SELFTEST"] == "1",
+           let i = args.firstIndex(of: "--selftest"), args.count > i + 2 {
             let test = SelfTest(model: model, input: URL(fileURLWithPath: args[i + 1]),
                                 output: URL(fileURLWithPath: args[i + 2], isDirectory: true))
             selfTest = test

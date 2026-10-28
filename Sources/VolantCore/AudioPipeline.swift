@@ -114,16 +114,24 @@ public final class OpusTrackDecoder {
         let total = max(1, demuxer.audioPacketCount)
         var decodedAny = false
         var failures = 0
+        // Never produce more audio than the recording spans (+5 s), whatever
+        // the timestamps say — protects against "silence bombs".
+        let maxSamples = Int64((demuxer.packetSpan + 5) * sampleRate)
+        // Silence may never dominate: at most 30 min or 3× the real audio.
+        var silenceSamples: Int64 = 0
+        var realSamples: Int64 = 0
 
         try demuxer.forEachAudioPacket(isCancelled: isCancelled) { time, packet in
             index += 1
+            if producedSamples >= maxSamples { return }
             if index % 2000 == 0 { progress?(Double(index) / Double(total)) }
             guard let n = OpusPacket.sampleCount(packet), packet.count <= 4000 else { failures += 1; return }
 
             // Fill gaps with silence (cap a single gap at 10 minutes).
             if startTime == nil { startTime = time }
             let expected = Int64(((time - startTime!) * sampleRate).rounded())
-            var gap = min(expected - producedSamples, Int64(sampleRate * 600))
+            let silenceBudget = max(Int64(sampleRate * 1800), 3 * realSamples) - silenceSamples
+            var gap = min(expected - producedSamples, Int64(sampleRate * 600), maxSamples - producedSamples, silenceBudget)
             if gap > Int64(n) {
                 while gap > 0 {
                     let chunk = AVAudioFrameCount(min(gap, Int64(silence.frameCapacity)))
@@ -131,6 +139,7 @@ public final class OpusTrackDecoder {
                     for c in 0 ..< channels { memset(silence.floatChannelData![c], 0, Int(chunk) * 4) }
                     try sink(silence)
                     producedSamples += Int64(chunk)
+                    silenceSamples += Int64(chunk)
                     gap -= Int64(chunk)
                 }
             }
@@ -174,6 +183,7 @@ public final class OpusTrackDecoder {
             decodedAny = true
             try sink(out)
             producedSamples += Int64(out.frameLength)
+            realSamples += Int64(out.frameLength)
         }
         progress?(1)
         if !decodedAny { throw MediaError.audioDecoderUnavailable }

@@ -3,20 +3,26 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+# Least privilege: the build job can only read. Only the tiny publish job,
+# which runs no project code, may write to the repository.
 permissions:
-  contents: write
-concurrency:
-  group: build
-  cancel-in-progress: true
+  contents: read
 defaults:
   run:
     shell: bash
+concurrency:
+  group: build
+  cancel-in-progress: true
 jobs:
   macos:
     runs-on: macos-26
     timeout-minutes: 45
+    outputs:
+      status: ${{ steps.summary.outputs.status }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
       - name: Toolchain
         run: |
           mkdir -p logs
@@ -24,7 +30,9 @@ jobs:
           [ -n "$XC" ] && sudo xcode-select -s "$XC" || true
           { sw_vers; xcodebuild -version; swift --version; } 2>&1 | tee logs/toolchain.txt
       - name: Large fixture
-        run: git fetch --depth 1 origin ci-fixtures && git show origin/ci-fixtures:long-1920.webm > /tmp/long-1920.webm || echo "no large fixture"
+        run: |
+          git fetch --depth 1 "https://github.com/${GITHUB_REPOSITORY}.git" ci-fixtures \
+            && git show FETCH_HEAD:long-1920.webm > /tmp/long-1920.webm || echo "no large fixture"
       - name: Unit tests
         id: tests
         continue-on-error: true
@@ -39,12 +47,42 @@ jobs:
       - name: DMG
         id: dmg
         run: scripts/make_dmg.sh 2>&1 | tee logs/dmg.txt
-      - name: Publish build output
+      - name: Collect output
+        id: summary
         if: always()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          JOB_STATUS: tests=${{ steps.tests.outcome }} app=${{ steps.app.outcome }} selftest=${{ steps.selftest.outcome }} dmg=${{ steps.dmg.outcome }}
-        run: scripts/publish_output.sh
+        run: |
+          scripts/collect_output.sh
+          echo "status=tests=${{ steps.tests.outcome }} app=${{ steps.app.outcome }} selftest=${{ steps.selftest.outcome }} dmg=${{ steps.dmg.outcome }}" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: build-output
+          path: out
+          retention-days: 14
       - name: Fail if tests failed
         if: steps.tests.outcome != 'success' || steps.selftest.outcome != 'success'
         run: exit 1
+
+  publish:
+    needs: macos
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: build-output
+          path: out
+      - name: Push to build-output branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JOB_STATUS: ${{ needs.macos.outputs.status }}
+        run: |
+          cd out
+          echo "$GITHUB_SHA" > SOURCE_SHA
+          echo "$JOB_STATUS" > STATUS
+          git init -q -b build-output
+          git -c user.name="volant-ci" -c user.email="volant-ci@users.noreply.github.com" add -A
+          git -c user.name="volant-ci" -c user.email="volant-ci@users.noreply.github.com" commit -qm "build $GITHUB_SHA"
+          git push -qf "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" build-output
