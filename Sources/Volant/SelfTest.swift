@@ -2,6 +2,7 @@ import AppKit
 import AVFoundation
 import SwiftUI
 import VolantCore
+import VolantASR
 
 /// End-to-end check used by CI on a real macOS machine:
 /// `Volant --selftest <input.webm> <output-dir>`.
@@ -16,10 +17,13 @@ final class SelfTest {
     private var report: [String: Any] = [:]
     private var errors: [String] = []
 
-    init(model: MeetingModel, input: URL, output: URL) {
+    let asrWav: URL?
+
+    init(model: MeetingModel, input: URL, output: URL, asrWav: URL? = nil) {
         self.model = model
         self.input = input
         self.output = output
+        self.asrWav = asrWav
     }
 
     func run() async {
@@ -107,6 +111,50 @@ final class SelfTest {
             report["audio"] = audio
         }
 
+        // 3b. Speech model download + on-device transcription
+        if ProcessInfo.processInfo.environment["VOLANT_SELFTEST_ASR"] == "1" {
+            var asr: [String: Any] = [:]
+            let speech = SpeechModelController.shared
+            let t4 = Date()
+            if !speech.isInstalled {
+                let ok = await speech.download()
+                asr["downloadSeconds"] = Date().timeIntervalSince(t4)
+                asr["downloadOK"] = ok
+                if !ok { errors.append("model download: \(speech.error ?? "?")") }
+            }
+            asr["installed"] = speech.isInstalled
+            asr["runtime"] = SpeechRecognizer.runtimeVersion
+            asr["vadBundled"] = SpeechModelController.vadModelURL != nil
+            if speech.isInstalled, let wav = asrWav, let vad = SpeechModelController.vadModelURL {
+                do {
+                    let samples = try Self.readMono16k(wav)
+                    let t5 = Date()
+                    let rec = try SpeechRecognizer(store: .shared, vadModel: vad)
+                    let segs = rec.transcribe(samples16k: samples)
+                    asr["wavSeconds"] = Double(samples.count) / 16_000
+                    asr["wavDecodeSeconds"] = Date().timeIntervalSince(t5)
+                    asr["wavText"] = segs.map(\.text).joined(separator: " ")
+                    if segs.isEmpty { errors.append("ASR: no text from Russian sample") }
+                } catch {
+                    errors.append("ASR wav: \(error)")
+                }
+            }
+            if speech.isInstalled, model.canTranscribe {
+                let t6 = Date()
+                await model.transcribe()
+                let segs = model.displayedSegments
+                asr["recordingSeconds"] = Date().timeIntervalSince(t6)
+                asr["recordingSegments"] = segs.count
+                asr["recordingSample"] = segs.prefix(3).map { "[\(Timecode.string($0.start))] \($0.text)" }
+                asr["error"] = model.transcribeError ?? ""
+                if let e = model.transcribeError { errors.append("ASR recording: \(e)") }
+                if let tr = model.transcript {
+                    try? TranscriptExporter.srt(tr).write(to: output.appendingPathComponent("transcript.srt"), atomically: true, encoding: .utf8)
+                }
+            }
+            report["asr"] = asr
+        }
+
         // 4. Key frames + OCR + reports
         if model.hasVideo, let player = model.player, player.isReady {
             for thorough in [false, true] {
@@ -154,6 +202,12 @@ final class SelfTest {
         setAppearance(.darkAqua); try? await Task.sleep(nanoseconds: 600_000_000)
         snapshotWindow("04-loaded-dark")
         setAppearance(.aqua)
+        if let model = Optional(model) {
+            StorageWindow.show(model: model)
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            report["storage"] = StorageModel.scan().map { "\($0.section.title): \($0.title) — \($0.bytes)" }
+            snapshotWindow("05-storage", storage: true)
+        }
         finish()
     }
 
@@ -174,8 +228,27 @@ final class SelfTest {
 
     /// Renders the window's view hierarchy (WebKit video surfaces may come
     /// out black — the actual video frame is saved separately).
-    private func snapshotWindow(_ name: String) {
-        guard let window = NSApp.windows.first(where: { $0.contentView is NSHostingView<ContentView> }),
+    static func readMono16k(_ url: URL) throws -> [Float] {
+        let file = try AVAudioFile(forReading: url)
+        let inFmt = file.processingFormat
+        guard let outFmt = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 16_000, channels: 1, interleaved: false),
+              let conv = AVAudioConverter(from: inFmt, to: outFmt),
+              let inBuf = AVAudioPCMBuffer(pcmFormat: inFmt, frameCapacity: AVAudioFrameCount(file.length)) else { return [] }
+        try file.read(into: inBuf)
+        let outBuf = AVAudioPCMBuffer(pcmFormat: outFmt, frameCapacity: AVAudioFrameCount(Double(file.length) * 16_000 / inFmt.sampleRate) + 4096)!
+        var given = false
+        var err: NSError?
+        _ = conv.convert(to: outBuf, error: &err) { _, s in
+            if given { s.pointee = .endOfStream; return nil }
+            given = true; s.pointee = .haveData; return inBuf
+        }
+        return Array(UnsafeBufferPointer(start: outBuf.floatChannelData![0], count: Int(outBuf.frameLength)))
+    }
+
+    private func snapshotWindow(_ name: String, storage: Bool = false) {
+        guard let window = NSApp.windows.first(where: {
+            storage ? $0.contentView is NSHostingView<StorageView> : $0.contentView is NSHostingView<ContentView>
+        }),
               let view = window.contentView?.superview ?? window.contentView,
               let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {
             errors.append("no window for snapshot \(name)")

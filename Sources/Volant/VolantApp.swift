@@ -13,7 +13,10 @@ struct VolantApp: App {
     var body: some Scene {
         Settings { EmptyView() }
             .commands {
-                CommandGroup(replacing: .appSettings) {}
+                CommandGroup(replacing: .appSettings) {
+                    Button("Хранилище…") { StorageWindow.show(model: delegate.model) }
+                        .keyboardShortcut(",")
+                }
                 AppCommands(model: delegate.model)
             }
     }
@@ -46,6 +49,9 @@ struct AppCommands: Commands {
             Button("Отправить звук в MacWhisper") { Task { await model.sendToMacWhisper() } }
                 .keyboardShortcut("m", modifiers: [.command, .shift])
                 .disabled(!model.canExportAudio)
+            Button("Расшифровать запись") { Task { await model.transcribe() } }
+                .keyboardShortcut("t")
+                .disabled(!model.canTranscribe || !SpeechModelController.shared.isInstalled)
             Divider()
             Button("Найти ключевые кадры") { Task { await model.analyzeScenes() } }
                 .keyboardShortcut("k")
@@ -110,8 +116,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Self-test is for CI only: it needs an explicit environment switch.
         if ProcessInfo.processInfo.environment["VOLANT_SELFTEST"] == "1",
            let i = args.firstIndex(of: "--selftest"), args.count > i + 2 {
+            let wav = args.firstIndex(of: "--asr-wav").flatMap { $0 + 1 < args.count ? URL(fileURLWithPath: args[$0 + 1]) : nil }
             let test = SelfTest(model: model, input: URL(fileURLWithPath: args[i + 1]),
-                                output: URL(fileURLWithPath: args[i + 2], isDirectory: true))
+                                output: URL(fileURLWithPath: args[i + 2], isDirectory: true), asrWav: wav)
             selfTest = test
             Task { await test.run() }
         }

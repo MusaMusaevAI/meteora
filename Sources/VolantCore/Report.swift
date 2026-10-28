@@ -109,7 +109,9 @@ public enum ReportExporter {
         return s
     }
 
-    private static func escapeMD(_ s: String) -> String {
+    public static func escapeMarkdown(_ s: String) -> String { escapeMD(s) }
+
+    static func escapeMD(_ s: String) -> String {
         var out = ""
         for ch in s {
             switch ch {
@@ -136,7 +138,7 @@ public enum ReportExporter {
     }
 
     /// Writes a folder: `кадры.md` + one PNG per frame.
-    public static func writeFolder(_ frames: [SceneFrame], meta: Meta, to folder: URL) throws {
+    public static func writeFolder(_ frames: [SceneFrame], meta: Meta, to folder: URL, transcript: Transcript? = nil) throws {
         let fm = FileManager.default
         try fm.createDirectory(at: folder, withIntermediateDirectories: true)
         var names: [Int: String] = [:]
@@ -148,6 +150,11 @@ public enum ReportExporter {
         }
         let md = markdown(frames, meta: meta, imageNames: names)
         try Data(md.utf8).write(to: folder.appendingPathComponent("кадры.md"), options: .atomic)
+        if let transcript {
+            // Speech and slides in one timeline — the file to give to Claude.
+            let all = TranscriptExporter.markdown(transcript, frames: frames, meta: meta, imageNames: names)
+            try Data(all.utf8).write(to: folder.appendingPathComponent("встреча.md"), options: .atomic)
+        }
     }
 
     /// A searchable PDF: one landscape page per frame with its timestamp

@@ -81,6 +81,8 @@ public final class OpusTrackDecoder {
         self.channels = info.channels
     }
 
+    public var channelCount: Int { channels }
+
     public var pcmFormat: AVAudioFormat {
         AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: sampleRate,
                       channels: AVAudioChannelCount(channels), interleaved: false)!

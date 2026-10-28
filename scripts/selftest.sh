@@ -8,6 +8,7 @@ BASE="$HOME/Downloads/volant-selftest"
 rm -rf "$BASE"; mkdir -p "$BASE/in" "$BASE/out"
 cp Tests/VolantCoreTests/Fixtures/*.webm "$BASE/in/"
 [ -f /tmp/long-1920.webm ] && cp /tmp/long-1920.webm "$BASE/in/"
+[ -f /tmp/ru-example.wav ] && cp /tmp/ru-example.wav "$BASE/in/"
 APP="$PWD/build/Volant.app"
 status=0
 
@@ -16,8 +17,8 @@ run() { # input-name
   [ -f "$BASE/in/$name.webm" ] || return 0
   mkdir -p "$out"
   echo "== selftest $name"
-  open -n -W --env VOLANT_SELFTEST=1 --stdout "$out/stdout.txt" --stderr "$out/stderr.txt" \
-       -a "$APP" --args --selftest "$BASE/in/$name.webm" "$out" &
+  open -n -W --env VOLANT_SELFTEST=1 --env VOLANT_SELFTEST_ASR=1 --stdout "$out/stdout.txt" --stderr "$out/stderr.txt" \
+       -a "$APP" --args --selftest "$BASE/in/$name.webm" "$out" --asr-wav "$BASE/in/ru-example.wav" &
   local pid=$!
   for _ in $(seq 1 420); do kill -0 $pid 2>/dev/null || break; sleep 1; done
   if kill -0 $pid 2>/dev/null; then

@@ -1,0 +1,20 @@
+Volant includes or downloads the following third-party components.
+
+GigaAM-v3 (speech recognition model, downloaded on demand)
+  Copyright (c) 2024 GigaChat Team (Sber). MIT License.
+  https://huggingface.co/ai-sage/GigaAM-v3
+  ONNX export: https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16
+
+sherpa-onnx v2.0.1 (speech recognition runtime, statically linked)
+  Copyright (c) Xiaomi Corporation and contributors. Apache License 2.0.
+  https://github.com/k2-fsa/sherpa-onnx
+  Includes kaldi-native-fbank, kaldi-decoder, kaldifst, kissfft, sentencepiece, utf8proc
+  under their respective permissive licenses (Apache-2.0, BSD, MIT).
+
+ONNX Runtime (statically linked)
+  Copyright (c) Microsoft Corporation. MIT License.
+  https://github.com/microsoft/onnxruntime
+
+Silero VAD (voice activity detection model, bundled)
+  Copyright (c) Silero Team. MIT License.
+  https://github.com/snakers4/silero-vad

@@ -2,6 +2,7 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 import VolantCore
+import VolantASR
 
 /// Thread-safe cancellation flag shared with background work.
 final class CancelToken: @unchecked Sendable {
@@ -76,6 +77,26 @@ final class MeetingModel: ObservableObject {
 
     @Published var toast: Toast?
 
+    // Transcription (GigaAM-v3 on this Mac)
+    enum BottomTab: Hashable { case frames, transcript }
+    @Published var bottomTab: BottomTab = .frames
+    @Published private(set) var transcript: Transcript?
+    @Published private(set) var liveSegments: [TranscriptSegment] = []
+    @Published private(set) var transcribeProgress: Double?
+    @Published private(set) var transcribeError: String?
+    @Published private(set) var transcribeStarted: Date?
+    private var transcribeToken: CancelToken?
+
+    var displayedSegments: [TranscriptSegment] {
+        transcript?.segments ?? liveSegments.sorted { $0.start < $1.start }
+    }
+    var canTranscribe: Bool { info?.audio?.codecID == "A_OPUS" && transcribeProgress == nil }
+    /// Rough time estimate (GigaAM-v3 INT8 on Apple Silicon ≈ 0.1× real time).
+    var transcribeEstimate: String {
+        let minutes = max(1, Int(((info?.duration ?? 0) * 0.1 / 60).rounded(.up)))
+        return "≈ \(minutes) мин"
+    }
+
     var title: String { url.map { sanitizedBaseName($0) } ?? "Volant" }
     var hasVideo: Bool { info?.video != nil }
     var canExportAudio: Bool { info?.audio?.codecID == "A_OPUS" && exportProgress == nil }
@@ -119,6 +140,8 @@ final class MeetingModel: ObservableObject {
                     self.demuxer = demuxer
                     self.player = PlayerController(fileURL: url, audioOnly: info.video == nil)
                     self.loadState = .ready
+                    self.transcript = TranscriptStore.load(for: url)
+                    if self.transcript != nil { self.bottomTab = .transcript }
                     self.startAudioAnalysis()
                     action?()
                 }
@@ -132,7 +155,12 @@ final class MeetingModel: ObservableObject {
     }
 
     func close() {
-        loadToken?.cancel(); exportToken?.cancel(); sceneToken?.cancel(); audioToken?.cancel()
+        loadToken?.cancel(); exportToken?.cancel(); sceneToken?.cancel(); audioToken?.cancel(); transcribeToken?.cancel()
+        transcript = nil
+        liveSegments = []
+        transcribeProgress = nil
+        transcribeError = nil
+        bottomTab = .frames
         player?.tearDown()
         player = nil
         demuxer = nil
@@ -269,6 +297,105 @@ final class MeetingModel: ObservableObject {
             toast = Toast(message: "MacWhisper не найден. Файл в «Загрузки/Volant» и в буфере обмена — вставьте его в любое приложение.",
                           revealURL: dest)
         }
+    }
+
+    // MARK: Transcription
+
+    func transcribe() async {
+        guard canTranscribe, let demuxer, let a = info?.audio, let url else { return }
+        guard SpeechModelController.shared.isInstalled else {
+            transcribeError = "Сначала загрузите модель GigaAM-v3."
+            return
+        }
+        guard let vad = SpeechModelController.vadModelURL else {
+            transcribeError = "В приложении не найден детектор речи — переустановите Volant."
+            return
+        }
+        let token = CancelToken()
+        transcribeToken = token
+        transcribeError = nil
+        liveSegments = []
+        transcript = nil
+        transcribeProgress = 0
+        transcribeStarted = Date()
+        bottomTab = .transcript
+        let duration = info?.duration ?? 0
+
+        let result: Result<[TranscriptSegment], Error> = await Task.detached(priority: .userInitiated) { [weak self] in
+            Result {
+                let recognizer = try SpeechRecognizer(store: .shared, vadModel: vad)
+                let decoder = try OpusTrackDecoder(demuxer: demuxer, info: a)
+                return try recognizer.transcribe(decoder: decoder, isCancelled: { token.isCancelled }, progress: { p in
+                    Task { @MainActor in if self?.transcribeProgress != nil { self?.transcribeProgress = p } }
+                }, onSegment: { seg in
+                    Task { @MainActor in self?.liveSegments.append(seg) }
+                })
+            }
+        }.value
+
+        transcribeProgress = nil
+        transcribeToken = nil
+        switch result {
+        case .success(let segments):
+            let tr = Transcript(sourceName: url.lastPathComponent, duration: duration,
+                                engine: SpeechRecognizer.engineName, segments: segments)
+            transcript = tr
+            liveSegments = []
+            TranscriptStore.save(tr, for: url)
+            toast = Toast(message: segments.isEmpty ? "Речи в записи не найдено" : "Расшифровка готова: \(segments.count) фраз")
+        case .failure(let e):
+            if (e as? RecognizerError) == .cancelled {
+                transcribeError = liveSegments.isEmpty ? nil : "Остановлено — показана расшифрованная часть."
+            } else {
+                transcribeError = (e as? LocalizedError)?.errorDescription ?? e.localizedDescription
+            }
+        }
+    }
+
+    func cancelTranscription() { transcribeToken?.cancel() }
+
+    private var currentTranscript: Transcript? {
+        if let transcript { return transcript }
+        guard !liveSegments.isEmpty else { return nil }
+        return Transcript(sourceName: url?.lastPathComponent ?? "", duration: info?.duration ?? 0,
+                          engine: SpeechRecognizer.engineName, segments: displayedSegments)
+    }
+
+    func copyTranscript() {
+        guard let tr = currentTranscript else { return }
+        NSPasteboard.general.prepareForNewContents(with: .currentHostOnly)
+        NSPasteboard.general.setString(TranscriptExporter.plainText(tr), forType: .string)
+        toast = Toast(message: "Расшифровка скопирована")
+    }
+
+    enum TranscriptFormat { case txt, srt, markdown }
+
+    func presentSaveTranscriptPanel(_ format: TranscriptFormat) {
+        guard let tr = currentTranscript else { return }
+        let panel = NSSavePanel()
+        let ext: String
+        let body: String
+        switch format {
+        case .txt: ext = "txt"; body = TranscriptExporter.plainText(tr)
+        case .srt: ext = "srt"; body = TranscriptExporter.srt(tr)
+        case .markdown:
+            ext = "md"
+            body = TranscriptExporter.markdown(tr, frames: frames.map(\.frame), meta: reportMeta)
+        }
+        panel.allowedContentTypes = [UTType(filenameExtension: ext) ?? .plainText]
+        panel.nameFieldStringValue = "\(title) — расшифровка.\(ext)"
+        guard panel.runModal() == .OK, let dest = panel.url else { return }
+        do {
+            try Data(body.utf8).write(to: dest, options: .atomic)
+            toast = Toast(message: "Расшифровка сохранена", revealURL: dest)
+        } catch {
+            toast = Toast(message: "Не удалось сохранить: \(error.localizedDescription)", isError: true)
+        }
+    }
+
+    /// Called from the storage window after it deleted cached transcripts.
+    func transcriptCacheDidChange() {
+        if let url, TranscriptStore.load(for: url) == nil, transcribeProgress == nil { transcript = nil }
     }
 
     // MARK: Key frames
@@ -412,14 +539,19 @@ final class MeetingModel: ObservableObject {
         panel.message = "Будет создана папка с кадрами (PNG) и файлом кадры.md"
         panel.prompt = "Создать"
         guard panel.runModal() == .OK, let dest = panel.url else { return }
-        let frames = self.frames.map(\.frame), meta = reportMeta
+        let frames = self.frames.map(\.frame), meta = reportMeta, tr = currentTranscript
         Task {
             do {
-                try await Task.detached { try ReportExporter.writeFolder(frames, meta: meta, to: dest) }.value
+                try await Task.detached { try ReportExporter.writeFolder(frames, meta: meta, to: dest, transcript: tr) }.value
                 toast = Toast(message: "Кадры сохранены", revealURL: dest.appendingPathComponent("кадры.md"))
             } catch {
                 toast = Toast(message: "Не удалось сохранить: \(error.localizedDescription)", isError: true)
             }
         }
     }
+}
+
+extension MeetingModel {
+    var showsFramesTab: Bool { hasVideo && (!frames.isEmpty || sceneProgress != nil || scenesDone) }
+    var showsTranscriptTab: Bool { transcript != nil || transcribeProgress != nil || !liveSegments.isEmpty }
 }

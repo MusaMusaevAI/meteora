@@ -6,3 +6,4 @@ selftest-out/
 .DS_Store
 *.xcodeproj/
 .swiftpm/
+Vendor/

@@ -7,6 +7,7 @@ VERSION="${VERSION:-1.0.0}"
 BUILD="${BUILD:-${GITHUB_RUN_NUMBER:-1}}"
 APP=build/Volant.app
 
+scripts/fetch_vendor.sh
 swift build -c release --arch arm64 --arch x86_64 --product Volant
 BIN_DIR=$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)
 
@@ -15,6 +16,8 @@ cp "$BIN_DIR/Volant" "$APP/Contents/MacOS/Volant"
 strip -x "$APP/Contents/MacOS/Volant" || true
 sed -e "s/__VERSION__/$VERSION/" -e "s/__BUILD__/$BUILD/" Resources/Info.plist > "$APP/Contents/Info.plist"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
+cp Vendor/models/silero_vad.onnx "$APP/Contents/Resources/silero_vad.onnx"
+cp Resources/THIRD_PARTY_NOTICES.txt "$APP/Contents/Resources/"
 
 # Legacy icon for macOS 14–15
 iconutil -c icns Resources/AppIcon.iconset -o "$APP/Contents/Resources/AppIcon.icns"

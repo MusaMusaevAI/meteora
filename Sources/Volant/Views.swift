@@ -85,7 +85,8 @@ struct EmptyStateView: View {
 
             HStack(spacing: 22) {
                 Feature(icon: "play.rectangle", text: "Посмотреть или послушать")
-                Feature(icon: "waveform", text: "Звук для MacWhisper в один клик")
+                Feature(icon: "text.quote", text: "Расшифровка на этом Mac")
+                Feature(icon: "waveform", text: "Звук для MacWhisper")
                 Feature(icon: "rectangle.on.rectangle", text: "Ключевые кадры с текстом")
             }
             .padding(.top, 26)
@@ -112,7 +113,7 @@ struct PrivacyNote: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: "lock")
-            Text("Всё обрабатывается на этом Mac. Приложение не выходит в интернет.")
+            Text("Записи обрабатываются на этом Mac. Интернет нужен, только чтобы один раз скачать модель речи.")
         }
         .font(Theme.ui(11.5))
         .foregroundStyle(Theme.tertiary)
@@ -159,8 +160,8 @@ struct MainView: View {
             VStack(spacing: 12) {
                 PlayerArea(model: model, player: player)
                 TransportBar(model: model, player: player)
-                if model.hasVideo, !model.frames.isEmpty || model.sceneProgress != nil || model.scenesDone {
-                    FramesStrip(model: model, player: player)
+                if model.showsFramesTab || model.showsTranscriptTab {
+                    BottomPanel(model: model, player: player)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
@@ -391,16 +392,7 @@ struct FramesStrip: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("Ключевые кадры")
-                    .font(Theme.ui(11, weight: .semibold)).tracking(0.6).textCase(.uppercase)
-                    .foregroundStyle(Theme.secondary)
-                if !model.frames.isEmpty {
-                    Text("\(model.frames.count)").font(Theme.ui(11, weight: .semibold)).foregroundStyle(Theme.accent)
-                }
-                Spacer()
-                if let e = model.sceneError { Text(e).font(Theme.ui(11.5)).foregroundStyle(Theme.secondary).lineLimit(1) }
-            }
+            if let e = model.sceneError { Text(e).font(Theme.ui(11.5)).foregroundStyle(Theme.secondary).lineLimit(1) }
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: true) {
                     LazyHStack(spacing: 10) {
@@ -427,10 +419,6 @@ struct FramesStrip: View {
                 }
             }
         }
-        .padding(14)
-        .frame(height: 188)
-        .background(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).fill(Theme.surface))
-        .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.border))
         .sheet(item: $detail) { FrameDetailView(item: $0, showHours: (model.info?.duration ?? 0) >= 3600) }
     }
 }
@@ -510,8 +498,10 @@ struct Sidebar: View {
             VStack(spacing: 12) {
                 RecordingCard(model: model)
                 AudioCard(model: model)
+                if model.info?.audio?.codecID == "A_OPUS" { TranscriptCard(model: model) }
                 if model.hasVideo { FramesCard(model: model) }
-                PrivacyNote().multilineTextAlignment(.leading).padding(.top, 4).padding(.horizontal, 4)
+                StorageButton(model: model).padding(.top, 2)
+                PrivacyNote().multilineTextAlignment(.leading).padding(.horizontal, 4)
             }
         }
     }
