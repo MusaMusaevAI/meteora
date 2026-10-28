@@ -32,6 +32,9 @@ struct AppCommands: Commands {
         CommandGroup(replacing: .newItem) {
             Button("Открыть запись…") { model.presentOpenPanel() }
                 .keyboardShortcut("o")
+            Button("Все записи") { model.requestClose() }
+                .keyboardShortcut("l", modifiers: [.command, .shift])
+                .disabled(model.loadState == .empty)
         }
         CommandGroup(replacing: .saveItem) {
             Button("Сохранить звук как…") { model.presentSaveAudioPanel() }
@@ -49,7 +52,7 @@ struct AppCommands: Commands {
                 .keyboardShortcut(.rightArrow, modifiers: [])
                 .disabled(model.player == nil)
             Divider()
-            Button("Отправить звук в MacWhisper") { Task { await model.sendToMacWhisper() } }
+            Button("Передать звук в другое приложение") { Task { await model.sendToMacWhisper() } }
                 .keyboardShortcut("m", modifiers: [.command, .shift])
                 .disabled(!model.canExportAudio)
             Button("Расшифровать запись") { Task { await model.transcribe() } }
@@ -72,7 +75,7 @@ struct AppCommands: Commands {
 }
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     let model = MeetingModel()
     private var selfTest: SelfTest?
     private var mainWindow: NSWindow?
@@ -95,12 +98,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         w.contentView = NSHostingView(rootView: ContentView(model: model))
         w.setFrameAutosaveName("MeteoraMain")
         if !w.setFrameUsingName("MeteoraMain") { w.center() }
+        w.delegate = self
         mainWindow = w
         titleWatch = model.$url.sink { [weak w] url in
             w?.title = url.map { sanitizedBaseName($0) } ?? "Meteora"
             w?.representedURL = url
         }
         w.makeKeyAndOrderFront(nil)
+    }
+
+    /// ⌘W and the close button put the recording away and return to the
+    /// list of meetings; only an empty window actually closes.
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard sender == mainWindow, model.loadState != .empty else { return true }
+        model.requestClose()
+        return false
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -130,7 +142,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
-        guard let url = urls.first(where: { $0.pathExtension.lowercased() == "webm" }) else { return }
+        guard let url = urls.first(where: MediaFormats.isSupported) else { return }
         showMainWindow()
         model.open(url)
         NSApp.activate(ignoringOtherApps: true)
@@ -140,14 +152,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
 
-    /// Finder → Services → «Meteora: звук в MacWhisper». Users can bind a
+    /// Finder → Services → «Meteora: передать звук». Users can bind a
     /// global keyboard shortcut to it in System Settings → Keyboard.
     @objc func sendToMacWhisper(_ pboard: NSPasteboard, userData: String?,
                                 error: AutoreleasingUnsafeMutablePointer<NSString?>) {
         let urls = pboard.readObjects(forClasses: [NSURL.self],
                                       options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? []
-        guard let url = urls.first(where: { $0.pathExtension.lowercased() == "webm" }) else {
-            error.pointee = "Выберите файл .webm" as NSString
+        guard let url = urls.first(where: MediaFormats.isSupported) else {
+            error.pointee = "Выберите запись встречи" as NSString
             return
         }
         NSApp.activate(ignoringOtherApps: true)

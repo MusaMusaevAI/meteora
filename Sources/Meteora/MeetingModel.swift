@@ -18,6 +18,33 @@ struct FrameItem: Identifiable {
     var id: Int { frame.id }
 }
 
+/// Where decoded audio comes from: the Opus track of a WebM file (our own
+/// demuxer) or any file AVFoundation can read.
+enum AudioOrigin: @unchecked Sendable {
+    case webm(WebMDemuxer, AudioTrackInfo)
+    case asset(URL)
+
+    func make() async throws -> PCMSource {
+        switch self {
+        case .webm(let d, let a): return try OpusTrackDecoder(demuxer: d, info: a)
+        case .asset(let url): return try await AssetAudioDecoder.make(url: url)
+        }
+    }
+}
+
+/// File types Meteora opens.
+enum MediaFormats {
+    /// Played and decoded by macOS itself.
+    static let native = ["mp4", "m4v", "mov", "qt", "m4a", "m4b", "mp3", "wav", "wave", "aif", "aiff", "aifc", "caf",
+                         "aac", "adts", "flac", "ac3", "ec3", "eac3", "3gp", "3g2", "au", "snd"]
+    static let webm = ["webm"]
+    /// Converted in the isolated helper (see MediaConverter).
+    static var converted: [String] { MediaConverterSupport.extensions }
+    static var all: [String] { Array(Set(native + webm + converted)).sorted() }
+    static func isSupported(_ url: URL) -> Bool { all.contains(url.pathExtension.lowercased()) }
+    static var contentTypes: [UTType] { all.compactMap { UTType(filenameExtension: $0) } }
+}
+
 struct Toast: Identifiable, Equatable {
     let id = UUID()
     var message: String
@@ -42,6 +69,12 @@ final class MeetingModel: ObservableObject {
     @Published private(set) var player: PlayerController?
     private var demuxer: WebMDemuxer?
     private var scopedURL: URL?
+    /// The file actually played and decoded: the original, or a converted
+    /// copy in our temporary folder for formats macOS can't open.
+    private var mediaURL: URL?
+    private(set) var audioOrigin: AudioOrigin?
+    /// Engine label for diagnostics: webm | native | converted.
+    private(set) var engine = ""
 
     // Audio
     @Published private(set) var audioAnalysis: AudioAnalysis?
@@ -90,7 +123,7 @@ final class MeetingModel: ObservableObject {
     var displayedSegments: [TranscriptSegment] {
         transcript?.segments ?? liveSegments.sorted { $0.start < $1.start }
     }
-    var canTranscribe: Bool { info?.audio?.codecID == "A_OPUS" && transcribeProgress == nil }
+    var canTranscribe: Bool { audioOrigin != nil && transcribeProgress == nil }
     /// Rough time estimate (GigaAM-v3 INT8 on Apple Silicon ≈ 0.1× real time).
     var transcribeEstimate: String {
         let minutes = max(1, Int(((info?.duration ?? 0) * 0.1 / 60).rounded(.up)))
@@ -99,7 +132,7 @@ final class MeetingModel: ObservableObject {
 
     var title: String { url.map { sanitizedBaseName($0) } ?? "Meteora" }
     var hasVideo: Bool { info?.video != nil }
-    var canExportAudio: Bool { info?.audio?.codecID == "A_OPUS" && exportProgress == nil }
+    var canExportAudio: Bool { audioOrigin != nil && exportProgress == nil }
     var isBusy: Bool { exportProgress != nil || sceneProgress != nil }
 
     /// Threshold for the scene detector derived from the UI slider.
@@ -109,10 +142,10 @@ final class MeetingModel: ObservableObject {
 
     func presentOpenPanel() {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [UTType(filenameExtension: "webm") ?? .movie]
+        panel.allowedContentTypes = MediaFormats.contentTypes
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
-        panel.message = "Выберите запись встречи (.webm)"
+        panel.message = "Выберите запись встречи — видео или звук"
         panel.prompt = "Открыть"
         if panel.runModal() == .OK, let url = panel.url { open(url) }
     }
@@ -127,6 +160,14 @@ final class MeetingModel: ObservableObject {
 
         let token = CancelToken()
         loadToken = token
+        if url.pathExtension.lowercased() == "webm" {
+            openWebM(url, token: token, then: action)
+        } else {
+            Task { await openNative(url, token: token, then: action) }
+        }
+    }
+
+    private func openWebM(_ url: URL, token: CancelToken, then action: (() -> Void)?) {
         Task.detached(priority: .userInitiated) { [weak self] in
             do {
                 let (info, demuxer) = try WebMDemuxer.analyze(url: url, progress: { p in
@@ -138,12 +179,11 @@ final class MeetingModel: ObservableObject {
                     guard let self, !token.isCancelled else { return }
                     self.info = info
                     self.demuxer = demuxer
-                    self.player = PlayerController(fileURL: url, audioOnly: info.video == nil)
-                    self.loadState = .ready
-                    self.transcript = TranscriptStore.load(for: url)
-                    if self.transcript != nil { self.bottomTab = .transcript }
-                    self.startAudioAnalysis()
-                    action?()
+                    self.mediaURL = url
+                    self.engine = "webm"
+                    if let a = info.audio, a.codecID == "A_OPUS" { self.audioOrigin = .webm(demuxer, a) }
+                    self.player = WebPlayerController(fileURL: url, audioOnly: info.video == nil)
+                    self.finishOpening(url, then: action)
                 }
             } catch {
                 await MainActor.run {
@@ -152,6 +192,72 @@ final class MeetingModel: ObservableObject {
                 }
             }
         }
+    }
+
+    /// Everything that isn't WebM: macOS opens it directly, or the isolated
+    /// converter turns it into a file macOS can open.
+    private func openNative(_ url: URL, token: CancelToken, then action: (() -> Void)?) async {
+        var playable = url
+        var engine = "native"
+        var probed: MediaInfo?
+        if !MediaFormats.converted.contains(url.pathExtension.lowercased()) {
+            probed = try? await AssetProbe.analyze(url: url)
+        }
+        if token.isCancelled { return }
+        if probed == nil {
+            do {
+                loadState = .loading(0.01)
+                let converted = try await MediaConverterSupport.convert(url, keepVideo: true, progress: { [weak self] p in
+                    Task { @MainActor in
+                        if case .loading = self?.loadState { self?.loadState = .loading(max(0.01, p)) }
+                    }
+                }, isCancelled: { token.isCancelled })
+                if token.isCancelled { try? FileManager.default.removeItem(at: converted); return }
+                playable = converted
+                engine = "converted"
+                probed = try await AssetProbe.analyze(url: converted)
+            } catch {
+                guard !token.isCancelled else { return }
+                loadState = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+                return
+            }
+        }
+        guard var info = probed, !token.isCancelled else { return }
+        if engine == "converted" {
+            // Show the original file's size, not the temporary copy's.
+            let size = (try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
+            info.fileSize = UInt64(max(0, size))
+        }
+        self.info = info
+        self.mediaURL = playable
+        self.engine = engine
+        if info.audio != nil { audioOrigin = .asset(playable) }
+        player = NativePlayerController(url: playable)
+        finishOpening(url, then: action)
+    }
+
+    private func finishOpening(_ url: URL, then action: (() -> Void)?) {
+        loadState = .ready
+        transcript = TranscriptStore.load(for: url)
+        if transcript != nil { bottomTab = .transcript }
+        if let info { MeetingJournal.shared.record(url: url, info: info, transcript: transcript) }
+        startAudioAnalysis()
+        action?()
+    }
+
+    var isWorking: Bool { transcribeProgress != nil || sceneProgress != nil || exportProgress != nil }
+
+    /// Back to the list of meetings. Asks first if work would be lost.
+    func requestClose() {
+        if isWorking {
+            let alert = NSAlert()
+            alert.messageText = transcribeProgress != nil ? "Остановить расшифровку?" : "Остановить обработку?"
+            alert.informativeText = "Запись закроется, а начатая работа не сохранится."
+            alert.addButton(withTitle: "Остановить и закрыть")
+            alert.addButton(withTitle: "Продолжить")
+            guard alert.runModal() == .alertFirstButtonReturn else { return }
+        }
+        close()
     }
 
     func close() {
@@ -164,6 +270,10 @@ final class MeetingModel: ObservableObject {
         player?.tearDown()
         player = nil
         demuxer = nil
+        audioOrigin = nil
+        if engine == "converted", let m = mediaURL { try? FileManager.default.removeItem(at: m) }
+        mediaURL = nil
+        engine = ""
         info = nil
         audioAnalysis = nil
         audioError = nil
@@ -181,16 +291,16 @@ final class MeetingModel: ObservableObject {
     // MARK: Audio
 
     private func startAudioAnalysis() {
-        guard let demuxer, let a = info?.audio else { return }
-        guard a.codecID == "A_OPUS" else {
-            audioError = MediaError.unsupportedAudioCodec(a.codecName).errorDescription
+        guard info?.audio != nil else { return }
+        guard let origin = audioOrigin else {
+            audioError = MediaError.unsupportedAudioCodec(info?.audio?.codecName ?? "?").errorDescription
             return
         }
         let token = CancelToken()
         audioToken = token
         Task.detached(priority: .utility) { [weak self] in
             do {
-                let dec = try OpusTrackDecoder(demuxer: demuxer, info: a)
+                let dec = try await origin.make()
                 let analysis = try dec.analyze(isCancelled: { token.isCancelled })
                 await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
             } catch {
@@ -222,7 +332,7 @@ final class MeetingModel: ObservableObject {
 
     @discardableResult
     func exportAudio(to dest: URL, reveal: Bool) async -> Bool {
-        guard let demuxer, let a = info?.audio, exportProgress == nil else { return false }
+        guard let origin = audioOrigin, exportProgress == nil else { return false }
         let token = CancelToken()
         exportToken = token
         exportProgress = 0
@@ -230,8 +340,8 @@ final class MeetingModel: ObservableObject {
         let options = AudioExportOptions(quality: quality, normalize: normalize)
         let analysis = audioAnalysis
         let result: Result<Void, Error> = await Task.detached(priority: .userInitiated) { [weak self] in
-            Result {
-                let dec = try OpusTrackDecoder(demuxer: demuxer, info: a)
+            do {
+                let dec = try await origin.make()
                 var analysisToUse = analysis
                 if options.normalize, analysisToUse == nil {
                     analysisToUse = try dec.analyze(isCancelled: { token.isCancelled }, progress: { p in
@@ -243,6 +353,9 @@ final class MeetingModel: ObservableObject {
                                          isCancelled: { token.isCancelled }, progress: { p in
                     Task { @MainActor in self?.exportProgress = base + p * (1 - base) }
                 })
+                return .success(())
+            } catch {
+                return .failure(error)
             }
         }.value
         exportProgress = nil
@@ -262,7 +375,7 @@ final class MeetingModel: ObservableObject {
     func cancelExport() { exportToken?.cancel() }
 
     /// Exports the audio to ~/Downloads/Meteora, copies it to the clipboard
-    /// and opens it in MacWhisper.
+    /// and hands it to another app.
     func sendToMacWhisper() async {
         guard canExportAudio, let src = url else { return }
         let dest: URL
@@ -292,9 +405,9 @@ final class MeetingModel: ObservableObject {
             UserDefaults.standard.set(remembered, forKey: "exportSettings")
         }
         if await MacWhisper.handOff(dest) {
-            toast = Toast(message: "Открыто в MacWhisper · файл в буфере обмена", revealURL: dest)
+            toast = Toast(message: "Звук передан в приложение расшифровки · файл в буфере обмена", revealURL: dest)
         } else {
-            toast = Toast(message: "MacWhisper не найден. Файл в «Загрузки/Meteora» и в буфере обмена — вставьте его в любое приложение.",
+            toast = Toast(message: "Звук сохранён в «Загрузки/Meteora» и скопирован в буфер обмена — вставьте его в нужное приложение.",
                           revealURL: dest)
         }
     }
@@ -302,7 +415,7 @@ final class MeetingModel: ObservableObject {
     // MARK: Transcription
 
     func transcribe() async {
-        guard canTranscribe, let demuxer, let a = info?.audio, let url else { return }
+        guard canTranscribe, let origin = audioOrigin, let url else { return }
         guard SpeechModelController.shared.isInstalled else {
             transcribeError = "Сначала загрузите модель GigaAM-v3."
             return
@@ -322,14 +435,17 @@ final class MeetingModel: ObservableObject {
         let duration = info?.duration ?? 0
 
         let result: Result<[TranscriptSegment], Error> = await Task.detached(priority: .userInitiated) { [weak self] in
-            Result {
+            do {
                 let recognizer = try SpeechRecognizer(store: .shared, vadModel: vad)
-                let decoder = try OpusTrackDecoder(demuxer: demuxer, info: a)
-                return try recognizer.transcribe(decoder: decoder, isCancelled: { token.isCancelled }, progress: { p in
+                let decoder = try await origin.make()
+                let segments = try recognizer.transcribe(decoder: decoder, isCancelled: { token.isCancelled }, progress: { p in
                     Task { @MainActor in if self?.transcribeProgress != nil { self?.transcribeProgress = p } }
                 }, onSegment: { seg in
                     Task { @MainActor in self?.liveSegments.append(seg) }
                 })
+                return .success(segments)
+            } catch {
+                return .failure(error)
             }
         }.value
 
@@ -342,6 +458,7 @@ final class MeetingModel: ObservableObject {
             transcript = tr
             liveSegments = []
             TranscriptStore.save(tr, for: url)
+            MeetingJournal.shared.updateTranscript(for: url, transcript: tr)
             toast = Toast(message: segments.isEmpty ? "Речи в записи не найдено" : "Расшифровка готова: \(ru(segments.count, "фраза", "фразы", "фраз"))")
         case .failure(let e):
             if (e as? RecognizerError) == .cancelled {
@@ -418,21 +535,24 @@ final class MeetingModel: ObservableObject {
 
         do {
             try await player.waitUntilReady()
-            let primary = ScenePlanner.primaryTimes(packets: info.videoPackets, duration: info.duration)
+            let primary = info.videoPackets.isEmpty
+                ? AssetProbe.sampleTimes(duration: info.duration, thorough: thorough)
+                : ScenePlanner.primaryTimes(packets: info.videoPackets, duration: info.duration)
             let spikes = ScenePlanner.spikes(packets: info.videoPackets, width: info.video!.width, height: info.video!.height)
             var times = primary
-            if thorough { times = (primary + ScenePlanner.secondaryTimes(primary: primary, spikes: spikes)).sorted() }
+            if thorough, !info.videoPackets.isEmpty { times = (primary + ScenePlanner.secondaryTimes(primary: primary, spikes: spikes)).sorted() }
             let collector = SceneCollector(threshold: sceneThreshold)
             let video = info.video!
             // Preferred: decode frames ourselves via WebCodecs (exact, full
             // resolution, doesn't touch the player). Fallback: seek + snapshot.
             var codec: String?
-            if let c = video.webCodecsCodec, await player.canDecode(codec: c, width: video.width, height: video.height) {
+            let independent = player is NativePlayerController
+            if !independent, let c = video.webCodecsCodec, await player.canDecode(codec: c, width: video.width, height: video.height) {
                 codec = c
-            } else {
+            } else if !independent {
                 player.pause()
             }
-            usedDecoder = codec != nil
+            usedDecoder = codec != nil || independent
             let demuxer = self.demuxer
 
             for (i, t) in times.enumerated() {

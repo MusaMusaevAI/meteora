@@ -11,7 +11,7 @@ struct StorageItem: Identifiable, Hashable {
             switch self {
             case .model: return "Модель распознавания речи"
             case .transcripts: return "Сохранённые расшифровки"
-            case .exports: return "Звук для MacWhisper — «Загрузки/Meteora»"
+            case .exports: return "Переданный звук — «Загрузки/Meteora»"
             case .temp: return "Временные файлы"
             }
         }

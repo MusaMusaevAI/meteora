@@ -72,7 +72,7 @@ public struct AudioAnalysis: Sendable {
 public final class OpusTrackDecoder {
     let demuxer: WebMDemuxer
     let channels: Int
-    let sampleRate: Double = 48_000
+    public let sampleRate: Double = 48_000
 
     public init(demuxer: WebMDemuxer, info: AudioTrackInfo) throws {
         guard info.codecID == "A_OPUS" else { throw MediaError.unsupportedAudioCodec(info.codecName) }
@@ -191,52 +191,7 @@ public final class OpusTrackDecoder {
         if !decodedAny { throw MediaError.audioDecoderUnavailable }
     }
 
-    // MARK: Analysis
-
-    /// One fast pass over the track: loudness envelope for the waveform and
-    /// statistics for volume normalization.
-    public func analyze(envelopeStep: Double = 0.1,
-                        isCancelled: (() -> Bool)? = nil,
-                        progress: ((Double) -> Void)? = nil) throws -> AudioAnalysis {
-        let window = Int(sampleRate * envelopeStep)
-        var envelope: [Float] = []
-        var acc: Double = 0
-        var accN = 0
-        var peak: Float = 0
-        var activeSum: Double = 0
-        var activeN = 0
-        var total: Int64 = 0
-
-        try decode(isCancelled: isCancelled, progress: progress) { buf in
-            let n = Int(buf.frameLength)
-            guard let data = buf.floatChannelData else { return }
-            for i in 0 ..< n {
-                var s: Float = 0
-                for c in 0 ..< channels { s += data[c][i] }
-                s /= Float(channels)
-                let a = abs(s)
-                if a > peak { peak = a }
-                acc += Double(s * s)
-                accN += 1
-                if accN == window {
-                    let rms = Float((acc / Double(accN)).squareRoot())
-                    envelope.append(rms)
-                    if rms > 0.003 { activeSum += acc; activeN += accN } // > −50 dBFS
-                    acc = 0; accN = 0
-                }
-            }
-            total += Int64(n)
-        }
-        if accN > 0 { envelope.append(Float((acc / Double(accN)).squareRoot())) }
-        // Perceptual scale for drawing: map −60…0 dBFS to 0…1.
-        let shaped = envelope.map { rms -> Float in
-            let db = 20 * log10(max(rms, 1e-6))
-            return min(1, max(0, (db + 60) / 60))
-        }
-        let activeRMS = activeN > 0 ? Float((activeSum / Double(activeN)).squareRoot()) : 0
-        return AudioAnalysis(envelope: shaped, envelopeStep: envelopeStep, activeRMS: activeRMS,
-                             peak: peak, decodedDuration: Double(total) / sampleRate)
-    }
+    // Analysis lives in the PCMSource extension (NativeMedia.swift).
 }
 
 // MARK: - Export
@@ -254,13 +209,13 @@ public enum AudioExporter {
     /// Decodes the Opus track and writes an AAC (.m4a) file.
     /// The file is first written to a temporary sibling and moved into place
     /// only on success, so a cancelled export never leaves a broken file.
-    public static func export(decoder: OpusTrackDecoder,
+    public static func export(decoder: PCMSource,
                               analysis: AudioAnalysis?,
                               options: AudioExportOptions,
                               to destination: URL,
                               isCancelled: (() -> Bool)? = nil,
                               progress: ((Double) -> Void)? = nil) throws {
-        let outChannels = options.quality.channels(source: decoder.channels)
+        let outChannels = options.quality.channels(source: decoder.channelCount)
         let outRate = options.quality.sampleRate
         let gain: Float = options.normalize ? (analysis?.normalizationGain ?? 1) : 1
 
@@ -325,11 +280,11 @@ public enum AudioExporter {
                 for i in 0 ..< chunk {
                     if outChannels == 1 {
                         var v: Float = 0
-                        for c in 0 ..< decoder.channels { v += s[c][offset + i] }
-                        d[0][i] = limit(v / Float(decoder.channels) * gain)
+                        for c in 0 ..< min(decoder.channelCount, Int(src.format.channelCount)) { v += s[c][offset + i] }
+                        d[0][i] = limit(v / Float(max(1, min(decoder.channelCount, Int(src.format.channelCount)))) * gain)
                     } else {
                         for c in 0 ..< outChannels {
-                            d[c][i] = limit(s[min(c, decoder.channels - 1)][offset + i] * gain)
+                            d[c][i] = limit(s[min(c, Int(src.format.channelCount) - 1)][offset + i] * gain)
                         }
                     }
                 }

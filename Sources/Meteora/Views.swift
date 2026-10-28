@@ -7,6 +7,7 @@ import MeteoraCore
 
 struct ContentView: View {
     @ObservedObject var model: MeetingModel
+    @ObservedObject var journal = MeetingJournal.shared
     @State private var dropTargeted = false
 
     var body: some View {
@@ -14,7 +15,11 @@ struct ContentView: View {
             Theme.background.ignoresSafeArea()
             switch model.loadState {
             case .empty:
-                EmptyStateView(model: model, dropTargeted: dropTargeted)
+                if journal.entries.isEmpty {
+                    EmptyStateView(model: model, dropTargeted: dropTargeted)
+                } else {
+                    HomeView(model: model, dropTargeted: dropTargeted)
+                }
             case .loading(let p):
                 LoadingView(title: model.title, progress: p)
             case .failed(let message):
@@ -29,7 +34,7 @@ struct ContentView: View {
         .onDrop(of: [UTType.fileURL], isTargeted: $dropTargeted) { providers in
             guard let p = providers.first else { return false }
             _ = p.loadObject(ofClass: URL.self) { url, _ in
-                guard let url, url.isFileURL, url.pathExtension.lowercased() == "webm" else { return }
+                guard let url, url.isFileURL, MediaFormats.isSupported(url) else { return }
                 DispatchQueue.main.async { model.open(url) }
             }
             return true
@@ -63,7 +68,7 @@ struct EmptyStateView: View {
                 .frame(maxWidth: 560)
                 .padding(.top, 34)
 
-            Text("Посмотреть или послушать  ·  Расшифровка  ·  Ключевые кадры с текстом  ·  Звук для MacWhisper")
+            Text("Посмотреть или послушать  ·  Расшифровка  ·  Ключевые кадры с текстом  ·  Звук")
                 .font(Theme.ui(12))
                 .foregroundStyle(Theme.tertiary)
                 .padding(.top, 18)
@@ -90,7 +95,7 @@ struct DropZone: View {
             Text(targeted ? "Отпустите — откроем запись" : "Перетащите сюда запись встречи")
                 .font(Theme.ui(14, weight: .medium))
                 .foregroundStyle(Theme.text)
-            Text("Файл .webm из Телемоста — видео со звуком или только звук")
+            Text("Запись из Телемоста или любой видео- и аудиофайл")
                 .font(Theme.ui(12))
                 .foregroundStyle(Theme.secondary)
             Button("Выбрать запись…") { model.presentOpenPanel() }
@@ -217,7 +222,7 @@ struct PlayerArea: View {
         ZStack {
             model.hasVideo ? Color.black : Theme.stage
             if model.hasVideo {
-                WebViewHost(webView: player.webView)
+                surface
                     .onTapGesture { player.togglePlay() }
                 if player.mediaErrorCode != 0 {
                     unsupported
@@ -226,8 +231,10 @@ struct PlayerArea: View {
                 }
             } else {
                 AudioOnlyView(model: model, player: player)
-                // Keep the (invisible) web view alive for audio playback.
-                WebViewHost(webView: player.webView).frame(width: 2, height: 2).opacity(0.01).allowsHitTesting(false)
+                if let web = player as? WebPlayerController {
+                    // Keep the (invisible) web view alive for audio playback.
+                    WebViewHost(webView: web.webView).frame(width: 2, height: 2).opacity(0.01).allowsHitTesting(false)
+                }
             }
             if let p = model.sceneProgress {
                 VStack {
@@ -246,6 +253,14 @@ struct PlayerArea: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()
+    }
+
+    @ViewBuilder private var surface: some View {
+        if let web = player as? WebPlayerController {
+            WebViewHost(webView: web.webView)
+        } else if let native = player as? NativePlayerController {
+            NativePlayerHost(player: native.avPlayer)
+        }
     }
 
     private var unsupported: some View {
@@ -532,7 +547,7 @@ struct Sidebar: View {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
                     RecordingSection(model: model)
-                    if model.info?.audio?.codecID == "A_OPUS" { Hairline(); TranscriptCard(model: model) }
+                    if model.audioOrigin != nil { Hairline(); TranscriptCard(model: model) }
                     Hairline()
                     AudioSection(model: model)
                     if model.hasVideo { Hairline(); FramesSection(model: model) }
@@ -550,6 +565,15 @@ struct RecordingSection: View {
     @ObservedObject var model: MeetingModel
     var body: some View {
         InspectorSection {
+            Button { model.requestClose() } label: {
+                HStack(spacing: 3) {
+                    Image(systemName: "chevron.left").font(.system(size: 10, weight: .semibold))
+                    Text("Все записи")
+                }
+            }
+            .buttonStyle(LinkButtonStyle())
+            .help("Вернуться к списку встреч (⌘W)")
+            .padding(.bottom, 2)
             HStack(alignment: .top, spacing: 8) {
                 Text(model.title).titleStyle(17).foregroundStyle(Theme.text).lineLimit(3)
                     .textSelection(.enabled)
@@ -611,9 +635,6 @@ struct AudioSection: View {
                     .padding(.top, 2)
                 } else {
                     VStack(spacing: 8) {
-                        Button("Отправить в MacWhisper") { Task { await model.sendToMacWhisper() } }
-                        .buttonStyle(SecondaryButtonStyle())
-                        .help("Сохранит звук в «Загрузки/Meteora», скопирует файл в буфер обмена и откроет MacWhisper (⌘⇧M)")
                         Button("Сохранить звук как…") { model.presentSaveAudioPanel() }
                             .buttonStyle(SecondaryButtonStyle())
                     }

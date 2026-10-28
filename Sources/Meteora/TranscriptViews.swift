@@ -155,7 +155,7 @@ struct TranscriptCard: View {
     }
 
     @ViewBuilder private var notInstalled: some View {
-        Text("Русская речь в текст с пунктуацией — открытая модель GigaAM-v3 от Сбера. Работает прямо на Mac, без интернета и без MacWhisper.")
+        Text("Русская речь в текст с пунктуацией — открытая модель GigaAM-v3 от Сбера. Работает прямо на Mac, без интернета.")
             .font(Theme.ui(12)).foregroundStyle(Theme.secondary).fixedSize(horizontal: false, vertical: true)
         if let p = speech.progress {
             VStack(alignment: .leading, spacing: 6) {

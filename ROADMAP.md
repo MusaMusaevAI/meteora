@@ -17,7 +17,7 @@
 
 **Форматы**
 
-7. Входные форматы с запасом сверх MacWhisper. Аудио: MP3, WAV, M4A, M4B, AAC, ALAC, AIFF, CAF, FLAC, OGG, OPUS, OGA, WebM, MKA, WMA, AMR, 3GA, AC3/EAC3, AU. Видео: MP4, MOV, M4V, MKV, WebM, AVI, WMV, FLV, MPEG, TS/MTS/M2TS, 3GP, OGV, VOB. Редкие форматы разбирает изолированный процесс без сети и чужих файлов.
+7. Входные форматы с большим запасом. Аудио: MP3, WAV, M4A, M4B, AAC, ALAC, AIFF, CAF, FLAC, OGG, OPUS, OGA, WebM, MKA, WMA, AMR, 3GA, AC3/EAC3, AU. Видео: MP4, MOV, M4V, MKV, WebM, AVI, WMV, FLV, MPEG, TS/MTS/M2TS, 3GP, OGV, VOB. Редкие форматы разбирает изолированный процесс без сети и чужих файлов.
 8. Пакетная обработка многих файлов сразу.
 9. Экспорт: Word (.docx) со скриншотами, PDF, RTF, HTML, SRT, VTT, CSV, Markdown, JSON, TXT; несколько форматов сразу.
 10. Переключатель таймкодов: без времени / у абзацев / у каждой фразы.

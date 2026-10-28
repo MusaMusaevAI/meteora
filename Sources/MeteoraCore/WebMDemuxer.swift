@@ -7,6 +7,12 @@ public struct VideoTrackInfo: Equatable, Sendable {
     public var width: Int
     public var height: Int
 
+    public init(codecID: String, width: Int, height: Int) {
+        self.codecID = codecID
+        self.width = width
+        self.height = height
+    }
+
     /// Codec string for WebCodecs' VideoDecoder, if supported.
     public var webCodecsCodec: String? {
         switch codecID {
@@ -22,9 +28,14 @@ public struct VideoTrackInfo: Equatable, Sendable {
         case "V_VP8": return "VP8"
         case "V_VP9": return "VP9"
         case "V_AV1": return "AV1"
-        case "V_MPEG4/ISO/AVC": return "H.264"
-        case "V_MPEGH/ISO/HEVC": return "H.265"
-        default: return codecID
+        case "V_MPEG4/ISO/AVC", "avc1", "avc3": return "H.264"
+        case "V_MPEGH/ISO/HEVC", "hvc1", "hev1": return "H.265"
+        case "mp4v": return "MPEG-4"
+        case "ap4h", "ap4x", "apch", "apcn", "apcs", "apco": return "ProRes"
+        case "jpeg": return "Motion JPEG"
+        case "av01": return "AV1"
+        case "vp09": return "VP9"
+        default: return codecID.trimmingCharacters(in: .whitespaces).uppercased()
         }
     }
 }
@@ -36,13 +47,31 @@ public struct AudioTrackInfo: Equatable, Sendable {
     public var codecPrivate: Data
     public var codecDelayNs: UInt64
 
+    public init(codecID: String, sampleRate: Double, channels: Int, codecPrivate: Data = Data(), codecDelayNs: UInt64 = 0) {
+        self.codecID = codecID
+        self.sampleRate = sampleRate
+        self.channels = channels
+        self.codecPrivate = codecPrivate
+        self.codecDelayNs = codecDelayNs
+    }
+
     public var codecName: String {
         switch codecID {
         case "A_OPUS": return "Opus"
         case "A_VORBIS": return "Vorbis"
         case "A_AAC": return "AAC"
-        case "A_PCM/INT/LIT": return "PCM"
-        default: return codecID
+        case "A_PCM/INT/LIT", "lpcm": return "PCM"
+        case "mp4a", "aac ": return "AAC"
+        case ".mp3", "mp3 ": return "MP3"
+        case "alac": return "ALAC"
+        case "flac", "fLaC": return "FLAC"
+        case "ac-3": return "AC-3"
+        case "ec-3": return "E-AC-3"
+        case "opus": return "Opus"
+        case "samr", "sawb": return "AMR"
+        case "ima4": return "IMA ADPCM"
+        case "ulaw", "alaw": return "G.711"
+        default: return codecID.trimmingCharacters(in: .whitespaces).uppercased()
         }
     }
 }
@@ -80,6 +109,19 @@ public struct MediaInfo: Sendable {
     public var videoPackets: [VideoPacket]
     public var audioPacketCount: Int
     public var isAudioOnly: Bool { video == nil && audio != nil }
+
+    public init(url: URL, fileSize: UInt64, duration: Double, video: VideoTrackInfo?, audio: AudioTrackInfo?,
+                writingApp: String? = nil, hasCues: Bool = false, videoPackets: [VideoPacket] = [], audioPacketCount: Int = 0) {
+        self.url = url
+        self.fileSize = fileSize
+        self.duration = duration
+        self.video = video
+        self.audio = audio
+        self.writingApp = writingApp
+        self.hasCues = hasCues
+        self.videoPackets = videoPackets
+        self.audioPacketCount = audioPacketCount
+    }
 }
 
 // MARK: - Demuxer

@@ -6,8 +6,11 @@
 	<key>com.apple.security.app-sandbox</key><true/>
 	<!-- Files picked in Open/Save panels, dragged in, or opened from Finder. -->
 	<key>com.apple.security.files.user-selected.read-write</key><true/>
-	<!-- ~/Downloads/Meteora: where audio for MacWhisper is placed. -->
+	<!-- ~/Downloads/Meteora: where handed-off audio is placed. -->
 	<key>com.apple.security.files.downloads.read-write</key><true/>
+	<!-- Meeting journal: reopen a recording the user already opened, without
+	     asking again. Bookmarks are read-only and only for those files. -->
+	<key>com.apple.security.files.bookmarks.app-scope</key><true/>
 	<!-- Required by WebKit in a sandboxed app: without it the web content
 	     process is killed and video can't be shown. The page itself can't
 	     reach the network: CSP forbids it, the navigation policy allows only

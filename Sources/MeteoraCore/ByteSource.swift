@@ -97,6 +97,7 @@ public enum MediaError: Error, LocalizedError, Equatable {
     case audioDecoderUnavailable
     case cancelled
     case exportFailed(String)
+    case unplayable
 
     public var errorDescription: String? {
         switch self {
@@ -111,6 +112,7 @@ public enum MediaError: Error, LocalizedError, Equatable {
         case .audioDecoderUnavailable: return "На этом Mac недоступен декодер Opus."
         case .cancelled: return "Отменено."
         case .exportFailed(let s): return "Не удалось сохранить: \(s)"
+        case .unplayable: return "Этот файл не удалось прочитать как аудио или видео."
         }
     }
 }

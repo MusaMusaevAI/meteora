@@ -119,13 +119,13 @@ public final class SpeechRecognizer {
         }
     }
 
-    /// Transcribes a WebM recording's Opus track.
-    public func transcribe(decoder: OpusTrackDecoder,
+    /// Transcribes any decoded audio source (WebM Opus or AVFoundation).
+    public func transcribe(decoder: PCMSource,
                            isCancelled: @escaping () -> Bool,
                            progress: @escaping (Double) -> Void,
                            onSegment: @escaping (TranscriptSegment) -> Void) throws -> [TranscriptSegment] {
         SherpaOnnxVoiceActivityDetectorReset(vad)
-        let resampler = try MonoResampler(inputRate: 48_000, channels: decoder.channelCount, outputRate: Double(Self.sampleRate))
+        let resampler = try MonoResampler(inputRate: decoder.sampleRate, channels: decoder.channelCount, outputRate: Double(Self.sampleRate))
         var out: [TranscriptSegment] = []
         do {
             try decoder.decode(isCancelled: isCancelled, progress: progress) { buf in

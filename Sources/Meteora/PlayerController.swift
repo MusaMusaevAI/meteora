@@ -2,11 +2,11 @@ import AppKit
 import WebKit
 import MeteoraCore
 
-/// Owns the WKWebView used to render the recording and exposes a small,
-/// typed API over it. All web content is local; the web view is configured
-/// to be as inert as possible.
+/// Playback surface shared by both engines: WebKit for WebM (see
+/// WebPlayerController) and AVFoundation for everything macOS plays itself
+/// (NativePlayerController). Views and the model talk only to this API.
 @MainActor
-final class PlayerController: NSObject, ObservableObject {
+class PlayerController: NSObject, ObservableObject {
     @Published var currentTime: Double = 0
     @Published var duration: Double = 0
     @Published var isPlaying = false
@@ -16,20 +16,76 @@ final class PlayerController: NSObject, ObservableObject {
     @Published var isReady = false
     @Published var mediaErrorCode = 0
     /// Short event log for diagnostics (self-test report).
-    private(set) var diagnostics: [String] = []
-    private var seenMessageTypes = Set<String>()
-    private var crashCount = 0
+    var diagnostics: [String] = []
+    /// When the canvas path is unavailable we fall back to native snapshots.
+    var usesSnapshotFallback = false
+    var snapshotRetries = 0
 
     func log(_ s: String) {
         if diagnostics.count < 300 { diagnostics.append(s) }
     }
 
+    func tearDown() {}
+    func togglePlay() { isPlaying ? pause() : play() }
+    func play() {}
+    func pause() {}
+    func seek(to t: Double) {}
+    func skip(_ delta: Double) { seek(to: currentTime + delta) }
+    func setRate(_ r: Double) { rate = r }
+    func setVolume(_ v: Double) { volume = v }
+
+    enum SampleError: Error, LocalizedError {
+        case failed(String)
+        var errorDescription: String? { if case .failed(let s) = self { return s }; return nil }
+    }
+
+    func waitUntilReady(timeout: Double = 30) async throws {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !isReady {
+            if mediaErrorCode != 0 { throw SampleError.failed("Видео не воспроизводится на этом Mac (код \(mediaErrorCode)).") }
+            if Date() > deadline { throw SampleError.failed("Видео не загрузилось.") }
+            try await Task.sleep(nanoseconds: 50_000_000)
+        }
+    }
+
+    /// Small grayscale thumbnail of the frame at `t` (key-frame analysis).
+    func sample(at t: Double) async throws -> FrameThumb { throw SampleError.failed("Не удалось получить кадр.") }
+    func canDecode(codec: String, width: Int, height: Int) async -> Bool { false }
+    func decodeSample(codec: String, width: Int, height: Int, chunks: [(Data, Bool, Double)]) async throws -> FrameThumb {
+        throw SampleError.failed("Не удалось декодировать кадр.")
+    }
+    func grabDecoded() async throws -> CGImage? { nil }
+    func releaseDecoded() {}
+    /// Full-resolution image of the frame last sampled / currently shown.
+    func grabFrame() async throws -> CGImage? { nil }
+    func debugInfo() async -> String { "n/a" }
+
+    static func thumb(from image: CGImage) -> FrameThumb? {
+        let w = FrameThumb.width, h = FrameThumb.height
+        var px = [UInt8](repeating: 0, count: w * h)
+        let ok = px.withUnsafeMutableBytes { buf -> Bool in
+            guard let ctx = CGContext(data: buf.baseAddress, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w,
+                                      space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue) else { return false }
+            ctx.interpolationQuality = .high
+            ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
+            return true
+        }
+        return ok ? FrameThumb(luma: px) : nil
+    }
+}
+
+/// Owns the WKWebView used to render WebM recordings and exposes a small,
+/// typed API over it. All web content is local; the web view is configured
+/// to be as inert as possible.
+@MainActor
+final class WebPlayerController: PlayerController {
+    private var seenMessageTypes = Set<String>()
+    private var crashCount = 0
+
     let webView: WKWebView
     private let world = WKContentWorld.world(name: "meteora")
     private var schemeHandler: MediaSchemeHandler?
     private let fileURL: URL?
-    /// When the canvas path is unavailable we fall back to native snapshots.
-    private(set) var usesSnapshotFallback = false
 
     init(fileURL: URL?, audioOnly: Bool) {
         self.fileURL = fileURL
@@ -86,7 +142,7 @@ final class PlayerController: NSObject, ObservableObject {
         }
     }
 
-    func tearDown() {
+    override func tearDown() {
         webView.stopLoading()
         webView.configuration.userContentController.removeAllScriptMessageHandlers()
         webView.navigationDelegate = nil
@@ -111,35 +167,19 @@ final class PlayerController: NSObject, ObservableObject {
         }
     }
 
-    func togglePlay() { isPlaying ? pause() : play() }
-    func play() { call("meteora.play()") }
-    func pause() { call("meteora.pause()") }
-    func seek(to t: Double) {
+    override func play() { call("meteora.play()") }
+    override func pause() { call("meteora.pause()") }
+    override func seek(to t: Double) {
         let clamped = max(0, min(t, duration > 0 ? duration : t))
         currentTime = clamped
         call("meteora.seek(t)", ["t": clamped])
     }
-    func skip(_ delta: Double) { seek(to: currentTime + delta) }
-    func setRate(_ r: Double) { rate = r; call("meteora.rate(r)", ["r": r]) }
-    func setVolume(_ v: Double) { volume = v; call("meteora.volume(x)", ["x": v]) }
+    override func setRate(_ r: Double) { rate = r; call("meteora.rate(r)", ["r": r]) }
+    override func setVolume(_ v: Double) { volume = v; call("meteora.volume(x)", ["x": v]) }
 
     // MARK: Frame sampling (used by key-frame analysis)
 
-    enum SampleError: Error, LocalizedError {
-        case failed(String)
-        var errorDescription: String? { if case .failed(let s) = self { return s }; return nil }
-    }
-
-    func waitUntilReady(timeout: Double = 30) async throws {
-        let deadline = Date().addingTimeInterval(timeout)
-        while !isReady {
-            if mediaErrorCode != 0 { throw SampleError.failed("Видео не воспроизводится на этом Mac (код \(mediaErrorCode)).") }
-            if Date() > deadline { throw SampleError.failed("Видео не загрузилось.") }
-            try await Task.sleep(nanoseconds: 50_000_000)
-        }
-    }
-
-    func sample(at t: Double) async throws -> FrameThumb {
+    override func sample(at t: Double) async throws -> FrameThumb {
         let result = try await eval("return await meteora.sample(t)", ["t": t])
         guard let dict = result as? [String: Any] else { throw SampleError.failed("Не удалось получить кадр.") }
         // btoa() maps each byte to one Latin-1 character, so base64-decoding
@@ -156,13 +196,13 @@ final class PlayerController: NSObject, ObservableObject {
 
     // MARK: WebCodecs decoding (preferred path for key-frame analysis)
 
-    func canDecode(codec: String, width: Int, height: Int) async -> Bool {
+    override func canDecode(codec: String, width: Int, height: Int) async -> Bool {
         let r = try? await eval("return await meteora.canDecode(c, w, h)", ["c": codec, "w": width, "h": height])
         return (r as? Bool) ?? ((r as? NSNumber)?.boolValue ?? false)
     }
 
     /// Decodes `chunks` (keyframe first) and returns a thumbnail of the last frame.
-    func decodeSample(codec: String, width: Int, height: Int, chunks: [(Data, Bool, Double)]) async throws -> FrameThumb {
+    override func decodeSample(codec: String, width: Int, height: Int, chunks: [(Data, Bool, Double)]) async throws -> FrameThumb {
         let payload: [[Any]] = chunks.map { [$0.0.base64EncodedString(), $0.1, Int(($0.2 * 1_000_000).rounded())] }
         let r = try await eval("return await meteora.decodeSample(c, w, h, chunks)",
                                ["c": codec, "w": width, "h": height, "chunks": payload])
@@ -173,11 +213,11 @@ final class PlayerController: NSObject, ObservableObject {
         return thumb
     }
 
-    func grabDecoded() async throws -> CGImage? {
+    override func grabDecoded() async throws -> CGImage? {
         Self.image(fromDataURL: try await eval("return await meteora.grabDecoded()") as? String)
     }
 
-    func releaseDecoded() { call("meteora.releaseDecoded()") }
+    override func releaseDecoded() { call("meteora.releaseDecoded()") }
 
     static func image(fromDataURL s: String?) -> CGImage? {
         guard let s, s.hasPrefix("data:image/png;base64,"), let comma = s.firstIndex(of: ","),
@@ -189,7 +229,7 @@ final class PlayerController: NSObject, ObservableObject {
     }
 
     /// Full-resolution image of the frame currently shown.
-    func grabFrame() async throws -> CGImage? {
+    override func grabFrame() async throws -> CGImage? {
         if !usesSnapshotFallback, let img = Self.image(fromDataURL: try await eval("return await meteora.grab()") as? String) {
             return img
         }
@@ -197,7 +237,6 @@ final class PlayerController: NSObject, ObservableObject {
     }
 
     private var lastSnapshotThumb: FrameThumb?
-    private(set) var snapshotRetries = 0
 
     /// The compositor may still show the previous frame for a moment after a
     /// seek. Take small snapshots until the picture stops changing and has
@@ -244,17 +283,10 @@ final class PlayerController: NSObject, ObservableObject {
         return image.cgImage(forProposedRect: &rect, context: nil, hints: nil)
     }
 
-    static func thumb(from image: CGImage) -> FrameThumb? {
-        let w = FrameThumb.width, h = FrameThumb.height
-        var px = [UInt8](repeating: 0, count: w * h)
-        let ok = px.withUnsafeMutableBytes { buf -> Bool in
-            guard let ctx = CGContext(data: buf.baseAddress, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w,
-                                      space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue) else { return false }
-            ctx.interpolationQuality = .high
-            ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
-            return true
-        }
-        return ok ? FrameThumb(luma: px) : nil
+    /// JS-side state for diagnostics.
+    override func debugInfo() async -> String {
+        let r = try? await eval("return JSON.stringify(meteora.info())")
+        return (r as? String) ?? "unavailable"
     }
 
     // MARK: State updates from the page
@@ -276,7 +308,7 @@ final class PlayerController: NSObject, ObservableObject {
     }
 }
 
-extension PlayerController: WKNavigationDelegate, WKUIDelegate {
+extension WebPlayerController: WKNavigationDelegate, WKUIDelegate {
     /// Only our own page may ever be loaded in this web view.
     func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction) async -> WKNavigationActionPolicy {
         let ok = action.request.url == PlayerPage.pageURL && action.targetFrame?.isMainFrame == true
@@ -292,12 +324,6 @@ extension PlayerController: WKNavigationDelegate, WKUIDelegate {
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { log("nav:fail \(error)") }
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         log("nav:failProvisional \(error)")
-    }
-
-    /// JS-side state for diagnostics.
-    func debugInfo() async -> String {
-        let r = try? await eval("return JSON.stringify(meteora.info())")
-        return (r as? String) ?? "unavailable"
     }
 
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
@@ -316,8 +342,8 @@ extension PlayerController: WKNavigationDelegate, WKUIDelegate {
 
 /// Breaks the retain cycle WKUserContentController → handler → controller.
 private final class WeakMessageHandler: NSObject, WKScriptMessageHandler {
-    weak var target: PlayerController?
-    init(_ target: PlayerController) { self.target = target }
+    weak var target: WebPlayerController?
+    init(_ target: WebPlayerController) { self.target = target }
 
     func userContentController(_ ucc: WKUserContentController, didReceive message: WKScriptMessage) {
         // Accept messages only from our own page in the main frame.
