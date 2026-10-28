@@ -52,6 +52,9 @@ enum PlayerPage {
         if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(finish);
         setTimeout(finish, 150);
       });
+      // Two animation frames: the new video frame has been composited and
+      // painted, so a native snapshot taken now is not stale.
+      const painted = () => new Promise(res => requestAnimationFrame(() => requestAnimationFrame(() => res())));
       const seek = (t) => new Promise((res, rej) => {
         const to = setTimeout(() => rej(new Error('seek timeout')), 20000);
         const ok = () => { clearTimeout(to); v.removeEventListener('error', bad); res(); };
@@ -76,7 +79,7 @@ enum PlayerPage {
         // Seeks to t and returns a 64x40 grayscale thumbnail (base64) or
         // {tainted:true} if the canvas refuses to give pixels back.
         sample: async (t) => {
-          await ready(); v.pause(); await seek(t); await waitFrame();
+          await ready(); v.pause(); await seek(t); await waitFrame(); await painted();
           tctx.drawImage(v, 0, 0, thumbCanvas.width, thumbCanvas.height);
           let px;
           try { px = tctx.getImageData(0, 0, thumbCanvas.width, thumbCanvas.height).data; }

@@ -172,11 +172,24 @@ final class PlayerController: NSObject, ObservableObject {
         return try await snapshotVideo()
     }
 
+    /// Native snapshot of just the video picture (without letterboxing),
+    /// rendered at the video's own resolution (capped at 2560 px) so that
+    /// small text on shared screens stays legible for OCR.
     private func snapshotVideo() async throws -> CGImage? {
         let cfg = WKSnapshotConfiguration()
         cfg.afterScreenUpdates = true
+        let bounds = webView.bounds
+        if videoSize.width > 0, videoSize.height > 0, bounds.width > 0, bounds.height > 0 {
+            let k = min(bounds.width / videoSize.width, bounds.height / videoSize.height)
+            let w = videoSize.width * k, h = videoSize.height * k
+            cfg.rect = CGRect(x: (bounds.width - w) / 2, y: (bounds.height - h) / 2, width: w, height: h)
+            let scale = webView.window?.backingScaleFactor ?? 2
+            let targetPixels = min(videoSize.width, 2560)
+            cfg.snapshotWidth = NSNumber(value: Double(targetPixels / scale))
+        }
         let image = try await webView.takeSnapshot(configuration: cfg)
-        return image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        var rect = CGRect(origin: .zero, size: image.size)
+        return image.cgImage(forProposedRect: &rect, context: nil, hints: nil)
     }
 
     static func thumb(from image: CGImage) -> FrameThumb? {
