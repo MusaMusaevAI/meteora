@@ -368,16 +368,17 @@ struct BatchView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
                 Image(systemName: "folder").foregroundStyle(Theme.tertiary)
-                Text("Сохранять в").foregroundStyle(Theme.secondary)
-                Text(queue.destination?.lastPathComponent ?? "папку выберем при запуске")
-                    .foregroundStyle(Theme.text).lineLimit(1).truncationMode(.middle)
-                Button("Изменить…") { _ = queue.chooseDestination() }
+                Text("Папка").foregroundStyle(Theme.secondary)
+                Text(queue.destination?.lastPathComponent ?? "спросим при запуске")
+                    .foregroundStyle(queue.destination == nil ? Theme.secondary : Theme.text)
+                    .lineLimit(1).truncationMode(.middle)
+                Button(queue.destination == nil ? "Выбрать…" : "Изменить…") { _ = queue.chooseDestination() }
                     .buttonStyle(LinkButtonStyle()).disabled(queue.isRunning)
                 Spacer()
             }
             .font(Theme.ui(12.5))
             HStack(spacing: 6) {
-                Image(systemName: "doc.on.doc").foregroundStyle(Theme.tertiary)
+                Image(systemName: "doc").foregroundStyle(Theme.tertiary)
                 Text("Форматы").foregroundStyle(Theme.secondary)
                 Text(settings.ordered.map(\.short).joined(separator: ", ").ifEmpty("не выбраны"))
                     .foregroundStyle(settings.formats.isEmpty ? Theme.danger : Theme.text).lineLimit(1)

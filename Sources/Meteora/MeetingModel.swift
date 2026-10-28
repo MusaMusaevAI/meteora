@@ -588,8 +588,26 @@ final class MeetingModel: ObservableObject {
                 } else {
                     thumb = try await player.sample(at: t + 0.02)
                 }
-                if let change = collector.consider(time: t, thumb: thumb, spikes: spikes),
-                   let image = try await (codec != nil ? player.grabDecoded() : player.grabFrame()) {
+                if var change = collector.consider(time: t, thumb: thumb, spikes: spikes) {
+                    // Files without packet timing are sampled on a grid: narrow
+                    // the moment of change down by bisection.
+                    if independent, i > 0 {
+                        var lo = times[i - 1] + 0.02, hi = t + 0.02
+                        for _ in 0..<4 where !token.isCancelled {
+                            let mid = (lo + hi) / 2
+                            if let th = try? await player.sample(at: mid), th.changedFraction(to: thumb) < sceneThreshold / 2 {
+                                hi = mid
+                            } else {
+                                lo = mid
+                            }
+                        }
+                        change = max(0, hi - 0.02)
+                        _ = try? await player.sample(at: hi)
+                    }
+                    guard let image = try await (codec != nil ? player.grabDecoded() : player.grabFrame()) else {
+                        sceneProgress = Double(i + 1) / Double(times.count)
+                        continue
+                    }
                     let text = await Task.detached(priority: .userInitiated) { TextRecognizer.recognize(image) }.value
                     let frame = SceneFrame(id: frames.count + 1, time: change, image: image, text: text)
                     let duplicateText = frames.last.map { !text.isEmpty && textSimilarity($0.frame.text, text) > 0.9 } ?? false

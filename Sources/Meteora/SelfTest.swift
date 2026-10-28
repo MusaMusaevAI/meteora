@@ -231,6 +231,8 @@ final class SelfTest {
                                                           format: f, options: .standard, baseName: model.title)
                     let u = try TranscriptExporter.write(r, to: dir, baseName: model.title, format: f)
                     ex[f.rawValue] = (try? u.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+                } catch ExportError.nothingToExport where model.transcript?.segments.isEmpty ?? true {
+                    ex[f.rawValue] = "nothing to export (no speech)"
                 } catch {
                     errors.append("export \(f.rawValue): \(error)")
                 }

@@ -148,6 +148,7 @@ struct ExportOptionsForm: View {
                         Text("Делить на абзацы по паузам").font(Theme.ui(12.5)).foregroundStyle(Theme.text)
                         Text("Иначе — каждая фраза с новой строки").font(Theme.ui(11)).foregroundStyle(Theme.secondary)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .toggleStyle(.switch).controlSize(.small).tint(Theme.accent)
                 .disabled(!hasTranscript)
@@ -162,10 +163,12 @@ struct ExportOptionsForm: View {
                             .font(Theme.ui(11)).foregroundStyle(Theme.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .toggleStyle(.switch).controlSize(.small).tint(Theme.accent)
                 Toggle(isOn: $settings.options.includeFrameText) {
                     Text("Текст, распознанный на кадрах").font(Theme.ui(12.5)).foregroundStyle(Theme.text)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .toggleStyle(.switch).controlSize(.small).tint(Theme.accent)
                 .disabled(!settings.options.includeFrames)
