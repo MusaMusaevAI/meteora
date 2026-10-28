@@ -38,15 +38,10 @@ jobs:
         run: mv ci-fixtures/long-1920.webm /tmp/long-1920.webm && rm -rf ci-fixtures
       - name: Vendor libraries (hash-pinned)
         run: scripts/fetch_vendor.sh 2>&1 | tee logs/vendor.txt
-      - name: Probe model files (hashes for pinning)
+      - name: Russian speech sample for the transcription self-test
         run: |
           R=https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16/resolve/main
-          mkdir -p /tmp/probe
-          for f in tokens.txt encoder.int8.onnx decoder.onnx joiner.onnx; do
-            curl -fsSL --retry 3 -o /tmp/probe/$f "$R/$f" && echo "$(shasum -a 256 /tmp/probe/$f | cut -d' ' -f1) $(stat -f%z /tmp/probe/$f) $f"
-          done 2>&1 | tee logs/model-hashes.txt
-          curl -fsSL --retry 3 -o /tmp/ru-example.wav "$R/test_wavs/example.wav" || true
-          rm -rf /tmp/probe
+          curl -fsSL --retry 3 -o /tmp/ru-example.wav "$R/test_wavs/example.wav" || echo "no sample"
       - name: Unit tests
         id: tests
         continue-on-error: true

@@ -193,6 +193,7 @@ public enum Timecode {
 
 public enum FileSizeText {
     public static func string(_ bytes: Int64) -> String {
+        if bytes > 0, bytes < 1000 { return "< 1 КБ" }
         let f = ByteCountFormatter()
         f.countStyle = .file
         f.allowedUnits = [.useKB, .useMB, .useGB]

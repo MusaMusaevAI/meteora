@@ -350,3 +350,43 @@ final class SecurityRegressionTests: XCTestCase {
         XCTAssertThrowsError(try ByteSource(url: URL(fileURLWithPath: path)))
     }
 }
+
+final class TranscriptTests: XCTestCase {
+    let tr = Transcript(sourceName: "Встреча.webm", duration: 3700, engine: "test", segments: [
+        TranscriptSegment(start: 1.5, end: 4.25, text: "Добрый день, коллеги."),
+        TranscriptSegment(start: 3661, end: 3665.5, text: "Итоги <b>квартала</b>](http://x)"),
+    ])
+
+    func testSRT() {
+        let srt = TranscriptExporter.srt(tr)
+        XCTAssertTrue(srt.hasPrefix("1\n00:00:01,500 --> 00:00:04,250\nДобрый день, коллеги.\n\n2\n01:01:01,000 --> 01:01:05,500\n"))
+    }
+
+    func testPlainText() {
+        XCTAssertTrue(TranscriptExporter.plainText(tr).hasPrefix("[0:00:01] Добрый день, коллеги.\n[1:01:01]"))
+    }
+
+    func testMarkdownMergesSpeechAndFramesSafely() throws {
+        let img = CGImage(width: 2, height: 2, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: 8,
+                          space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                          provider: CGDataProvider(data: Data(count: 16) as CFData)!, decode: nil, shouldInterpolate: false, intent: .defaultIntent)!
+        let frames = [SceneFrame(id: 1, time: 2, image: img, text: "Слайд")]
+        let md = TranscriptExporter.markdown(tr, frames: frames, meta: .init(title: "Встреча", sourceName: "Встреча.webm", duration: 3700))
+        let speech = try XCTUnwrap(md.range(of: "Добрый день"))
+        let frame = try XCTUnwrap(md.range(of: "Кадр 1"))
+        XCTAssertLessThan(speech.lowerBound, frame.lowerBound, "speech at 1.5 s comes before the frame at 2 s")
+        XCTAssertFalse(md.contains("<b>"))
+        XCTAssertFalse(md.contains("](http"))
+    }
+
+    func testSegmentLookup() {
+        XCTAssertEqual(tr.segmentIndex(at: 2), 0)
+        XCTAssertNil(tr.segmentIndex(at: 100))
+        XCTAssertEqual(tr.segmentIndex(at: 3662), 1)
+        XCTAssertEqual(tr.wordCount, 5)
+    }
+
+    func testTinySizes() {
+        XCTAssertEqual(FileSizeText.string(300), "< 1 КБ")
+    }
+}
