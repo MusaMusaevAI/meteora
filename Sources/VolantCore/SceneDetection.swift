@@ -63,8 +63,8 @@ public enum ScenePlanner {
         return filled
     }
 
-    /// Times of unusually large inter-frames. Spikes right after a keyframe
-    /// are ignored (encoders often refresh reference frames there).
+    /// Times of unusually large inter-frames. Spikes within 0.3 s after a
+    /// keyframe are ignored (encoders often refresh reference frames there).
     public static func spikes(packets: [VideoPacket], width: Int, height: Int) -> [Double] {
         let floor = max(6_000, Int(Double(width * height) * 0.006))
         var window: [Int] = []
@@ -75,7 +75,7 @@ public enum ScenePlanner {
             if p.isKey { lastKey = p.time; continue }
             if window.count >= 20 {
                 let median = window.sorted()[window.count / 2]
-                if p.size > max(10 * median, floor), p.time - lastKey > 1.5 {
+                if p.size > max(10 * median, floor), p.time - lastKey > 0.3 {
                     if let last = result.last, p.time - last < 2 { /* same burst */ } else { result.append(p.time) }
                 }
             }

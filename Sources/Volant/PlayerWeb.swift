@@ -108,6 +108,7 @@ final class MediaSchemeHandler: NSObject, WKURLSchemeHandler {
     private let queue = DispatchQueue(label: "volant.media", qos: .userInitiated)
     private var active = Set<ObjectIdentifier>()
     private let chunk = 512 * 1024
+    var logger: ((String) -> Void)?
 
     init(fileURL: URL?, audioOnly: Bool) {
         self.source = fileURL.flatMap { try? ByteSource(url: $0) }
@@ -117,6 +118,7 @@ final class MediaSchemeHandler: NSObject, WKURLSchemeHandler {
     func webView(_ webView: WKWebView, start task: WKURLSchemeTask) {
         let id = ObjectIdentifier(task)
         active.insert(id)
+        logger?("scheme:\(task.request.url?.path ?? "?") range=\(task.request.value(forHTTPHeaderField: "Range") ?? "-")")
         guard let url = task.request.url, url.scheme == PlayerPage.scheme, url.host == PlayerPage.host else {
             return fail(task, 403)
         }

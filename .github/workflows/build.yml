@@ -8,6 +8,9 @@ permissions:
 concurrency:
   group: build
   cancel-in-progress: true
+defaults:
+  run:
+    shell: bash
 jobs:
   macos:
     runs-on: macos-26

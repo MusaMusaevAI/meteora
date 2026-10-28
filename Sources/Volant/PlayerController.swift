@@ -15,6 +15,13 @@ final class PlayerController: NSObject, ObservableObject {
     @Published var videoSize: CGSize = .zero
     @Published var isReady = false
     @Published var mediaErrorCode = 0
+    /// Short event log for diagnostics (self-test report).
+    private(set) var diagnostics: [String] = []
+    private var seenMessageTypes = Set<String>()
+
+    func log(_ s: String) {
+        if diagnostics.count < 300 { diagnostics.append(s) }
+    }
 
     let webView: WKWebView
     private let world = WKContentWorld.world(name: "volant")
@@ -37,6 +44,8 @@ final class PlayerController: NSObject, ObservableObject {
         if #available(macOS 14.0, *) { config.allowsInlinePredictions = false }
 
         let handler = MediaSchemeHandler(fileURL: fileURL, audioOnly: audioOnly)
+        var pendingLog: [String] = []
+        handler.logger = { pendingLog.append($0) }
         config.setURLSchemeHandler(handler, forURLScheme: PlayerPage.scheme)
 
         let ucc = WKUserContentController()
@@ -55,6 +64,8 @@ final class PlayerController: NSObject, ObservableObject {
         super.init()
 
         ucc.add(WeakMessageHandler(self), contentWorld: world, name: "volant")
+        diagnostics = pendingLog
+        handler.logger = { [weak self] s in self?.log(s) }
         webView.navigationDelegate = self
         webView.uiDelegate = self
         if fileURL != nil { webView.load(URLRequest(url: PlayerPage.pageURL)) }
@@ -170,6 +181,7 @@ final class PlayerController: NSObject, ObservableObject {
 
     fileprivate func handle(_ body: Any) {
         guard let m = body as? [String: Any], let type = m["type"] as? String else { return }
+        if seenMessageTypes.insert(type).inserted || type == "error" { log("js:\(type) rs=\(m["err"] ?? 0)") }
         func num(_ k: String) -> Double { (m[k] as? NSNumber)?.doubleValue ?? 0 }
         let t = num("t"), d = num("d")
         if t.isFinite { currentTime = t }
@@ -196,7 +208,20 @@ extension PlayerController: WKNavigationDelegate, WKUIDelegate {
         nil
     }
 
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { log("nav:finish") }
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { log("nav:fail \(error)") }
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        log("nav:failProvisional \(error)")
+    }
+
+    /// JS-side state for diagnostics.
+    func debugInfo() async -> String {
+        let r = try? await eval("return JSON.stringify(volant.info())")
+        return (r as? String) ?? "unavailable"
+    }
+
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        log("webcontent:terminated")
         // Recover from a crashed renderer by reloading our page.
         isReady = false
         if fileURL != nil { webView.load(URLRequest(url: PlayerPage.pageURL)) }

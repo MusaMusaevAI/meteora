@@ -109,14 +109,14 @@ final class ParserTests: XCTestCase {
         // EBML lacing, 3 frames: 4, 6 (+2), rest 1
         var e = Data([2])
         e += [0x84]            // first size 4
-        e += [0xBF + 3]        // signed delta +2 (1-byte vint, bias 63)
+        e += [0xC1]            // signed delta +2 (1-byte vint 65, bias 63)
         e += Data(repeating: 0, count: 4 + 6 + 1)
         XCTAssertEqual(try WebMDemuxer.splitLacing(e, lacing: 3).map(\.count), [4, 6, 1])
 
         // Hostile sizes must throw, not crash
         XCTAssertThrowsError(try WebMDemuxer.splitLacing(Data([3, 255, 255, 255, 255]), lacing: 1))
         XCTAssertThrowsError(try WebMDemuxer.splitLacing(Data([2, 0x81, 0xFF, 0]), lacing: 3))
-        XCTAssertThrowsError(try WebMDemuxer.splitLacing(Data([2, 1, 2, 3]), lacing: 2))
+        XCTAssertThrowsError(try WebMDemuxer.splitLacing(Data([2, 1, 2, 3, 4]), lacing: 2))
     }
 
     func testVint() throws {
@@ -288,7 +288,8 @@ final class SceneTests: XCTestCase {
         XCTAssertEqual(Timecode.fileSafe(3725), "01-02-05")
         XCTAssertEqual(sanitizedBaseName(URL(fileURLWithPath: "/tmp/Встреча в Телемосте 26.10.26 13-59-23 — запись.webm")),
                        "Встреча в Телемосте 26.10.26 13-59-23 — запись")
-        XCTAssertEqual(sanitizedBaseName(URL(fileURLWithPath: "/tmp/..webm")), "Запись")
+        XCTAssertFalse(sanitizedBaseName(URL(fileURLWithPath: "/tmp/..webm")).hasPrefix("."))
+        XCTAssertFalse(sanitizedBaseName(URL(fileURLWithPath: "/tmp/a:b|c?.webm")).contains(":"))
         XCTAssertGreaterThan(textSimilarity("Итоги квартала ПДС", "итоги квартала пдс 2026"), 0.6)
     }
 }

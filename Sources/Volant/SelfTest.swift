@@ -25,7 +25,13 @@ final class SelfTest {
     func run() async {
         try? FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
         report["entitlements_sandboxed"] = ProcessInfo.processInfo.environment["APP_SANDBOX_CONTAINER_ID"] != nil
+        _ = await wait(15) { !NSApp.windows.isEmpty }
+        NSApp.activate(ignoringOtherApps: true)
+        NSApp.windows.first?.makeKeyAndOrderFront(nil)
         try? await Task.sleep(nanoseconds: 1_500_000_000)
+        report["windows"] = NSApp.windows.map { "\($0.className) visible=\($0.isVisible) onScreen=\($0.occlusionState.contains(.visible)) \(Int($0.frame.width))x\(Int($0.frame.height))" }
+        report["screens"] = NSScreen.screens.count
+        report["activationPolicy"] = NSApp.activationPolicy().rawValue
         snapshotWindow("01-empty")
         setAppearance(.darkAqua); try? await Task.sleep(nanoseconds: 400_000_000)
         snapshotWindow("02-empty-dark")
@@ -58,6 +64,8 @@ final class SelfTest {
                                   "videoSize": "\(Int(player.videoSize.width))x\(Int(player.videoSize.height))",
                                   "webDuration": player.duration, "waitedOK": ok] as [String: Any]
             if !player.isReady { errors.append("playback not ready, code \(player.mediaErrorCode)") }
+            report["jsInfo"] = await player.debugInfo()
+            report["webDiagnostics"] = player.diagnostics
             if player.isReady {
                 player.play()
                 try? await Task.sleep(nanoseconds: 1_500_000_000)
@@ -165,7 +173,7 @@ final class SelfTest {
     /// Renders the window's view hierarchy (WebKit video surfaces may come
     /// out black — the actual video frame is saved separately).
     private func snapshotWindow(_ name: String) {
-        guard let window = NSApp.windows.first(where: { $0.isVisible && $0.contentView != nil }),
+        guard let window = NSApp.windows.first(where: { $0.contentView != nil && $0.frame.width > 300 }),
               let view = window.contentView?.superview ?? window.contentView,
               let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {
             errors.append("no window for snapshot \(name)")
@@ -178,6 +186,7 @@ final class SelfTest {
     }
 
     private func finish() {
+        if let player = model.player { report["webDiagnosticsFinal"] = player.diagnostics }
         report["errors"] = errors
         report["ok"] = errors.isEmpty
         if let data = try? JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys]) {
