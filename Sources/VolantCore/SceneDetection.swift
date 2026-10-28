@@ -2,8 +2,8 @@ import Foundation
 
 /// A tiny grayscale thumbnail of a video frame used to compare frames.
 public struct FrameThumb: Equatable, Sendable {
-    public static let width = 64
-    public static let height = 40
+    public static let width = 128
+    public static let height = 80
     public var luma: [UInt8]
 
     public init?(luma: [UInt8]) {
@@ -14,7 +14,7 @@ public struct FrameThumb: Equatable, Sendable {
     /// Fraction (0…1) of pixels whose brightness changed noticeably.
     public func changedFraction(to other: FrameThumb) -> Double {
         var changed = 0
-        for i in 0 ..< luma.count where abs(Int(luma[i]) - Int(other.luma[i])) > 24 { changed += 1 }
+        for i in 0 ..< luma.count where abs(Int(luma[i]) - Int(other.luma[i])) > 16 { changed += 1 }
         return Double(changed) / Double(luma.count)
     }
 
@@ -123,7 +123,7 @@ public final class SceneCollector {
     public private(set) var kept: [Kept] = []
     private var previousSampleTime: Double?
 
-    public init(threshold: Double = 0.06) {
+    public init(threshold: Double = 0.016) {
         self.threshold = threshold
     }
 
@@ -135,10 +135,15 @@ public final class SceneCollector {
             kept.append(Kept(sampleTime: time, changeTime: time, thumb: thumb))
             return time
         }
-        guard thumb.changedFraction(to: last.thumb) > threshold else { return nil }
+        let from = previousSampleTime ?? last.sampleTime
+        // A big encoded frame in between is independent evidence of a change:
+        // then even a modest visual difference (same template, new text) counts.
+        let hadSpike = spikes.contains { $0 > from && $0 <= time }
+        let needed = hadSpike ? threshold / 3 : threshold
+        guard thumb.changedFraction(to: last.thumb) > needed else { return nil }
         // Don't repeat a slide that was already captured recently.
-        for k in kept.suffix(30) where thumb.changedFraction(to: k.thumb) < threshold / 2 { return nil }
-        let change = ScenePlanner.changeTime(between: previousSampleTime ?? last.sampleTime, and: time, spikes: spikes)
+        for k in kept.suffix(30) where thumb.changedFraction(to: k.thumb) < needed / 2 { return nil }
+        let change = ScenePlanner.changeTime(between: from, and: time, spikes: spikes)
         kept.append(Kept(sampleTime: time, changeTime: change, thumb: thumb))
         return change
     }

@@ -82,7 +82,7 @@ final class MeetingModel: ObservableObject {
     var isBusy: Bool { exportProgress != nil || sceneProgress != nil }
 
     /// Threshold for the scene detector derived from the UI slider.
-    var sceneThreshold: Double { 0.16 - 0.13 * sensitivity } // 0.16 … 0.03
+    var sceneThreshold: Double { 0.05 * pow(0.1, sensitivity) } // 5 % … 0.5 % of the picture
 
     // MARK: Opening
 

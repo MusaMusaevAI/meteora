@@ -36,6 +36,9 @@ enum PlayerPage {
         .forEach(e => v.addEventListener(e, () => state(e)));
       let last = 0;
       v.addEventListener('timeupdate', () => { const n = performance.now(); if (n - last > 100) { last = n; state('time'); } });
+      // CORS mode keeps the canvas untainted so frames can be read back at
+      // full resolution (the scheme handler answers with ACAO).
+      v.crossOrigin = 'anonymous';
       v.src = '\(mediaURLString)';
       v.load();
 
@@ -177,6 +180,7 @@ final class MediaSchemeHandler: NSObject, WKURLSchemeHandler {
         let range = parsed ?? (0 ... src.size - 1)
         let length = range.upperBound - range.lowerBound + 1
         var headers = [
+            "Access-Control-Allow-Origin": "*",
             "Content-Type": mime,
             "Content-Length": "\(length)",
             "Accept-Ranges": "bytes",

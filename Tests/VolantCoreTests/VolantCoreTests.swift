@@ -249,7 +249,7 @@ final class SceneTests: XCTestCase {
 
     func testCollector() {
         let c = SceneCollector(threshold: 0.06)
-        XCTAssertNil(c.consider(time: 0, thumb: FrameThumb(luma: [UInt8](repeating: 0, count: 2560))!, spikes: []), "black frame")
+        XCTAssertNil(c.consider(time: 0, thumb: FrameThumb(luma: [UInt8](repeating: 0, count: FrameThumb.width * FrameThumb.height))!, spikes: []), "black frame")
         XCTAssertEqual(c.consider(time: 1, thumb: thumb(40), spikes: []), 1)
         XCTAssertNil(c.consider(time: 5, thumb: thumb(40, block: 20), spikes: []), "small change (cursor)")
         XCTAssertEqual(c.consider(time: 10, thumb: thumb(160), spikes: [7.5]), 7.5, "dated by spike")
