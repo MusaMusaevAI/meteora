@@ -149,10 +149,7 @@ final class PlayerController: NSObject, ObservableObject {
         }
         if dict["tainted"] as? Bool == true {
             usesSnapshotFallback = true
-            guard let img = try await snapshotVideo(), let thumb = Self.thumb(from: img) else {
-                throw SampleError.failed("Не удалось снять кадр.")
-            }
-            return thumb
+            return try await stableSnapshotThumb()
         }
         throw SampleError.failed("Не удалось получить кадр.")
     }
@@ -172,10 +169,38 @@ final class PlayerController: NSObject, ObservableObject {
         return try await snapshotVideo()
     }
 
+    private var lastSnapshotThumb: FrameThumb?
+    private(set) var snapshotRetries = 0
+
+    /// The compositor may still show the previous frame for a moment after a
+    /// seek. Take small snapshots until the picture stops changing and has
+    /// either changed from the previous sample or had time to (≈0.3 s).
+    private func stableSnapshotThumb() async throws -> FrameThumb {
+        let started = Date()
+        var previous: FrameThumb?
+        for _ in 0 ..< 12 {
+            guard let img = try await snapshotVideo(pixelWidth: CGFloat(FrameThumb.width * 2)),
+                  let thumb = Self.thumb(from: img) else { throw SampleError.failed("Не удалось снять кадр.") }
+            if let p = previous, thumb.changedFraction(to: p) < 0.002 {
+                let differsFromLast = lastSnapshotThumb.map { thumb.changedFraction(to: $0) > 0.002 } ?? true
+                if differsFromLast || Date().timeIntervalSince(started) > 0.3 {
+                    lastSnapshotThumb = thumb
+                    return thumb
+                }
+            }
+            previous = thumb
+            snapshotRetries += 1
+            try await Task.sleep(nanoseconds: 50_000_000)
+        }
+        lastSnapshotThumb = previous
+        if let previous { return previous }
+        throw SampleError.failed("Не удалось снять кадр.")
+    }
+
     /// Native snapshot of just the video picture (without letterboxing),
     /// rendered at the video's own resolution (capped at 2560 px) so that
     /// small text on shared screens stays legible for OCR.
-    private func snapshotVideo() async throws -> CGImage? {
+    private func snapshotVideo(pixelWidth: CGFloat? = nil) async throws -> CGImage? {
         let cfg = WKSnapshotConfiguration()
         cfg.afterScreenUpdates = true
         let bounds = webView.bounds
@@ -184,7 +209,7 @@ final class PlayerController: NSObject, ObservableObject {
             let w = videoSize.width * k, h = videoSize.height * k
             cfg.rect = CGRect(x: (bounds.width - w) / 2, y: (bounds.height - h) / 2, width: w, height: h)
             let scale = webView.window?.backingScaleFactor ?? 2
-            let targetPixels = min(videoSize.width, 2560)
+            let targetPixels = pixelWidth ?? min(videoSize.width, 2560)
             cfg.snapshotWidth = NSNumber(value: Double(targetPixels / scale))
         }
         let image = try await webView.takeSnapshot(configuration: cfg)

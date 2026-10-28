@@ -121,6 +121,7 @@ final class SelfTest {
                     "times": frames.map { ($0.time * 10).rounded() / 10 },
                     "letters": frames.map(\.letterCount),
                     "snapshotFallback": player.usesSnapshotFallback,
+                    "snapshotRetries": player.snapshotRetries,
                     "error": model.sceneError ?? "",
                 ] as [String: Any]
             }
