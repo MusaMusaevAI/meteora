@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- App Sandbox: the app can only touch files the user explicitly opens or saves. -->
+	<key>com.apple.security.app-sandbox</key><true/>
+	<!-- Files picked in Open/Save panels, dragged in, or opened from Finder. -->
+	<key>com.apple.security.files.user-selected.read-write</key><true/>
+	<!-- ~/Downloads/Volant: where audio for MacWhisper is placed. -->
+	<key>com.apple.security.files.downloads.read-write</key><true/>
+	<!-- Deliberately absent: network client/server, camera, microphone,
+	     Apple Events, JIT, unsigned memory, library validation exceptions. -->
+</dict>
+</plist>

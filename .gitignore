@@ -1,0 +1,8 @@
+.build/
+build/
+out/
+logs/
+selftest-out/
+.DS_Store
+*.xcodeproj/
+.swiftpm/

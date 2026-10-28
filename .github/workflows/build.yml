@@ -1,0 +1,47 @@
+name: build
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: build
+  cancel-in-progress: true
+jobs:
+  macos:
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        run: |
+          mkdir -p logs
+          XC=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1 || true)
+          [ -n "$XC" ] && sudo xcode-select -s "$XC" || true
+          { sw_vers; xcodebuild -version; swift --version; } 2>&1 | tee logs/toolchain.txt
+      - name: Large fixture
+        run: git fetch --depth 1 origin ci-fixtures && git show origin/ci-fixtures:long-1920.webm > /tmp/long-1920.webm || echo "no large fixture"
+      - name: Unit tests
+        id: tests
+        continue-on-error: true
+        run: swift test 2>&1 | tee logs/tests.txt
+      - name: Build app
+        id: app
+        run: scripts/build_app.sh 2>&1 | tee logs/build.txt
+      - name: Self-test (sandboxed app, real WebKit)
+        id: selftest
+        continue-on-error: true
+        run: scripts/selftest.sh 2>&1 | tee logs/selftest.txt
+      - name: DMG
+        id: dmg
+        run: scripts/make_dmg.sh 2>&1 | tee logs/dmg.txt
+      - name: Publish build output
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JOB_STATUS: tests=${{ steps.tests.outcome }} app=${{ steps.app.outcome }} selftest=${{ steps.selftest.outcome }} dmg=${{ steps.dmg.outcome }}
+        run: scripts/publish_output.sh
+      - name: Fail if tests failed
+        if: steps.tests.outcome != 'success' || steps.selftest.outcome != 'success'
+        run: exit 1
