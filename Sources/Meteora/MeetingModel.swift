@@ -258,6 +258,11 @@ final class MeetingModel: ObservableObject {
         action?()
     }
 
+    func revealInFinder() {
+        guard let url else { return }
+        NSWorkspace.shared.activateFileViewerSelecting([url])
+    }
+
     var isWorking: Bool { transcribeProgress != nil || sceneProgress != nil || exportProgress != nil }
 
     /// Back to the list of meetings. Asks first if work would be lost.

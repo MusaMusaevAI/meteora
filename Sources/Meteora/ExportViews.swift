@@ -85,7 +85,7 @@ struct ExportSheet: View {
             Text("Экспорт").titleStyle(20).foregroundStyle(Theme.text)
             Text(subtitle).font(Theme.ui(12)).foregroundStyle(Theme.secondary).padding(.top, 3)
 
-            ExportOptionsForm(settings: settings, hasFrames: !model.frames.isEmpty, hasTranscript: model.transcript != nil)
+            ExportOptionsForm(settings: settings, hasFrames: !model.frames.isEmpty, hasTranscript: model.transcript != nil, showsFrames: model.hasVideo)
                 .padding(.top, 18)
 
             HStack {
@@ -123,6 +123,8 @@ struct ExportOptionsForm: View {
     @ObservedObject var settings: ExportSettings
     var hasFrames: Bool
     var hasTranscript: Bool = true
+    /// Batch processing and audio-only recordings have no key frames at all.
+    var showsFrames: Bool = true
 
     private let columns = [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)]
 
@@ -140,9 +142,7 @@ struct ExportOptionsForm: View {
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("Время в тексте").font(Theme.ui(12, weight: .semibold)).foregroundStyle(Theme.secondary)
-                PillPicker(options: TimestampMode.allCases, selection: $settings.options.timestamps) { $0.title.capitalizedFirst }
-                    .disabled(!hasTranscript)
+                Text("Текст").font(Theme.ui(12, weight: .semibold)).foregroundStyle(Theme.secondary)
                 Toggle(isOn: $settings.options.paragraphs) {
                     VStack(alignment: .leading, spacing: 1) {
                         Text("Делить на абзацы по паузам").font(Theme.ui(12.5)).foregroundStyle(Theme.text)
@@ -152,9 +152,11 @@ struct ExportOptionsForm: View {
                 }
                 .toggleStyle(.switch).controlSize(.small).tint(Theme.accent)
                 .disabled(!hasTranscript)
+                PillPicker(options: TimestampMode.allCases, selection: $settings.options.timestamps) { $0.title.capitalizedFirst }
+                    .disabled(!hasTranscript)
             }
 
-            VStack(alignment: .leading, spacing: 8) {
+            if showsFrames { VStack(alignment: .leading, spacing: 8) {
                 Toggle(isOn: $settings.options.includeFrames) {
                     VStack(alignment: .leading, spacing: 1) {
                         Text("Ключевые кадры").font(Theme.ui(12.5)).foregroundStyle(Theme.text)
@@ -173,6 +175,10 @@ struct ExportOptionsForm: View {
                 .toggleStyle(.switch).controlSize(.small).tint(Theme.accent)
                 .disabled(!settings.options.includeFrames)
             }
+            .disabled(!hasFrames) }
+        }
+        .onChange(of: settings.options.paragraphs) { _, on in
+            if !on, settings.options.timestamps == .paragraph { settings.options.timestamps = .phrase }
         }
     }
 }
@@ -187,7 +193,7 @@ private struct FormatChip: View {
         let shape = RoundedRectangle(cornerRadius: 8, style: .continuous)
         Button(action: action) {
             HStack(spacing: 10) {
-                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                Image(systemName: selected ? "checkmark.square.fill" : "square")
                     .font(.system(size: 14))
                     .foregroundStyle(selected ? Theme.accent : Theme.tertiary)
                 VStack(alignment: .leading, spacing: 0) {

@@ -99,7 +99,7 @@ struct DropZone: View {
                 .font(.system(size: 26, weight: .light))
                 .foregroundStyle(targeted ? Theme.accent : Theme.tertiary)
                 .contentTransition(.symbolEffect(.replace))
-            Text(targeted ? "Отпустите — откроем запись" : "Перетащите сюда запись встречи")
+            Text(targeted ? "Отпустите, чтобы открыть" : "Перетащите сюда запись встречи")
                 .font(Theme.ui(14, weight: .medium))
                 .foregroundStyle(Theme.text)
             Text("Запись из Телемоста или любой видео- и аудиофайл")
@@ -145,7 +145,7 @@ struct LoadingView: View {
             LogoMark().frame(width: 52, height: 52)
             Text(title).titleStyle(20).foregroundStyle(Theme.text).lineLimit(2).multilineTextAlignment(.center)
             ThinProgress(value: progress).frame(width: 260)
-            Text("Читаю структуру записи…").font(Theme.ui(12.5)).foregroundStyle(Theme.secondary)
+            Text("Чтение записи…").font(Theme.ui(12.5)).foregroundStyle(Theme.secondary)
         }
         .padding(40)
     }
@@ -582,15 +582,15 @@ struct RecordingSection: View {
                 }
             }
             .buttonStyle(LinkButtonStyle())
-            .help("Вернуться к списку встреч (⌘W)")
+            .help("Вернуться ко всем записям (⌘W)")
             .padding(.bottom, 2)
             HStack(alignment: .top, spacing: 8) {
                 Text(model.title).titleStyle(17).foregroundStyle(Theme.text).lineLimit(3)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Button { model.presentOpenPanel() } label: { Image(systemName: "folder") }
+                Button { model.revealInFinder() } label: { Image(systemName: "folder") }
                     .buttonStyle(IconButtonStyle())
-                    .help("Открыть другую запись (⌘O)")
+                    .help("Показать в Finder")
                     .padding(.top, -6)
             }
             if let info = model.info {

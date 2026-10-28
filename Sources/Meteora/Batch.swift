@@ -315,7 +315,7 @@ struct BatchView: View {
     }
 
     private var summary: String {
-        if queue.items.isEmpty { return "Добавьте записи — Meteora расшифрует их по очереди и сохранит файлы в одну папку." }
+        if queue.items.isEmpty { return "Записи расшифровываются по очереди, файлы сохраняются в одну папку." }
         var s = ru(queue.items.count, "запись", "записи", "записей")
         if queue.finished > 0 { s += " · готово \(queue.finished)" }
         return s
@@ -369,7 +369,7 @@ struct BatchView: View {
             HStack(spacing: 6) {
                 Image(systemName: "folder").foregroundStyle(Theme.tertiary)
                 Text("Папка").foregroundStyle(Theme.secondary)
-                Text(queue.destination?.lastPathComponent ?? "спросим при запуске")
+                Text(queue.destination?.lastPathComponent ?? "выбор при запуске")
                     .foregroundStyle(queue.destination == nil ? Theme.secondary : Theme.text)
                     .lineLimit(1).truncationMode(.middle)
                 Button(queue.destination == nil ? "Выбрать…" : "Изменить…") { _ = queue.chooseDestination() }
@@ -387,10 +387,10 @@ struct BatchView: View {
                 Spacer()
             }
             .font(Theme.ui(12.5))
-            Toggle("Не расшифровывать заново то, что уже расшифровано", isOn: $queue.reuseTranscripts)
-                .toggleStyle(.checkbox).font(Theme.ui(12.5)).foregroundStyle(Theme.text)
+            Toggle("Использовать готовые расшифровки", isOn: $queue.reuseTranscripts)
+                .toggleStyle(.checkbox).tint(Theme.accent).font(Theme.ui(12.5)).foregroundStyle(Theme.text)
             if showOptions {
-                ExportOptionsForm(settings: settings, hasFrames: false)
+                ExportOptionsForm(settings: settings, hasFrames: false, showsFrames: false)
                     .padding(14)
                     .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.surface))
                     .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.hairline))
@@ -442,7 +442,7 @@ private struct BatchRow: View {
         case .done: Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.accent)
         case .failed: Image(systemName: "exclamationmark.circle").foregroundStyle(Theme.danger)
         case .cancelled: Image(systemName: "minus.circle").foregroundStyle(Theme.tertiary)
-        case .waiting: Image(systemName: "circle").foregroundStyle(Theme.tertiary)
+        case .waiting: Image(systemName: "clock").foregroundStyle(Theme.tertiary)
         default: ProgressView().controlSize(.small)
         }
     }
@@ -450,9 +450,9 @@ private struct BatchRow: View {
     private var statusText: String {
         switch item.status {
         case .waiting: return "В очереди"
-        case .reading: return "Читаю файл…"
-        case .transcribing(let p): return "Расшифровываю · \(Int(p * 100)) %"
-        case .saving: return "Сохраняю…"
+        case .reading: return "Чтение файла…"
+        case .transcribing(let p): return "Расшифровка · \(Int(p * 100)) %"
+        case .saving: return "Сохранение…"
         case .done(let n, let reused):
             return "Готово · \(ru(n, "файл", "файла", "файлов"))" + (reused ? " · расшифровка была готова" : "")
         case .failed(let m): return m

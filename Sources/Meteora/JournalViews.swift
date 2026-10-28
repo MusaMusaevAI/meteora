@@ -10,6 +10,7 @@ struct HomeView: View {
     var dropTargeted: Bool
     @State private var query = ""
     @State private var pendingRemoval: JournalEntry?
+    @State private var highlighted: JournalEntry.ID?
     @FocusState private var searchFocused: Bool
 
     var body: some View {
@@ -17,10 +18,16 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 0) {
             header
                 .padding(.top, 34)
-            SearchField(text: $query, focused: $searchFocused)
+            SearchField(text: $query, focused: $searchFocused) {
+                if let e = (highlighted.flatMap { id in results.first { $0.id == id } } ?? results.first),
+                   !journal.missing.contains(e.id) { open(e) }
+            }
+            .onKeyPress(.downArrow) { move(1, in: results); return .handled }
+            .onKeyPress(.upArrow) { move(-1, in: results); return .handled }
+            .onChange(of: query) { _, _ in highlighted = nil }
                 .padding(.top, 22)
             HStack(alignment: .firstTextBaseline) {
-                Text(query.isEmpty ? "Недавние встречи" : "Найдено")
+                Text(query.isEmpty ? "Недавние записи" : "Найдено")
                     .font(Theme.ui(12, weight: .semibold))
                     .foregroundStyle(Theme.secondary)
                 Spacer()
@@ -47,6 +54,7 @@ struct HomeView: View {
                         ForEach(results) { entry in
                             JournalRow(entry: entry, query: query,
                                        missing: journal.missing.contains(entry.id),
+                                       highlighted: highlighted == entry.id,
                                        open: { open(entry) },
                                        remove: { pendingRemoval = entry })
                             if entry.id != results.last?.id { Hairline().padding(.leading, 58) }
@@ -102,6 +110,12 @@ struct HomeView: View {
         }
     }
 
+    private func move(_ step: Int, in results: [JournalEntry]) {
+        guard !results.isEmpty else { return }
+        let i = highlighted.flatMap { id in results.firstIndex { $0.id == id } } ?? (step > 0 ? -1 : results.count)
+        highlighted = results[max(0, min(results.count - 1, i + step))].id
+    }
+
     private func open(_ entry: JournalEntry) {
         guard let url = journal.resolve(entry) else { return }
         model.open(url)
@@ -111,11 +125,13 @@ struct HomeView: View {
 struct SearchField: View {
     @Binding var text: String
     var focused: FocusState<Bool>.Binding
+    var onSubmit: () -> Void = {}
 
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass").foregroundStyle(Theme.tertiary)
-            TextField("Поиск по встречам и расшифровкам", text: $text)
+            TextField("Поиск по названиям и расшифровкам", text: $text)
+                .onSubmit(onSubmit)
                 .textFieldStyle(.plain)
                 .font(Theme.ui(13.5))
                 .focused(focused)
@@ -138,6 +154,7 @@ struct JournalRow: View {
     var entry: JournalEntry
     var query: String
     var missing: Bool
+    var highlighted: Bool = false
     var open: () -> Void
     var remove: () -> Void
     @State private var hover = false
@@ -182,7 +199,7 @@ struct JournalRow: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 11)
-        .background(hover && !missing ? Theme.accentSoft.opacity(0.45) : Color.clear)
+        .background(highlighted ? Theme.accentSoft : hover && !missing ? Theme.accentSoft.opacity(0.45) : Color.clear)
         .contentShape(Rectangle())
         .onHover { h in withAnimation(.easeOut(duration: 0.12)) { hover = h } }
         .onTapGesture { if !missing { open() } }
@@ -200,7 +217,7 @@ struct JournalRow: View {
     private var subtitle: String {
         if missing { return "Файл не найден — его переместили или удалили" }
         var parts = [Self.dateText(entry.date), Self.durationText(entry.duration)]
-        if entry.hasTranscript { parts.append("расшифровка") }
+        if entry.hasTranscript { parts.append("есть расшифровка") }
         return parts.joined(separator: "  ·  ")
     }
 
@@ -252,7 +269,7 @@ struct DropOverlay: View {
                 Image(systemName: "arrow.down.circle.fill")
                     .font(.system(size: 28, weight: .light))
                     .foregroundStyle(Theme.accent)
-                Text("Отпустите — откроем запись").font(Theme.ui(14, weight: .medium)).foregroundStyle(Theme.text)
+                Text("Отпустите, чтобы открыть").font(Theme.ui(14, weight: .medium)).foregroundStyle(Theme.text)
             }
         }
         .padding(16)

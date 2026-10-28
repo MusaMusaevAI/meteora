@@ -255,6 +255,7 @@ struct StorageView: View {
             }
         }
         .toggleStyle(.checkbox)
+        .tint(Theme.accent)
         .padding(.horizontal, 12).padding(.vertical, 9)
     }
 }

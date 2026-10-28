@@ -23,7 +23,7 @@ struct BottomPanel: View {
                     }
                 }
                 if model.showsTranscriptTab {
-                    TabTitle(title: "Расшифровка", count: model.displayedSegments.count, selected: tab == .transcript) {
+                    TabTitle(title: "Расшифровка", count: transcriptRowCount(model.displayedSegments), selected: tab == .transcript) {
                         model.bottomTab = .transcript
                     }
                 }
@@ -116,7 +116,7 @@ struct TranscriptList: View {
             ScrollView(.vertical) {
                 LazyVStack(alignment: .leading, spacing: settings.showParagraphs ? 6 : 2) {
                     if rows.isEmpty {
-                        Text(model.transcribeProgress != nil ? "Слушаю запись… первые фразы появятся через несколько секунд."
+                        Text(model.transcribeProgress != nil ? "Идёт расшифровка — первые фразы появятся через несколько секунд."
                                                              : "Речь не найдена.")
                             .font(Theme.ui(12.5)).foregroundStyle(Theme.secondary).padding(.vertical, 6)
                     }
@@ -136,7 +136,13 @@ struct TranscriptList: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .padding(.vertical, settings.showParagraphs ? 7 : 5).padding(.horizontal, 8)
-                        .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(i == current ? Theme.accentSoft : .clear))
+                        .background(RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(i == current && !settings.showParagraphs ? Theme.accentSoft : .clear))
+                        .overlay(alignment: .leading) {
+                            if i == current && settings.showParagraphs {
+                                Capsule().fill(Theme.accent).frame(width: 2).padding(.vertical, 6)
+                            }
+                        }
                         .id(row.id)
                     }
                 }
@@ -155,33 +161,32 @@ struct TranscriptList: View {
     }
 }
 
+enum TranscriptLayout: String, CaseIterable, Identifiable {
+    case paragraphs, phrases
+    var id: String { rawValue }
+    var title: String { self == .paragraphs ? "Абзацы" : "Фразы" }
+}
+
 /// Paragraphs | phrases switch in the transcript tab header.
 struct TranscriptLayoutPicker: View {
     @ObservedObject var settings = ExportSettings.shared
     var body: some View {
-        HStack(spacing: 2) {
-            option("Абзацы", "text.alignleft", true)
-            option("Фразы", "list.bullet", false)
-        }
-        .padding(2)
-        .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(Theme.surfaceSunken.opacity(0.6)))
+        PillPicker(options: TranscriptLayout.allCases,
+                   selection: Binding(get: { settings.showParagraphs ? .paragraphs : .phrases },
+                                      set: { settings.showParagraphs = $0 == .paragraphs })) { $0.title }
+            .frame(width: 160)
+            .help("Абзацы — фразы склеены по паузам")
     }
+}
 
-    private func option(_ title: String, _ icon: String, _ value: Bool) -> some View {
-        let on = settings.showParagraphs == value
-        return Button { settings.showParagraphs = value } label: {
-            Image(systemName: icon)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(on ? Theme.text : Theme.tertiary)
-                .frame(width: 26, height: 20)
-                .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(on ? Theme.surface : .clear))
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .help(value ? "Абзацы: фразы склеены по паузам" : "Каждая фраза отдельно")
-        .accessibilityLabel(title)
-        .accessibilityAddTraits(on ? .isSelected : [])
-    }
+/// How many rows the transcript panel shows in the current layout.
+@MainActor
+func transcriptRowCount(_ segments: [TranscriptSegment]) -> Int {
+    let settings = ExportSettings.shared
+    guard settings.showParagraphs else { return segments.count }
+    var opts = settings.options
+    opts.paragraphs = true
+    return TranscriptExporter.paragraphs(segments, options: opts).count
 }
 
 // MARK: - Sidebar card
