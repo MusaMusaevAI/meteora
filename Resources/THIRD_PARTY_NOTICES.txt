@@ -18,3 +18,43 @@ ONNX Runtime (statically linked)
 Silero VAD (voice activity detection model, bundled)
   Copyright (c) Silero Team. MIT License.
   https://github.com/snakers4/silero-vad
+
+FFmpeg 7.1.5 (conversion of rare media formats; separate program, not linked into Meteora)
+  Location: Meteora.app/Contents/XPCServices/com.musamusaev.meteora.converter.xpc/Contents/MacOS/ffmpeg
+  Copyright (c) 2000-2026 the FFmpeg developers. https://ffmpeg.org
+  License: GNU Lesser General Public License, version 2.1 or (at your option) any later
+  version (LGPL-2.1-or-later). The full license text is in FFMPEG_LICENSE_LGPL-2.1.txt.
+
+  FFmpeg is free software; you can redistribute it and/or modify it under the terms of
+  the GNU Lesser General Public License as published by the Free Software Foundation;
+  either version 2.1 of the License, or (at your option) any later version. FFmpeg is
+  distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU Lesser General Public License for more details.
+
+  Built from unmodified source: https://github.com/FFmpeg/FFmpeg, tag n7.1.5
+  (commit 3a0867c2bfda4a4d4309ca1a8cbdc6175e67f587; release tarballs are also published
+  at https://ffmpeg.org/releases/). Build script: scripts/build_ffmpeg.sh
+  in the Meteora repository; the exact configure line of this build is in
+  FFMPEG_BUILD.txt. LGPL only: no --enable-gpl, no --enable-nonfree, no external
+  libraries besides Apple system frameworks and the system zlib. Configure (per arch,
+  arm64 and x86_64; x86_64 adds --disable-x86asm):
+    --arch=<arch> --cc='clang -arch <arch>' --extra-cflags=-mmacosx-version-min=14.0
+    --extra-ldflags=-mmacosx-version-min=14.0 --enable-cross-compile --target-os=darwin
+    --disable-shared --enable-static --disable-debug --enable-stripping
+    --disable-autodetect --disable-everything --disable-network --disable-doc
+    --disable-ffplay --disable-ffprobe --disable-avdevice --disable-postproc
+    --disable-iconv --enable-zlib --enable-videotoolbox --enable-audiotoolbox
+    --enable-demuxer=matroska,avi,asf,flv,mpegps,mpegts,mpegvideo,ogg,mov,mp3,wav,aiff,
+      flac,aac,ac3,eac3,amr,caf,au,w64
+    --enable-decoder=h264,hevc,mpeg4,mpeg1video,mpeg2video,msmpeg4v1,msmpeg4v2,msmpeg4v3,
+      wmv1,wmv2,wmv3,vc1,vp8,vp9,flv,h263,theora,mjpeg,aac,aac_latm,mp1,mp2,mp3,mp1float,
+      mp2float,mp3float,opus,vorbis,flac,alac,wmav1,wmav2,wmapro,wmavoice,wmalossless,
+      ac3,eac3,dca,truehd,mlp,amrnb,amrwb,pcm_*,adpcm_ima_wav,adpcm_ima_qt,adpcm_ms,gsm,gsm_ms
+    --enable-encoder=aac,h264_videotoolbox,mpeg4,pcm_s16le --enable-muxer=mp4,mov,ipod
+    --enable-parser=aac,aac_latm,ac3,amr,dca,flac,gsm,h263,h264,hevc,mjpeg,mlp,mpeg4video,
+      mpegaudio,mpegvideo,opus,vc1,vorbis,vp3,vp8,vp9
+    --enable-bsf=aac_adtstoasc,extract_extradata,h264_mp4toannexb,hevc_mp4toannexb,
+      mpeg4_unpack_bframes,null,vp9_superframe_split
+    --enable-filter=aresample,scale,format,null,anull,aformat,bwdif
+    --enable-protocol=fd,pipe,file

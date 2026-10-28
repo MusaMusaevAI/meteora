@@ -21,7 +21,7 @@ struct LoadedMedia: @unchecked Sendable {
             let origin = info.audio.flatMap { $0.codecID == "A_OPUS" ? AudioOrigin.webm(demuxer, $0) : nil }
             return LoadedMedia(info: info, origin: origin, temporary: nil)
         }
-        if !MediaFormats.converted.contains(url.pathExtension.lowercased()),
+        if !(await MediaConverterSupport.needsConversion(url)),
            let info = try? await AssetProbe.analyze(url: url) {
             return LoadedMedia(info: info, origin: info.audio != nil ? .asset(url) : nil, temporary: nil)
         }

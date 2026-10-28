@@ -18,12 +18,14 @@ final class SelfTest {
     private var errors: [String] = []
 
     let asrWav: URL?
+    let convertFixtures: URL?
 
-    init(model: MeetingModel, input: URL, output: URL, asrWav: URL? = nil) {
+    init(model: MeetingModel, input: URL, output: URL, asrWav: URL? = nil, convertFixtures: URL? = nil) {
         self.model = model
         self.input = input
         self.output = output
         self.asrWav = asrWav
+        self.convertFixtures = convertFixtures
     }
 
     func run() async {
@@ -76,6 +78,7 @@ final class SelfTest {
         }
 
         // 2. Playback in WebKit
+        report["engine"] = model.engine
         if let player = model.player {
             let ok = await wait(30) { player.isReady || player.mediaErrorCode != 0 }
             report["playback"] = ["ready": player.isReady, "mediaError": player.mediaErrorCode,
@@ -252,6 +255,11 @@ final class SelfTest {
             try? await Task.sleep(nanoseconds: 1_200_000_000)
             report["storage"] = StorageModel.scan().map { "\($0.section.title): \($0.title) — \($0.bytes)" }
             snapshotWindow("05-storage", storage: true)
+        }
+        if let dir = convertFixtures {
+            let r = await MediaConverter.runSelfTest(fixtures: dir, output: output.appendingPathComponent("convert", isDirectory: true))
+            report["convert"] = r
+            if r["ok"] as? Bool != true { errors.append("convert: \((r["errors"] as? [String] ?? []).joined(separator: "; "))") }
         }
         finish()
     }

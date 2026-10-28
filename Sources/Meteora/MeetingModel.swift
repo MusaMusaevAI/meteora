@@ -213,7 +213,7 @@ final class MeetingModel: ObservableObject {
         var playable = url
         var engine = "native"
         var probed: MediaInfo?
-        if !MediaFormats.converted.contains(url.pathExtension.lowercased()) {
+        if !(await MediaConverterSupport.needsConversion(url)) {
             probed = try? await AssetProbe.analyze(url: url)
         }
         if token.isCancelled { return }

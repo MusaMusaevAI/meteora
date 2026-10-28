@@ -32,6 +32,12 @@
 			<key>LSHandlerRank</key><string>Alternate</string>
 			<key>LSItemContentTypes</key><array><string>public.movie</string><string>public.audio</string></array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeName</key><string>Видео или звук (конвертируется)</string>
+			<key>CFBundleTypeRole</key><string>Viewer</string>
+			<key>LSHandlerRank</key><string>Alternate</string>
+			<key>CFBundleTypeExtensions</key><array><string>mkv</string><string>mka</string><string>avi</string><string>wmv</string><string>wma</string><string>asf</string><string>flv</string><string>mpeg</string><string>mpg</string><string>vob</string><string>ts</string><string>mts</string><string>m2ts</string><string>ogv</string><string>ogg</string><string>oga</string><string>opus</string><string>amr</string><string>3ga</string></array>
+		</dict>
 	</array>
 	<key>UTImportedTypeDeclarations</key>
 	<array>

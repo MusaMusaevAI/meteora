@@ -8,7 +8,9 @@ BUILD="${BUILD:-${GITHUB_RUN_NUMBER:-1}}"
 APP=build/Meteora.app
 
 scripts/fetch_vendor.sh
+scripts/build_ffmpeg.sh   # no-op when Vendor/ffmpeg is up to date (CI cache)
 swift build -c release --arch arm64 --arch x86_64 --product Meteora
+swift build -c release --arch arm64 --arch x86_64 --product MeteoraConverter
 BIN_DIR=$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)
 
 rm -rf build && mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
@@ -19,6 +21,18 @@ printf 'APPL????' > "$APP/Contents/PkgInfo"
 cp Vendor/models/silero_vad.onnx "$APP/Contents/Resources/silero_vad.onnx"
 cp Resources/THIRD_PARTY_NOTICES.txt "$APP/Contents/Resources/"
 cp -R Resources/Onboarding "$APP/Contents/Resources/Onboarding"
+cp Vendor/ffmpeg/CONFIGURE.txt "$APP/Contents/Resources/FFMPEG_BUILD.txt"
+cp Vendor/ffmpeg/COPYING.LGPLv2.1 "$APP/Contents/Resources/FFMPEG_LICENSE_LGPL-2.1.txt"
+
+# Converter XPC service: its own bundle, Info.plist and sandbox; ffmpeg next
+# to its executable (Contents/MacOS/ffmpeg) so it can be spawned from there.
+XPC="$APP/Contents/XPCServices/com.musamusaev.meteora.converter.xpc"
+mkdir -p "$XPC/Contents/MacOS"
+cp "$BIN_DIR/MeteoraConverter" "$XPC/Contents/MacOS/MeteoraConverter"
+strip -x "$XPC/Contents/MacOS/MeteoraConverter" || true
+cp Vendor/ffmpeg/bin/ffmpeg "$XPC/Contents/MacOS/ffmpeg"
+chmod 755 "$XPC/Contents/MacOS/ffmpeg"
+sed -e "s/__VERSION__/$VERSION/" -e "s/__BUILD__/$BUILD/" Resources/ConverterInfo.plist > "$XPC/Contents/Info.plist"
 
 # Legacy icon for macOS 14–15
 iconutil -c icns Resources/AppIcon.iconset -o "$APP/Contents/Resources/AppIcon.icns"
@@ -35,11 +49,23 @@ else
   echo "actool: .icon not compiled, legacy icon only"; cat build/actool/log.txt || true
 fi
 
-# Sign: hardened runtime + sandbox entitlements
+# Sign inside-out, all with hardened runtime:
+#   ffmpeg (sandbox + inherit) → converter .xpc (sandbox only) → app.
 IDENTITY="${SIGN_IDENTITY:--}"
 codesign --force --options runtime --timestamp=none \
+  --identifier com.musamusaev.meteora.converter.ffmpeg \
+  --entitlements Resources/ffmpeg.entitlements -s "$IDENTITY" "$XPC/Contents/MacOS/ffmpeg"
+codesign --force --options runtime --timestamp=none \
+  --entitlements Resources/MeteoraConverter.entitlements -s "$IDENTITY" "$XPC"
+codesign --force --options runtime --timestamp=none \
   --entitlements Resources/Meteora.entitlements -s "$IDENTITY" "$APP"
-codesign --verify --strict --verbose=2 "$APP"
+codesign --verify --deep --strict --verbose=2 "$APP"
 codesign -d --entitlements - --xml "$APP" 2>/dev/null | plutil -p - || true
+echo "converter service entitlements:"
+codesign -d --entitlements - --xml "$XPC" 2>/dev/null | plutil -p - || true
+echo "ffmpeg entitlements:"
+codesign -d --entitlements - --xml "$XPC/Contents/MacOS/ffmpeg" 2>/dev/null | plutil -p - || true
 lipo -info "$APP/Contents/MacOS/Meteora"
+lipo -info "$XPC/Contents/MacOS/MeteoraConverter"
+lipo -info "$XPC/Contents/MacOS/ffmpeg"
 du -sh "$APP"

@@ -7,6 +7,11 @@ cd "$(dirname "$0")/.."
 BASE="$HOME/Downloads/meteora-selftest"
 rm -rf "$BASE"; mkdir -p "$BASE/in" "$BASE/out"
 cp Tests/MeteoraCoreTests/Fixtures/*.webm "$BASE/in/"
+# Rare-format fixtures for the isolated converter (MKV, AVI, OGG, WMV).
+mkdir -p "$BASE/in/convert"
+cp Tests/MeteoraCoreTests/Fixtures/convert/* "$BASE/in/convert/"
+# One rare format also goes through the whole app (convert → play → frames).
+cp Tests/MeteoraCoreTests/Fixtures/convert/vp9-opus.mkv "$BASE/in/"
 [ -f /tmp/long-1920.webm ] && cp /tmp/long-1920.webm "$BASE/in/"
 [ -f /tmp/ru-example.wav ] && cp /tmp/ru-example.wav "$BASE/in/"
 # Formats macOS opens itself (the native AVFoundation path).
@@ -20,13 +25,13 @@ fi
 APP="$PWD/build/Meteora.app"
 status=0
 
-run() { # input-file-name
-  local file=$1 name="${1%.*}-${1##*.}" out="$BASE/out/${1%.*}-${1##*.}"
+run() { # input-file-name [extra app arguments…]
+  local file=$1 name="${1%.*}-${1##*.}" out="$BASE/out/${1%.*}-${1##*.}"; shift
   [ -f "$BASE/in/$file" ] || return 0
   mkdir -p "$out"
   echo "== selftest $name"
   open -n -W --env METEORA_SELFTEST=1 --env METEORA_SELFTEST_ASR=1 --stdout "$out/stdout.txt" --stderr "$out/stderr.txt" \
-       -a "$APP" --args --selftest "$BASE/in/$file" "$out" --asr-wav "$BASE/in/ru-example.wav" &
+       -a "$APP" --args --selftest "$BASE/in/$file" "$out" --asr-wav "$BASE/in/ru-example.wav" "$@" &
   local pid=$!
   for _ in $(seq 1 420); do kill -0 $pid 2>/dev/null || break; sleep 1; done
   if kill -0 $pid 2>/dev/null; then
@@ -38,6 +43,11 @@ run() { # input-file-name
   python3 -c "import json,sys; sys.exit(0 if json.load(open('$out/report.json')).get('ok') else 1)"
 }
 
-for f in slides.webm long-1920.webm audio-only.webm slides.mp4 speech.m4a speech.flac; do run "$f" || status=1; done
+run slides.webm || status=1
+run long-1920.webm || status=1
+# --convert-fixtures <dir>: SelfTest converts every file in <dir> through the
+# converter XPC service (MediaConverter.runSelfTest) into <out>/convert.
+run audio-only.webm --convert-fixtures "$BASE/in/convert" || status=1
+for f in slides.mp4 speech.m4a speech.flac vp9-opus.mkv; do run "$f" || status=1; done
 mkdir -p selftest-out && cp -R "$BASE/out/." selftest-out/
 exit $status

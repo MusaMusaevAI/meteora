@@ -139,8 +139,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if isSelfTest,
            let i = args.firstIndex(of: "--selftest"), args.count > i + 2 {
             let wav = args.firstIndex(of: "--asr-wav").flatMap { $0 + 1 < args.count ? URL(fileURLWithPath: args[$0 + 1]) : nil }
+            let convert = args.firstIndex(of: "--convert-fixtures").flatMap { $0 + 1 < args.count ? URL(fileURLWithPath: args[$0 + 1], isDirectory: true) : nil }
             let test = SelfTest(model: model, input: URL(fileURLWithPath: args[i + 1]),
-                                output: URL(fileURLWithPath: args[i + 2], isDirectory: true), asrWav: wav)
+                                output: URL(fileURLWithPath: args[i + 2], isDirectory: true), asrWav: wav,
+                                convertFixtures: convert)
             selfTest = test
             Task { await test.run() }
         }

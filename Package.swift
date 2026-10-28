@@ -16,6 +16,9 @@ let package = Package(
     platforms: [.macOS(.v14)],
     products: [
         .executable(name: "Meteora", targets: ["Meteora"]),
+        // Isolated converter for rare formats, bundled as
+        // Meteora.app/Contents/XPCServices/com.musamusaev.meteora.converter.xpc
+        .executable(name: "MeteoraConverter", targets: ["MeteoraConverter"]),
     ],
     targets: [
         // Pure logic + media pipeline. No UI, no networking.
@@ -38,9 +41,21 @@ let package = Package(
             dependencies: ["MeteoraCore", "CSherpaOnnx"],
             path: "Sources/MeteoraASR"
         ),
+        // NSXPC protocol shared by the app and the converter service.
+        .target(
+            name: "MeteoraConverterProtocol",
+            path: "Sources/MeteoraConverterProtocol"
+        ),
+        // XPC service: runs the bundled ffmpeg (sandbox-inherited) on file
+        // descriptors passed by the app. No network, no file access.
+        .executableTarget(
+            name: "MeteoraConverter",
+            dependencies: ["MeteoraConverterProtocol"],
+            path: "Sources/MeteoraConverter"
+        ),
         .executableTarget(
             name: "Meteora",
-            dependencies: ["MeteoraCore", "MeteoraASR"],
+            dependencies: ["MeteoraCore", "MeteoraASR", "MeteoraConverterProtocol"],
             path: "Sources/Meteora"
         ),
         .testTarget(

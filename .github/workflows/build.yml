@@ -16,7 +16,7 @@ concurrency:
 jobs:
   macos:
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 60
     outputs:
       status: ${{ steps.summary.outputs.status }}
     steps:
@@ -46,6 +46,23 @@ jobs:
         id: tests
         continue-on-error: true
         run: swift test 2>&1 | tee logs/tests.txt
+      # FFmpeg for the isolated converter: built from pinned, verified source
+      # (scripts/build_ffmpeg.sh). Restore/save are separate so the cache is
+      # saved even when a later step (tests, self-test) fails the job.
+      - name: Restore FFmpeg build
+        id: ffmpeg-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: Vendor/ffmpeg
+          key: ffmpeg-7.1.5-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/build_ffmpeg.sh') }}
+      - name: FFmpeg (pinned source, LGPL, minimal)
+        run: scripts/build_ffmpeg.sh 2>&1 | tee logs/ffmpeg.txt
+      - name: Save FFmpeg build
+        if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: Vendor/ffmpeg
+          key: ffmpeg-7.1.5-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/build_ffmpeg.sh') }}
       - name: Build app
         id: app
         run: scripts/build_app.sh 2>&1 | tee logs/build.txt
