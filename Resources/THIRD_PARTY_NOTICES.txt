@@ -1,4 +1,4 @@
-Volant includes or downloads the following third-party components.
+Meteora includes or downloads the following third-party components.
 
 GigaAM-v3 (speech recognition model, downloaded on demand)
   Copyright (c) 2024 GigaChat Team (Sber). MIT License.

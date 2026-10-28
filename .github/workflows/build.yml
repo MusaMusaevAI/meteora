@@ -92,6 +92,6 @@ jobs:
           echo "$GITHUB_SHA" > SOURCE_SHA
           echo "$JOB_STATUS" > STATUS
           git init -q -b build-output
-          git -c user.name="volant-ci" -c user.email="volant-ci@users.noreply.github.com" add -A
-          git -c user.name="volant-ci" -c user.email="volant-ci@users.noreply.github.com" commit -qm "build $GITHUB_SHA"
+          git -c user.name="meteora-ci" -c user.email="meteora-ci@users.noreply.github.com" add -A
+          git -c user.name="meteora-ci" -c user.email="meteora-ci@users.noreply.github.com" commit -qm "build $GITHUB_SHA"
           git push -qf "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" build-output

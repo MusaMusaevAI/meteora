@@ -3,7 +3,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 rm -rf out && mkdir -p out
-cp build/Volant.dmg build/Volant.dmg.sha256 out/ 2>/dev/null || true
+cp build/Meteora.dmg build/Meteora.dmg.sha256 out/ 2>/dev/null || true
 cp -R logs out/ 2>/dev/null || true
 cp build/actool/log.txt out/logs/actool.txt 2>/dev/null || true
 if [ -d selftest-out ]; then

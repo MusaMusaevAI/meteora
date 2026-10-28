@@ -1,7 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <path d="M554.40,789.84 L766.40,285.84 A46.0,46.0 0 0 0 681.60,250.16 L469.60,754.16 A46.0,46.0 0 0 0 554.40,789.84 Z" fill="#1D5C45"/>
-  <path d="M554.40,754.16 L469.60,552.56 A46.0,46.0 0 0 0 384.80,588.24 L469.60,789.84 A46.0,46.0 0 0 0 554.40,754.16 Z" fill="#1D5C45"/>
-  <path d="M424.67,484.15 L384.39,388.39 A38.0,38.0 0 0 0 314.33,417.85 L354.61,513.61 A38.0,38.0 0 0 0 424.67,484.15 Z" fill="#1D5C45"/>
-  <circle cx="303.56" cy="319.52" r="32" fill="#1D5C45"/>
-  <circle cx="245.40" cy="214.80" r="20" fill="#1D5C45"/>
+  <defs><linearGradient id="t" gradientUnits="userSpaceOnUse" x1="392" y1="390" x2="151.51" y2="95.78"><stop offset="0" stop-color="#33506B" stop-opacity="1"/><stop offset="0.3" stop-color="#BCD4EC" stop-opacity="0.95"/><stop offset="0.55" stop-color="#D6CDEE" stop-opacity="0.75"/><stop offset="0.78" stop-color="#EBC6D6" stop-opacity="0.45"/><stop offset="1" stop-color="#F1E2CC" stop-opacity="0"/></linearGradient></defs>
+  <path d="M426.07,362.15 Q276.76,214.26 151.51,95.78 Q242.70,242.10 357.93,417.85 A44.0,44.0 0 0 1 426.07,362.15 Z" fill="url(#t)"/>
+  <polyline points="392,802 392,390 580,620 768,390 768,802" fill="none" stroke="#33506B" stroke-width="88" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

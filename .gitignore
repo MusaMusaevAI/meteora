@@ -7,3 +7,4 @@ selftest-out/
 *.xcodeproj/
 .swiftpm/
 Vendor/
+__pycache__/

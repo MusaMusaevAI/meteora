@@ -4,12 +4,12 @@
 # ~/Downloads because the sandbox only grants access there.
 set -uo pipefail
 cd "$(dirname "$0")/.."
-BASE="$HOME/Downloads/volant-selftest"
+BASE="$HOME/Downloads/meteora-selftest"
 rm -rf "$BASE"; mkdir -p "$BASE/in" "$BASE/out"
-cp Tests/VolantCoreTests/Fixtures/*.webm "$BASE/in/"
+cp Tests/MeteoraCoreTests/Fixtures/*.webm "$BASE/in/"
 [ -f /tmp/long-1920.webm ] && cp /tmp/long-1920.webm "$BASE/in/"
 [ -f /tmp/ru-example.wav ] && cp /tmp/ru-example.wav "$BASE/in/"
-APP="$PWD/build/Volant.app"
+APP="$PWD/build/Meteora.app"
 status=0
 
 run() { # input-name
@@ -17,12 +17,12 @@ run() { # input-name
   [ -f "$BASE/in/$name.webm" ] || return 0
   mkdir -p "$out"
   echo "== selftest $name"
-  open -n -W --env VOLANT_SELFTEST=1 --env VOLANT_SELFTEST_ASR=1 --stdout "$out/stdout.txt" --stderr "$out/stderr.txt" \
+  open -n -W --env METEORA_SELFTEST=1 --env METEORA_SELFTEST_ASR=1 --stdout "$out/stdout.txt" --stderr "$out/stderr.txt" \
        -a "$APP" --args --selftest "$BASE/in/$name.webm" "$out" --asr-wav "$BASE/in/ru-example.wav" &
   local pid=$!
   for _ in $(seq 1 420); do kill -0 $pid 2>/dev/null || break; sleep 1; done
   if kill -0 $pid 2>/dev/null; then
-    echo "timeout"; pkill -9 -f "Volant.app/Contents/MacOS/Volant" || true; kill $pid 2>/dev/null
+    echo "timeout"; pkill -9 -f "Meteora.app/Contents/MacOS/Meteora" || true; kill $pid 2>/dev/null
     echo '{"ok":false,"errors":["timeout"]}' > "$out/report.json"
   fi
   wait $pid 2>/dev/null

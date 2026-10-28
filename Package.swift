@@ -11,17 +11,17 @@ let sherpaLibs = [
 ]
 
 let package = Package(
-    name: "Volant",
+    name: "Meteora",
     defaultLocalization: "ru",
     platforms: [.macOS(.v14)],
     products: [
-        .executable(name: "Volant", targets: ["Volant"]),
+        .executable(name: "Meteora", targets: ["Meteora"]),
     ],
     targets: [
         // Pure logic + media pipeline. No UI, no networking.
         .target(
-            name: "VolantCore",
-            path: "Sources/VolantCore"
+            name: "MeteoraCore",
+            path: "Sources/MeteoraCore"
         ),
         // C API of sherpa-onnx (speech recognition runtime).
         .target(
@@ -34,19 +34,19 @@ let package = Package(
         ),
         // On-device transcription with GigaAM-v3 + model download/verification.
         .target(
-            name: "VolantASR",
-            dependencies: ["VolantCore", "CSherpaOnnx"],
-            path: "Sources/VolantASR"
+            name: "MeteoraASR",
+            dependencies: ["MeteoraCore", "CSherpaOnnx"],
+            path: "Sources/MeteoraASR"
         ),
         .executableTarget(
-            name: "Volant",
-            dependencies: ["VolantCore", "VolantASR"],
-            path: "Sources/Volant"
+            name: "Meteora",
+            dependencies: ["MeteoraCore", "MeteoraASR"],
+            path: "Sources/Meteora"
         ),
         .testTarget(
-            name: "VolantCoreTests",
-            dependencies: ["VolantCore"],
-            path: "Tests/VolantCoreTests",
+            name: "MeteoraCoreTests",
+            dependencies: ["MeteoraCore"],
+            path: "Tests/MeteoraCoreTests",
             resources: [.copy("Fixtures")]
         ),
     ]

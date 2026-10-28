@@ -1,100 +1,118 @@
 #!/usr/bin/env python3
-"""Builds the Volant icon sources from one geometry (same as Logo.swift):
-- Resources/AppIcon.icon (Icon Composer document: white / black background)
-- Resources/AppIcon.iconset (legacy PNGs for macOS 14–15)
+"""Builds the Meteora icon sources from one geometry (same as Logo.swift):
+- Resources/AppIcon.icon (Icon Composer: pearl-white / gunmetal background)
+- Resources/AppIcon.iconset (legacy PNGs for macOS 14-15)
 - docs/icon-light.png, docs/icon-dark.png (previews)
+
+The mark: an "M" whose first diagonal arrives as a meteor, a tapering trail
+fading from the accent into mother-of-pearl (Amouage Portrayal / Reflection 45).
 """
 import json, math, os
 from PIL import Image, ImageDraw, ImageFilter
 
-V, RT, LT = (512, 772), (724, 268), (300, 268)
-W = 92
-# Left arm dissolves: (t0, t1, width, offset) dashes, then (t, radius, offset) dots
-DASHES = [(0, 0.40, 92, (0, 0)), (0.53, 0.72, 76, (-10, -6))]
-DOTS = [(0.87, 32, (-24, -14)), (1.05, 20, (-44, -28))]
-GREEN, GREEN_DARK = "#1D5C45", "#5DA683"
+A, B, C, D, E = (392, 802), (392, 390), (580, 620), (768, 390), (768, 802)
+STROKE, TAIL = 88, 380
+ACCENT, ACCENT_DARK = "#33506B", "#9DB8D3"
+BG, BG_DARK = (251, 251, 250), (20, 22, 25)
+NACRE = ["#BCD4EC", "#D6CDEE", "#EBC6D6", "#F1E2CC"]
+# (offset, colour index or None for the accent, opacity)
+STOPS = [(0, None, 1), (0.30, 0, 0.95), (0.55, 1, 0.75), (0.78, 2, 0.45), (1, 3, 0)]
 
-def lerp(t):
-    return (V[0] + (LT[0] - V[0]) * t, V[1] + (LT[1] - V[1]) * t)
+dx, dy = B[0] - C[0], B[1] - C[1]
+n = math.hypot(dx, dy)
+U = (dx / n, dy / n)
+TIP = (B[0] + U[0] * TAIL, B[1] + U[1] * TAIL)
 
-def capsule(p, q, w):
-    (x1, y1), (x2, y2) = p, q
-    dx, dy = x2 - x1, y2 - y1
-    L = math.hypot(dx, dy); nx, ny = -dy / L * w / 2, dx / L * w / 2
-    r = w / 2
-    return (f"M{x1+nx:.2f},{y1+ny:.2f} L{x2+nx:.2f},{y2+ny:.2f} "
-            f"A{r},{r} 0 0 0 {x2-nx:.2f},{y2-ny:.2f} L{x1-nx:.2f},{y1-ny:.2f} "
-            f"A{r},{r} 0 0 0 {x1+nx:.2f},{y1+ny:.2f} Z")
+def hexrgb(h):
+    h = h.lstrip("#"); return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
 
-def off(p, o):
-    return (p[0] + o[0], p[1] + o[1])
+def tail_svg_path():
+    r = STROKE / 2; nx, ny = -U[1] * r, U[0] * r
+    c1 = (B[0] + nx * .5 + U[0] * TAIL * .55, B[1] + ny * .5 + U[1] * TAIL * .55)
+    c2 = (B[0] - nx * .5 + U[0] * TAIL * .55, B[1] - ny * .5 + U[1] * TAIL * .55)
+    return (f"M{B[0]+nx:.2f},{B[1]+ny:.2f} Q{c1[0]:.2f},{c1[1]:.2f} {TIP[0]:.2f},{TIP[1]:.2f} "
+            f"Q{c2[0]:.2f},{c2[1]:.2f} {B[0]-nx:.2f},{B[1]-ny:.2f} A{r},{r} 0 0 1 {B[0]+nx:.2f},{B[1]+ny:.2f} Z")
 
-def segments():
-    segs = [(V, RT, W)] + [(off(lerp(a), o), off(lerp(b), o), w) for a, b, w, o in DASHES]
-    dots = [(off(lerp(t), o), r) for t, r, o in DOTS]
-    return segs, dots
+def svg(accent):
+    stops = "".join(
+        f'<stop offset="{o}" stop-color="{accent if c is None else NACRE[c]}" stop-opacity="{a}"/>' for o, c, a in STOPS)
+    pts = " ".join(f"{x},{y}" for x, y in (A, B, C, D, E))
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs><linearGradient id="t" gradientUnits="userSpaceOnUse" x1="{B[0]}" y1="{B[1]}" x2="{TIP[0]:.2f}" y2="{TIP[1]:.2f}">{stops}</linearGradient></defs>
+  <path d="{tail_svg_path()}" fill="url(#t)"/>
+  <polyline points="{pts}" fill="none" stroke="{accent}" stroke-width="{STROKE}" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+'''
 
-def svg(color):
-    segs, dots = segments()
-    paths = "\n".join(f'  <path d="{capsule(p, q, w)}" fill="{color}"/>' for p, q, w in segs)
-    circles = "\n".join(f'  <circle cx="{c[0]:.2f}" cy="{c[1]:.2f}" r="{r}" fill="{color}"/>' for c, r in dots)
-    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">\n{paths}\n{circles}\n</svg>\n')
+def stop_color(t, accent):
+    for (o0, c0, a0), (o1, c1, a1) in zip(STOPS, STOPS[1:]):
+        if o0 <= t <= o1:
+            f = (t - o0) / (o1 - o0)
+            k0 = hexrgb(accent if c0 is None else NACRE[c0]); k1 = hexrgb(accent if c1 is None else NACRE[c1])
+            return tuple(round(k0[i] + (k1[i] - k0[i]) * f) for i in range(3)), a0 + (a1 - a0) * f
+    return hexrgb(NACRE[-1]), 0
 
-def draw_glyph(img, color, scale, offset=(0, 0)):
-    d = ImageDraw.Draw(img)
-    segs, dots = segments()
-    ox, oy = offset
-    for p, q, w in segs:
-        d.line([(ox + p[0]*scale, oy + p[1]*scale), (ox + q[0]*scale, oy + q[1]*scale)], fill=color, width=round(w*scale))
-        for e in (p, q):
-            r = w * scale / 2
-            d.ellipse([ox + e[0]*scale - r, oy + e[1]*scale - r, ox + e[0]*scale + r, oy + e[1]*scale + r], fill=color)
-    for c, r0 in dots:
-        r = r0 * scale
-        d.ellipse([ox + c[0]*scale - r, oy + c[1]*scale - r, ox + c[0]*scale + r, oy + c[1]*scale + r], fill=color)
+def draw_glyph(img, accent, k, off):
+    """Raster version of the same glyph (k = px per unit, off = origin)."""
+    W = img.size[0]
+    # tail: march along the axis with shrinking discs (matches the taper)
+    tail = Image.new("RGBA", img.size, (0, 0, 0, 0)); td = ImageDraw.Draw(tail)
+    steps = 700
+    for i in range(steps, -1, -1):
+        t = i / steps
+        cx, cy = B[0] + U[0] * TAIL * t, B[1] + U[1] * TAIL * t
+        r = STROKE / 2 * (1 - t) ** 1.2
+        if r * k < 0.3: continue
+        col, a = stop_color(t, accent)
+        td.ellipse([off[0] + (cx - r) * k, off[1] + (cy - r) * k, off[0] + (cx + r) * k, off[1] + (cy + r) * k], fill=col + (int(255 * a),))
+    img.alpha_composite(tail)
+    g = Image.new("RGBA", img.size, (0, 0, 0, 0)); d = ImageDraw.Draw(g)
+    col = hexrgb(accent) + (255,)
+    pts = [A, B, C, D, E]
+    for p, q in zip(pts, pts[1:]):
+        d.line([(off[0] + p[0] * k, off[1] + p[1] * k), (off[0] + q[0] * k, off[1] + q[1] * k)], fill=col, width=round(STROKE * k))
+    for p in pts:
+        r = STROKE * k / 2
+        d.ellipse([off[0] + p[0] * k - r, off[1] + p[1] * k - r, off[0] + p[0] * k + r, off[1] + p[1] * k + r], fill=col)
+    img.alpha_composite(g)
 
 def legacy_icon(size, dark=False):
-    """macOS 11–15 style: rounded square on a transparent canvas (824/1024)."""
+    """macOS 11-15 style: rounded square on a transparent canvas (824/1024)."""
     S = 4 * size
     img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
     inset = S * 100 / 1024; side = S - 2 * inset; radius = side * 0.2237
     shadow = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    ImageDraw.Draw(shadow).rounded_rectangle([inset, inset + S*0.012, inset + side, inset + side + S*0.012], radius, fill=(0, 0, 0, 70))
-    img = Image.alpha_composite(img, shadow.filter(ImageFilter.GaussianBlur(S * 0.012)))
+    ImageDraw.Draw(shadow).rounded_rectangle([inset, inset + S * 0.012, inset + side, inset + side + S * 0.012], radius, fill=(0, 0, 0, 70))
+    img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(S * 0.012)))
     bg = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    ImageDraw.Draw(bg).rounded_rectangle([inset, inset, inset + side, inset + side], radius,
-                                         fill=(0, 0, 0, 255) if dark else (255, 255, 255, 255))
-    img = Image.alpha_composite(img, bg)
+    ImageDraw.Draw(bg).rounded_rectangle([inset, inset, inset + side, inset + side], radius, fill=(BG_DARK if dark else BG) + (255,))
+    img.alpha_composite(bg)
     glyph = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    k = side / 1024
-    draw_glyph(glyph, GREEN_DARK if dark else GREEN, k, (inset, inset))
-    img = Image.alpha_composite(img, glyph)
+    draw_glyph(glyph, ACCENT_DARK if dark else ACCENT, side / 1024, (inset, inset))
+    mask = Image.new("L", (S, S), 0)
+    ImageDraw.Draw(mask).rounded_rectangle([inset, inset, inset + side, inset + side], radius, fill=255)
+    img.paste(glyph, (0, 0), Image.composite(glyph, Image.new("RGBA", (S, S)), mask).getchannel("A"))
     return img.resize((size, size), Image.LANCZOS)
 
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 res = os.path.join(root, "Resources")
-with open(os.path.join(res, "AppIcon.icon/Assets/glyph.svg"), "w") as f: f.write(svg(GREEN))
-with open(os.path.join(res, "AppIcon.icon/Assets/glyph-dark.svg"), "w") as f: f.write(svg(GREEN_DARK))
+with open(os.path.join(res, "AppIcon.icon/Assets/glyph.svg"), "w") as f: f.write(svg(ACCENT))
+with open(os.path.join(res, "AppIcon.icon/Assets/glyph-dark.svg"), "w") as f: f.write(svg(ACCENT_DARK))
+srgb = lambda c: "srgb:" + ",".join(f"{v / 255:.5f}" for v in c) + ",1.00000"
 icon = {
-    "fill": {"solid": "srgb:1.00000,1.00000,1.00000,1.00000"},
-    "fill-specializations": [
-        {"appearance": "dark", "value": {"solid": "srgb:0.00000,0.00000,0.00000,1.00000"}}
-    ],
+    "fill": {"solid": srgb(BG)},
+    "fill-specializations": [{"appearance": "dark", "value": {"solid": srgb(BG_DARK)}}],
     "groups": [{
         "layers": [{
-            "image-name-specializations": [
-                {"value": "glyph.svg"},
-                {"appearance": "dark", "value": "glyph-dark.svg"}
-            ],
-            "name": "glyph",
-            "glass": False,
-            "position": {"scale": 1, "translation-in-points": [0, 0]}
+            "image-name-specializations": [{"value": "glyph.svg"}, {"appearance": "dark", "value": "glyph-dark.svg"}],
+            "name": "glyph", "glass": False,
+            "position": {"scale": 1, "translation-in-points": [0, 0]},
         }],
         "shadow": {"kind": "none", "opacity": 0.5},
         "translucency": {"enabled": False, "value": 0.5},
-        "specular": False
+        "specular": False,
     }],
-    "supported-platforms": {"squares": "shared"}
+    "supported-platforms": {"squares": "shared"},
 }
 with open(os.path.join(res, "AppIcon.icon/icon.json"), "w") as f: json.dump(icon, f, indent=2, ensure_ascii=False)
 
