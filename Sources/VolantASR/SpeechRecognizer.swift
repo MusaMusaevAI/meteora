@@ -4,7 +4,7 @@ import CSherpaOnnx
 import VolantCore
 
 /// Pinned at build time from the official model card (see scripts/fetch_vendor.sh).
-let tokensSHA256 = "UNPINNED"
+let tokensSHA256 = "39abae20e692998290c574e606f11a9edef2902a1995463fcff63d1490cf22b7"
 
 public enum RecognizerError: Error, LocalizedError, Equatable {
     case modelLoad

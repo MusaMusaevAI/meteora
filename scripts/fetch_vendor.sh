@@ -8,7 +8,7 @@ SHERPA_VERSION=v2.0.1
 SHERPA_TAR=sherpa-onnx-${SHERPA_VERSION}-osx-universal2-static-no-tts-lib.tar.bz2
 SHERPA_SHA256=bd4cdc1c4122d249c46187fb36528733186f7bf52e8ceae716bd37255550a567
 VAD_URL=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
-VAD_SHA256="${VAD_SHA256:-UNPINNED}"
+VAD_SHA256=9e2449e1087496d8d4caba907f23e0bd3f78d91fa552479bb9c23ac09cbb1fd6
 
 verify() { # file expected
   local got; got=$(shasum -a 256 "$1" | cut -d' ' -f1)
