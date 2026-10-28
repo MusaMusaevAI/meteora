@@ -219,6 +219,7 @@ struct StorageView: View {
                     confirming = true
                 } label: {
                     Text("Удалить выбранное")
+                        .lineLimit(1)
                         .font(Theme.ui(13, weight: .medium)).foregroundStyle(.white)
                         .padding(.horizontal, 14).frame(minHeight: 30)
                         .background(RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous).fill(Theme.danger))
@@ -226,6 +227,8 @@ struct StorageView: View {
                         .fixedSize()
                 }
                 .buttonStyle(.plain)
+                .fixedSize()
+                .layoutPriority(1)
                 .disabled(store.selected.isEmpty || store.deleting)
             }
         }
