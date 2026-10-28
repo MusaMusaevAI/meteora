@@ -16,7 +16,12 @@ cp Tests/MeteoraCoreTests/Fixtures/convert/vp9-opus.mkv "$BASE/in/"
 [ -f /tmp/ru-example.wav ] && cp /tmp/ru-example.wav "$BASE/in/"
 # Formats macOS opens itself (the native AVFoundation path).
 if command -v swift >/dev/null; then
-  swift scripts/make_native_fixtures.swift "$BASE/in" "$BASE/in/ru-example.wav" || echo "no mp4 fixture"
+  echo "== making native fixtures"
+  swift scripts/make_native_fixtures.swift "$BASE/in" "$BASE/in/ru-example.wav" &
+  fx=$!
+  for _ in $(seq 1 240); do kill -0 $fx 2>/dev/null || break; sleep 1; done
+  if kill -0 $fx 2>/dev/null; then echo "fixture maker timed out"; kill -9 $fx; rm -f "$BASE/in/slides.mp4"; fi
+  wait $fx 2>/dev/null || echo "no mp4 fixture"
 fi
 if [ -f "$BASE/in/ru-example.wav" ]; then
   afconvert -f m4af -d aac "$BASE/in/ru-example.wav" "$BASE/in/speech.m4a" || true
@@ -40,6 +45,7 @@ run() { # input-file-name [extra app arguments…]
   fi
   wait $pid 2>/dev/null
   cat "$out/report.json" 2>/dev/null || echo '{"ok":false,"errors":["no report"]}' > "$out/report.json"
+  mkdir -p selftest-out && cp -R "$out" selftest-out/
   python3 -c "import json,sys; sys.exit(0 if json.load(open('$out/report.json')).get('ok') else 1)"
 }
 

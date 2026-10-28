@@ -79,10 +79,31 @@ writer.add(aIn)
 writer.startWriting()
 writer.startSession(atSourceTime: .zero)
 
-// Video frames
+// Audio format for the PCM chunks
+var desc: CMAudioFormatDescription?
+var asbd = AudioStreamBasicDescription(mSampleRate: rate, mFormatID: kAudioFormatLinearPCM,
+                                       mFormatFlags: kAudioFormatFlagIsFloat | kAudioFormatFlagIsPacked,
+                                       mBytesPerPacket: 4, mFramesPerPacket: 1, mBytesPerFrame: 4, mChannelsPerFrame: 1,
+                                       mBitsPerChannel: 32, mReserved: 0)
+CMAudioFormatDescriptionCreate(allocator: nil, asbd: &asbd, layoutSize: 0, layout: nil, magicCookieSize: 0,
+                               magicCookie: nil, extensions: nil, formatDescriptionOut: &desc)
+
+/// Waits for an input with a deadline, so a stalled writer fails instead of hanging.
+func waitReady(_ input: AVAssetWriterInput) {
+    let deadline = Date().addingTimeInterval(20)
+    while !input.isReadyForMoreMediaData {
+        if writer.status == .failed { print("writer failed: \(writer.error?.localizedDescription ?? "?")"); exit(1) }
+        if Date() > deadline { print("writer stalled"); exit(1) }
+        usleep(1000)
+    }
+}
+
+// Interleave video and audio in time order: the writer stalls one input
+// while it waits for the other to catch up.
 let frames = total * Int(fps)
+var pos = 0
 for i in 0..<frames {
-    while !vIn.isReadyForMoreMediaData { usleep(1000) }
+    waitReady(vIn)
     var pb: CVPixelBuffer?
     CVPixelBufferPoolCreatePixelBuffer(nil, adaptor.pixelBufferPool!, &pb)
     guard let pb else { fatalError("no pixel buffer") }
@@ -93,34 +114,26 @@ for i in 0..<frames {
     draw(ctx, slide: slides[min(slides.count - 1, i / (slideSeconds * Int(fps)))])
     CVPixelBufferUnlockBaseAddress(pb, [])
     adaptor.append(pb, withPresentationTime: CMTime(value: CMTimeValue(i), timescale: fps))
+
+    let audioUntil = i == frames - 1 ? pcm.count : min(pcm.count, Int(Double(i + 1) / Double(fps) * rate))
+    while pos < audioUntil {
+        waitReady(aIn)
+        let n = min(1024, audioUntil - pos)
+        var block: CMBlockBuffer?
+        CMBlockBufferCreateWithMemoryBlock(allocator: nil, memoryBlock: nil, blockLength: n * 4, blockAllocator: nil,
+                                           customBlockSource: nil, offsetToData: 0, dataLength: n * 4, flags: 0, blockBufferOut: &block)
+        pcm.withUnsafeBytes { raw in
+            _ = CMBlockBufferReplaceDataBytes(with: raw.baseAddress! + pos * 4, blockBuffer: block!, offsetIntoDestination: 0, dataLength: n * 4)
+        }
+        var sb: CMSampleBuffer?
+        CMAudioSampleBufferCreateReadyWithPacketDescriptions(allocator: nil, dataBuffer: block!, formatDescription: desc!,
+                                                             sampleCount: n, presentationTimeStamp: CMTime(value: CMTimeValue(pos), timescale: CMTimeScale(rate)),
+                                                             packetDescriptions: nil, sampleBufferOut: &sb)
+        aIn.append(sb!)
+        pos += n
+    }
 }
 vIn.markAsFinished()
-
-// Audio samples in 1024-frame chunks
-var desc: CMAudioFormatDescription?
-var asbd = AudioStreamBasicDescription(mSampleRate: rate, mFormatID: kAudioFormatLinearPCM,
-                                       mFormatFlags: kAudioFormatFlagIsFloat | kAudioFormatFlagIsPacked,
-                                       mBytesPerPacket: 4, mFramesPerPacket: 1, mBytesPerFrame: 4, mChannelsPerFrame: 1,
-                                       mBitsPerChannel: 32, mReserved: 0)
-CMAudioFormatDescriptionCreate(allocator: nil, asbd: &asbd, layoutSize: 0, layout: nil, magicCookieSize: 0,
-                               magicCookie: nil, extensions: nil, formatDescriptionOut: &desc)
-var pos = 0
-while pos < pcm.count {
-    while !aIn.isReadyForMoreMediaData { usleep(1000) }
-    let n = min(1024, pcm.count - pos)
-    var block: CMBlockBuffer?
-    CMBlockBufferCreateWithMemoryBlock(allocator: nil, memoryBlock: nil, blockLength: n * 4, blockAllocator: nil,
-                                       customBlockSource: nil, offsetToData: 0, dataLength: n * 4, flags: 0, blockBufferOut: &block)
-    pcm.withUnsafeBytes { raw in
-        _ = CMBlockBufferReplaceDataBytes(with: raw.baseAddress! + pos * 4, blockBuffer: block!, offsetIntoDestination: 0, dataLength: n * 4)
-    }
-    var sb: CMSampleBuffer?
-    CMAudioSampleBufferCreateReadyWithPacketDescriptions(allocator: nil, dataBuffer: block!, formatDescription: desc!,
-                                                         sampleCount: n, presentationTimeStamp: CMTime(value: CMTimeValue(pos), timescale: CMTimeScale(rate)),
-                                                         packetDescriptions: nil, sampleBufferOut: &sb)
-    aIn.append(sb!)
-    pos += n
-}
 aIn.markAsFinished()
 
 let done = DispatchSemaphore(value: 0)
