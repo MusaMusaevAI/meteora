@@ -5,12 +5,16 @@ public struct TranscriptSegment: Codable, Equatable, Sendable, Identifiable {
     public var start: Double
     public var end: Double
     public var text: String
+    /// Speaker label, once speaker separation exists. Optional so transcripts
+    /// cached as JSON by earlier versions still decode (missing key → nil).
+    public var speaker: String?
     public var id: Double { start }
 
-    public init(start: Double, end: Double, text: String) {
+    public init(start: Double, end: Double, text: String, speaker: String? = nil) {
         self.start = start
         self.end = end
         self.text = text
+        self.speaker = speaker
     }
 }
 
