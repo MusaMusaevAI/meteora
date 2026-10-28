@@ -79,7 +79,13 @@ enum PlayerPage {
         // Seeks to t and returns a 64x40 grayscale thumbnail (base64) or
         // {tainted:true} if the canvas refuses to give pixels back.
         sample: async (t) => {
-          await ready(); v.pause(); await seek(t); await waitFrame(); await painted();
+          await ready(); v.pause(); await seek(t);
+          // WebKit doesn't repaint a paused video after a seek until the next
+          // action, so present the frame by playing (muted) for one frame.
+          const wasMuted = v.muted; v.muted = true;
+          try { await v.play(); await waitFrame(); } catch (e) {}
+          v.pause(); v.muted = wasMuted;
+          await painted();
           tctx.drawImage(v, 0, 0, thumbCanvas.width, thumbCanvas.height);
           let px;
           try { px = tctx.getImageData(0, 0, thumbCanvas.width, thumbCanvas.height).data; }
