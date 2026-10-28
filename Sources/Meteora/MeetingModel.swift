@@ -342,7 +342,7 @@ final class MeetingModel: ObservableObject {
             transcript = tr
             liveSegments = []
             TranscriptStore.save(tr, for: url)
-            toast = Toast(message: segments.isEmpty ? "Речи в записи не найдено" : "Расшифровка готова: \(segments.count) фраз")
+            toast = Toast(message: segments.isEmpty ? "Речи в записи не найдено" : "Расшифровка готова: \(ru(segments.count, "фраза", "фразы", "фраз"))")
         case .failure(let e):
             if (e as? RecognizerError) == .cancelled {
                 transcribeError = liveSegments.isEmpty ? nil : "Остановлено — показана расшифрованная часть."
@@ -511,7 +511,7 @@ final class MeetingModel: ObservableObject {
         let text = ReportExporter.plainText(frames.map(\.frame), meta: reportMeta)
         NSPasteboard.general.prepareForNewContents(with: .currentHostOnly)
         NSPasteboard.general.setString(text, forType: .string)
-        toast = Toast(message: "Текст \(frames.count) кадров скопирован")
+        toast = Toast(message: "Скопирован текст: \(ru(frames.count, "кадр", "кадра", "кадров"))")
     }
 
     func presentSavePDFPanel() {

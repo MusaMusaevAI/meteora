@@ -59,7 +59,7 @@ struct OnboardingView: View {
                 .frame(width: 600, height: 350)
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.hairline))
-                .padding(.top, 40)
+                .padding(.top, 38)
                 .transition(.opacity)
 
             VStack(spacing: 8) {
@@ -101,7 +101,7 @@ struct OnboardingView: View {
             .padding(.horizontal, 28)
             .padding(.bottom, 22)
         }
-        .frame(width: 680, height: 640)
+        .frame(width: 680, height: 610)
         .background(Theme.background)
         .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: step)
     }
@@ -208,7 +208,7 @@ enum OnboardingWindow {
 
     static func show(model: MeetingModel, step: Int = 0, stillsOnly: Bool = false) {
         if let w = window { w.makeKeyAndOrderFront(nil); return }
-        let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 680, height: 640),
+        let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 680, height: 610),
                          styleMask: [.titled, .closable, .fullSizeContentView], backing: .buffered, defer: false)
         w.title = "Знакомство с Meteora"
         w.titlebarAppearsTransparent = true

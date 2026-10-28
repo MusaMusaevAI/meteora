@@ -109,7 +109,7 @@ final class StorageModel: ObservableObject {
                 let size = Int64((try? f.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0)
                 let tr = (try? Data(contentsOf: f)).flatMap { try? dec.decode(Transcript.self, from: $0) }
                 let name = tr.map { sanitizedBaseName(URL(fileURLWithPath: $0.sourceName)) } ?? f.lastPathComponent
-                let detail = tr.map { "\($0.segments.count) фраз · \(dateFormatter.string(from: $0.created))" } ?? "повреждённый файл"
+                let detail = tr.map { "\(ru($0.segments.count, "фраза", "фразы", "фраз")) · \(dateFormatter.string(from: $0.created))" } ?? "повреждённый файл"
                 out.append(StorageItem(id: "tr:" + f.lastPathComponent, section: .transcripts, title: name,
                                        detail: detail, bytes: size, urls: [f]))
             }
@@ -213,6 +213,7 @@ struct StorageView: View {
                 Spacer()
                 Button("Готово") { close() }
                     .buttonStyle(SecondaryButtonStyle(fill: false))
+                    .fixedSize()
                     .keyboardShortcut(.cancelAction)
                 Button {
                     confirming = true
@@ -222,6 +223,7 @@ struct StorageView: View {
                         .padding(.horizontal, 14).frame(minHeight: 30)
                         .background(RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous).fill(Theme.danger))
                         .opacity(store.selected.isEmpty || store.deleting ? 0.45 : 1)
+                        .fixedSize()
                 }
                 .buttonStyle(.plain)
                 .disabled(store.selected.isEmpty || store.deleting)

@@ -34,7 +34,9 @@ struct ContentView: View {
             }
             return true
         }
-        .overlay(alignment: .bottom) { ToastView(model: model) }
+        .overlay(alignment: .bottom) {
+            if model.loadState != .ready { ToastView(model: model) }
+        }
     }
 }
 
@@ -171,6 +173,7 @@ struct MainView: View {
             .padding(.trailing, 18)
             .padding(.bottom, 18)
             .padding(.top, 4)
+            .overlay(alignment: .bottom) { ToastView(model: model).padding(.bottom, 8) }
             Rectangle().fill(Theme.hairline).frame(width: 1).ignoresSafeArea()
             Sidebar(model: model, player: player)
                 .frame(width: 304)
@@ -188,6 +191,8 @@ struct Stage: View {
     var body: some View {
         VStack(spacing: 0) {
             PlayerArea(model: model, player: player)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.radius - 5, style: .continuous))
+                .padding([.horizontal, .top], 6)
             TransportBar(model: model, player: player)
         }
         .background(Theme.stage)
@@ -210,7 +215,7 @@ struct PlayerArea: View {
 
     var body: some View {
         ZStack {
-            Color.black
+            model.hasVideo ? Color.black : Theme.stage
             if model.hasVideo {
                 WebViewHost(webView: player.webView)
                     .onTapGesture { player.togglePlay() }
@@ -322,8 +327,6 @@ struct TransportBar: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 7)
-        .background(Theme.stageRaised)
-        .overlay(alignment: .top) { Rectangle().fill(Color.white.opacity(0.06)).frame(height: 1) }
         .environment(\.colorScheme, .dark)
     }
 
@@ -536,12 +539,9 @@ struct Sidebar: View {
                 }
             }
             Hairline()
-            VStack(alignment: .leading, spacing: 10) {
-                StorageButton(model: model)
-                PrivacyNote().fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 14)
+            StorageButton(model: model)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 12)
         }
     }
 }
@@ -611,14 +611,9 @@ struct AudioSection: View {
                     .padding(.top, 2)
                 } else {
                     VStack(spacing: 8) {
-                        Button { Task { await model.sendToMacWhisper() } } label: {
-                            HStack(spacing: 6) {
-                                Text("Отправить в MacWhisper")
-                                Text("⌘⇧M").font(Theme.ui(11)).opacity(0.65)
-                            }
-                        }
+                        Button("Отправить в MacWhisper") { Task { await model.sendToMacWhisper() } }
                         .buttonStyle(SecondaryButtonStyle())
-                        .help("Сохранит звук в «Загрузки/Meteora», скопирует файл в буфер обмена и откроет MacWhisper")
+                        .help("Сохранит звук в «Загрузки/Meteora», скопирует файл в буфер обмена и откроет MacWhisper (⌘⇧M)")
                         Button("Сохранить звук как…") { model.presentSaveAudioPanel() }
                             .buttonStyle(SecondaryButtonStyle())
                     }
@@ -667,13 +662,9 @@ struct FramesSection: View {
                     ProgressStatus(text: "Найдено: \(model.frames.count)", action: "Остановить") { model.cancelScenes() }
                 }
             } else if model.frames.isEmpty {
-                Button { Task { await model.analyzeScenes() } } label: {
-                    HStack(spacing: 6) {
-                        Text("Найти ключевые кадры")
-                        Text("⌘K").font(Theme.ui(11)).opacity(0.65)
-                    }
-                }
+                Button("Найти ключевые кадры") { Task { await model.analyzeScenes() } }
                 .buttonStyle(SecondaryButtonStyle())
+                .help("Найти моменты, когда меняется картинка (⌘K)")
             } else {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {

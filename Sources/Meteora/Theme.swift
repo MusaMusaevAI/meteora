@@ -63,6 +63,13 @@ enum Theme {
     static let numbers = Font.system(size: 12.5).monospacedDigit()
 }
 
+/// Russian plural forms: ru(1, "фраза", "фразы", "фраз") → "1 фраза".
+func ru(_ n: Int, _ one: String, _ few: String, _ many: String) -> String {
+    let m10 = n % 10, m100 = n % 100
+    let w = (m10 == 1 && m100 != 11) ? one : (2 ... 4).contains(m10) && !(12 ... 14).contains(m100) ? few : many
+    return "\(n) \(w)"
+}
+
 extension NSColor {
     convenience init(hex: UInt32, alpha: CGFloat = 1) {
         self.init(srgbRed: CGFloat((hex >> 16) & 0xFF) / 255,

@@ -14,6 +14,10 @@ A, B, C, D, E = (392, 802), (392, 390), (580, 620), (768, 390), (768, 802)
 STROKE, TAIL = 88, 380
 ACCENT, ACCENT_DARK = "#33506B", "#9DB8D3"
 BG, BG_DARK = (251, 251, 250), (20, 22, 25)
+# Pearl ground (Portrayal's iridescent finish), very low saturation:
+# rose top-left → lilac → pale blue → champagne bottom-right.
+PEARL = [(0, "#F8EEF2"), (0.38, "#F1EEF8"), (0.70, "#EAF1F8"), (1, "#F6F0E6")]
+PEARL_DARK = [(0, "#25232A"), (0.45, "#1A1C21"), (1, "#121417")]
 NACRE = ["#BCD4EC", "#D6CDEE", "#EBC6D6", "#F1E2CC"]
 # (offset, colour index or None for the accent, opacity)
 STOPS = [(0, None, 1), (0.30, 0, 0.95), (0.55, 1, 0.75), (0.78, 2, 0.45), (1, 3, 0)]
@@ -33,12 +37,20 @@ def tail_svg_path():
     return (f"M{B[0]+nx:.2f},{B[1]+ny:.2f} Q{c1[0]:.2f},{c1[1]:.2f} {TIP[0]:.2f},{TIP[1]:.2f} "
             f"Q{c2[0]:.2f},{c2[1]:.2f} {B[0]-nx:.2f},{B[1]-ny:.2f} A{r},{r} 0 0 1 {B[0]+nx:.2f},{B[1]+ny:.2f} Z")
 
-def svg(accent):
+def ground_svg(stops):
+    st = "".join(f'<stop offset="{o}" stop-color="{c}"/>' for o, c in stops)
+    return (f'<linearGradient id="g" x1="0" y1="0" x2="1" y2="1">{st}</linearGradient>'
+            '<radialGradient id="l" cx="0.3" cy="0.12" r="0.75"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.35"/>'
+            '<stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>')
+
+def svg(accent, dark=False):
     stops = "".join(
         f'<stop offset="{o}" stop-color="{accent if c is None else NACRE[c]}" stop-opacity="{a}"/>' for o, c, a in STOPS)
     pts = " ".join(f"{x},{y}" for x, y in (A, B, C, D, E))
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <defs><linearGradient id="t" gradientUnits="userSpaceOnUse" x1="{B[0]}" y1="{B[1]}" x2="{TIP[0]:.2f}" y2="{TIP[1]:.2f}">{stops}</linearGradient></defs>
+  <defs><linearGradient id="t" gradientUnits="userSpaceOnUse" x1="{B[0]}" y1="{B[1]}" x2="{TIP[0]:.2f}" y2="{TIP[1]:.2f}">{stops}</linearGradient>{ground_svg(PEARL_DARK if dark else PEARL)}</defs>
+  <rect width="1024" height="1024" fill="url(#g)"/>
+  <rect width="1024" height="1024" fill="url(#l)" opacity="{0.25 if dark else 1}"/>
   <path d="{tail_svg_path()}" fill="url(#t)"/>
   <polyline points="{pts}" fill="none" stroke="{accent}" stroke-width="{STROKE}" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
@@ -76,6 +88,21 @@ def draw_glyph(img, accent, k, off):
         d.ellipse([off[0] + p[0] * k - r, off[1] + p[1] * k - r, off[0] + p[0] * k + r, off[1] + p[1] * k + r], fill=col)
     img.alpha_composite(g)
 
+def pearl_ground(n, stops, light):
+    """Diagonal gradient plus a soft top light, n×n."""
+    import numpy as np
+    y, x = np.mgrid[0:n, 0:n] / max(1, n - 1)
+    t = (x + y) / 2
+    cols = np.array([hexrgb(c) for _, c in stops], float); offs = np.array([o for o, _ in stops])
+    out = np.zeros((n, n, 3))
+    for ch in range(3):
+        out[..., ch] = np.interp(t, offs, cols[:, ch])
+    d = np.sqrt((x - 0.3) ** 2 + (y - 0.12) ** 2) / 0.75
+    glow = np.clip(1 - d, 0, 1) * 0.35 * light
+    out = out + (255 - out) * glow[..., None]
+    a = np.dstack([out, np.full((n, n), 255.0)]).astype("uint8")
+    return Image.fromarray(a, "RGBA")
+
 def legacy_icon(size, dark=False):
     """macOS 11-15 style: rounded square on a transparent canvas (824/1024)."""
     S = 4 * size
@@ -84,9 +111,11 @@ def legacy_icon(size, dark=False):
     shadow = Image.new("RGBA", (S, S), (0, 0, 0, 0))
     ImageDraw.Draw(shadow).rounded_rectangle([inset, inset + S * 0.012, inset + side, inset + side + S * 0.012], radius, fill=(0, 0, 0, 70))
     img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(S * 0.012)))
-    bg = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    ImageDraw.Draw(bg).rounded_rectangle([inset, inset, inset + side, inset + side], radius, fill=(BG_DARK if dark else BG) + (255,))
-    img.alpha_composite(bg)
+    ground = pearl_ground(int(side), PEARL_DARK if dark else PEARL, 0.25 if dark else 1)
+    bg = Image.new("RGBA", (S, S), (0, 0, 0, 0)); bg.paste(ground, (int(inset), int(inset)))
+    mask0 = Image.new("L", (S, S), 0)
+    ImageDraw.Draw(mask0).rounded_rectangle([inset, inset, inset + side, inset + side], radius, fill=255)
+    img.paste(bg, (0, 0), mask0)
     glyph = Image.new("RGBA", (S, S), (0, 0, 0, 0))
     draw_glyph(glyph, ACCENT_DARK if dark else ACCENT, side / 1024, (inset, inset))
     mask = Image.new("L", (S, S), 0)
@@ -97,7 +126,7 @@ def legacy_icon(size, dark=False):
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 res = os.path.join(root, "Resources")
 with open(os.path.join(res, "AppIcon.icon/Assets/glyph.svg"), "w") as f: f.write(svg(ACCENT))
-with open(os.path.join(res, "AppIcon.icon/Assets/glyph-dark.svg"), "w") as f: f.write(svg(ACCENT_DARK))
+with open(os.path.join(res, "AppIcon.icon/Assets/glyph-dark.svg"), "w") as f: f.write(svg(ACCENT_DARK, dark=True))
 srgb = lambda c: "srgb:" + ",".join(f"{v / 255:.5f}" for v in c) + ",1.00000"
 icon = {
     "fill": {"solid": srgb(BG)},

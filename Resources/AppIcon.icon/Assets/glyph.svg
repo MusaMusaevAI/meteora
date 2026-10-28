@@ -1,5 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <defs><linearGradient id="t" gradientUnits="userSpaceOnUse" x1="392" y1="390" x2="151.51" y2="95.78"><stop offset="0" stop-color="#33506B" stop-opacity="1"/><stop offset="0.3" stop-color="#BCD4EC" stop-opacity="0.95"/><stop offset="0.55" stop-color="#D6CDEE" stop-opacity="0.75"/><stop offset="0.78" stop-color="#EBC6D6" stop-opacity="0.45"/><stop offset="1" stop-color="#F1E2CC" stop-opacity="0"/></linearGradient></defs>
+  <defs><linearGradient id="t" gradientUnits="userSpaceOnUse" x1="392" y1="390" x2="151.51" y2="95.78"><stop offset="0" stop-color="#33506B" stop-opacity="1"/><stop offset="0.3" stop-color="#BCD4EC" stop-opacity="0.95"/><stop offset="0.55" stop-color="#D6CDEE" stop-opacity="0.75"/><stop offset="0.78" stop-color="#EBC6D6" stop-opacity="0.45"/><stop offset="1" stop-color="#F1E2CC" stop-opacity="0"/></linearGradient><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8EEF2"/><stop offset="0.38" stop-color="#F1EEF8"/><stop offset="0.7" stop-color="#EAF1F8"/><stop offset="1" stop-color="#F6F0E6"/></linearGradient><radialGradient id="l" cx="0.3" cy="0.12" r="0.75"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.35"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient></defs>
+  <rect width="1024" height="1024" fill="url(#g)"/>
+  <rect width="1024" height="1024" fill="url(#l)" opacity="1"/>
   <path d="M426.07,362.15 Q276.76,214.26 151.51,95.78 Q242.70,242.10 357.93,417.85 A44.0,44.0 0 0 1 426.07,362.15 Z" fill="url(#t)"/>
   <polyline points="392,802 392,390 580,620 768,390 768,802" fill="none" stroke="#33506B" stroke-width="88" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

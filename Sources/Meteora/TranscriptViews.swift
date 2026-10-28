@@ -183,9 +183,9 @@ struct TranscriptCard: View {
             HStack(spacing: 6) {
                 Image(systemName: "text.quote")
                 Text("Расшифровать запись")
-                Text("⌘T").font(Theme.ui(11)).opacity(0.7)
             }
         }
+        .help("Расшифровать запись на этом Mac (⌘T)")
         .buttonStyle(PrimaryButtonStyle())
         .disabled(!model.canTranscribe)
         Text("Займёт \(model.transcribeEstimate). Можно смотреть запись, пока идёт расшифровка.")
@@ -206,7 +206,7 @@ struct TranscriptCard: View {
     }
 
     @ViewBuilder private func done(_ tr: Transcript) -> some View {
-        Text("Готово: \(tr.segments.count) фраз, \(tr.wordCount) слов")
+        Text("Готово: \(ru(tr.segments.count, "фраза", "фразы", "фраз")), \(ru(tr.wordCount, "слово", "слова", "слов"))")
             .font(Theme.ui(12.5).monospacedDigit()).foregroundStyle(Theme.text)
         HStack(spacing: 8) {
             Button("Скопировать") { model.copyTranscript() }.buttonStyle(SecondaryButtonStyle())
@@ -239,7 +239,7 @@ struct StorageButton: View {
                 Image(systemName: "internaldrive")
                 Text("Хранилище")
                 Spacer()
-                Text("⌘,").font(Theme.ui(11)).foregroundStyle(Theme.tertiary)
+                Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.tertiary)
             }
             .font(Theme.ui(12.5))
             .foregroundStyle(hover ? Theme.text : Theme.secondary)
@@ -247,6 +247,6 @@ struct StorageButton: View {
         }
         .buttonStyle(.plain)
         .onHover { hover = $0 }
-        .help("Что Meteora хранит на диске — и что можно удалить")
+        .help("Что Meteora хранит на диске и что можно удалить (⌘,)")
     }
 }

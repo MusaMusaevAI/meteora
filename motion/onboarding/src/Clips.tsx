@@ -118,7 +118,7 @@ export const ListenClip: React.FC<ClipProps> = ({ mode }) => {
   const done = interpolate(f, [132, 146], [1, 0], clamp);
   return (
     <Frame mode={mode}>
-      <AbsoluteFill style={{ padding: "64px 110px", gap: 26 }}>
+      <AbsoluteFill style={{ padding: "0 110px", gap: 26, justifyContent: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
           <div style={{ fontSize: 22, fontWeight: 600 }}>Расшифровка</div>
           <div style={{ flex: 1, height: 7, borderRadius: 4, background: p.sunken, position: "relative", overflow: "hidden" }}>
