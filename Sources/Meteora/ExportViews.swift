@@ -37,6 +37,10 @@ final class ExportSettings: ObservableObject {
     }
 }
 
+extension TimestampMode: Identifiable {
+    public var id: String { rawValue }
+}
+
 extension ExportFormat {
     /// Short label for chips.
     var short: String {

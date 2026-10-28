@@ -224,6 +224,7 @@ final class BatchQueue: ObservableObject {
 
 // MARK: - Window
 
+@MainActor
 enum BatchWindow {
     private static var window: NSWindow?
 
@@ -305,7 +306,7 @@ struct BatchView: View {
             for p in providers {
                 _ = p.loadObject(ofClass: URL.self) { url, _ in
                     guard let url, url.isFileURL else { return }
-                    DispatchQueue.main.async { queue.add([url]) }
+                    Task { @MainActor in BatchQueue.shared.add([url]) }
                 }
             }
             return true
