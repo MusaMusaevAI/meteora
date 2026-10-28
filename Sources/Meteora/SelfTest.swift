@@ -30,6 +30,7 @@ final class SelfTest {
 
     func run() async {
         try? FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+        mark("start")
         report["entitlements_sandboxed"] = ProcessInfo.processInfo.environment["APP_SANDBOX_CONTAINER_ID"] != nil
         _ = await wait(15) { !NSApp.windows.isEmpty }
         NSApp.activate(ignoringOtherApps: true)
@@ -57,6 +58,7 @@ final class SelfTest {
         snapshotWindow("02-empty-dark")
         setAppearance(.aqua)
 
+        mark("parse")
         // 1. Parse
         let t0 = Date()
         model.open(input)
@@ -77,6 +79,7 @@ final class SelfTest {
             ] as [String: Any]
         }
 
+        mark("playback")
         // 2. Playback in WebKit
         report["engine"] = model.engine
         if let player = model.player {
@@ -97,6 +100,7 @@ final class SelfTest {
             }
         }
 
+        mark("audio")
         // 3. Audio analysis + export
         if model.info?.audio != nil {
             let t1 = Date()
@@ -128,6 +132,7 @@ final class SelfTest {
             report["audio"] = audio
         }
 
+        mark("asr")
         // 3b. Speech model download + on-device transcription
         if ProcessInfo.processInfo.environment["METEORA_SELFTEST_ASR"] == "1" {
             var asr: [String: Any] = [:]
@@ -172,6 +177,7 @@ final class SelfTest {
             report["asr"] = asr
         }
 
+        mark("scenes")
         // 4. Key frames + OCR + reports
         if model.hasVideo, let player = model.player, player.isReady {
             for thorough in [false, true] {
@@ -213,6 +219,7 @@ final class SelfTest {
             }
         }
 
+        mark("exports")
         // 5. Documents in every format
         if model.canExportDocuments {
             var ex: [String: Any] = [:]
@@ -236,6 +243,7 @@ final class SelfTest {
             try? await Task.sleep(nanoseconds: 400_000_000)
         }
 
+        mark("batch")
         // 6. Batch window (not started)
         BatchQueue.shared.add([input])
         BatchWindow.show()
@@ -263,6 +271,18 @@ final class SelfTest {
         }
         finish()
     }
+
+    /// Progress breadcrumbs, so a run that hangs still shows where.
+    private func mark(_ stage: String) {
+        let line = "\(String(format: "%.1f", Date().timeIntervalSince(started))) \(stage)\n"
+        let f = output.appendingPathComponent("progress.txt")
+        if let h = try? FileHandle(forWritingTo: f) {
+            h.seekToEndOfFile(); h.write(Data(line.utf8)); try? h.close()
+        } else {
+            try? Data(line.utf8).write(to: f)
+        }
+    }
+    private let started = Date()
 
     private var isFailed: Bool { if case .failed = model.loadState { return true }; return false }
 
@@ -341,6 +361,7 @@ final class SelfTest {
     }
 
     private func finish() {
+        mark("finish")
         if let player = model.player { report["webDiagnosticsFinal"] = player.diagnostics }
         report["errors"] = errors
         report["ok"] = errors.isEmpty

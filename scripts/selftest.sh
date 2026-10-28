@@ -33,10 +33,10 @@ run() { # input-file-name [extra app arguments…]
   open -n -W --env METEORA_SELFTEST=1 --env METEORA_SELFTEST_ASR=1 --stdout "$out/stdout.txt" --stderr "$out/stderr.txt" \
        -a "$APP" --args --selftest "$BASE/in/$file" "$out" --asr-wav "$BASE/in/ru-example.wav" "$@" &
   local pid=$!
-  for _ in $(seq 1 420); do kill -0 $pid 2>/dev/null || break; sleep 1; done
+  for _ in $(seq 1 300); do kill -0 $pid 2>/dev/null || break; sleep 1; done
   if kill -0 $pid 2>/dev/null; then
     echo "timeout"; pkill -9 -f "Meteora.app/Contents/MacOS/Meteora" || true; kill $pid 2>/dev/null
-    echo '{"ok":false,"errors":["timeout"]}' > "$out/report.json"
+    echo "{\"ok\":false,\"errors\":[\"timeout after: $(tail -1 "$out/progress.txt" 2>/dev/null)\"]}" > "$out/report.json"
   fi
   wait $pid 2>/dev/null
   cat "$out/report.json" 2>/dev/null || echo '{"ok":false,"errors":["no report"]}' > "$out/report.json"

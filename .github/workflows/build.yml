@@ -16,7 +16,7 @@ concurrency:
 jobs:
   macos:
     runs-on: macos-15
-    timeout-minutes: 60
+    timeout-minutes: 80
     outputs:
       status: ${{ steps.summary.outputs.status }}
     steps:
@@ -69,6 +69,7 @@ jobs:
       - name: Self-test (sandboxed app, real WebKit)
         id: selftest
         continue-on-error: true
+        timeout-minutes: 40
         run: scripts/selftest.sh 2>&1 | tee logs/selftest.txt
       - name: DMG
         id: dmg
