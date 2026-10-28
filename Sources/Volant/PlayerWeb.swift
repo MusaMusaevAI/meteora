@@ -54,6 +54,7 @@ enum PlayerPage {
       });
       // Two animation frames: the new video frame has been composited and
       // painted, so a native snapshot taken now is not stale.
+      const sleep = (ms) => new Promise(r => setTimeout(r, ms));
       const painted = () => new Promise(res => requestAnimationFrame(() => requestAnimationFrame(() => res())));
       const seek = (t) => new Promise((res, rej) => {
         const to = setTimeout(() => rej(new Error('seek timeout')), 20000);
@@ -83,7 +84,8 @@ enum PlayerPage {
           // WebKit doesn't repaint a paused video after a seek until the next
           // action, so present the frame by playing (muted) for one frame.
           const wasMuted = v.muted; v.muted = true;
-          try { await v.play(); await waitFrame(); } catch (e) {}
+          await Promise.race([v.play().catch(() => {}), sleep(400)]);
+          await waitFrame();
           v.pause(); v.muted = wasMuted;
           await painted();
           tctx.drawImage(v, 0, 0, thumbCanvas.width, thumbCanvas.height);

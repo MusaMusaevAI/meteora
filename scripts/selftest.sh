@@ -19,7 +19,7 @@ run() { # input-name
   open -n -W --env VOLANT_SELFTEST=1 --stdout "$out/stdout.txt" --stderr "$out/stderr.txt" \
        -a "$APP" --args --selftest "$BASE/in/$name.webm" "$out" &
   local pid=$!
-  for _ in $(seq 1 900); do kill -0 $pid 2>/dev/null || break; sleep 1; done
+  for _ in $(seq 1 420); do kill -0 $pid 2>/dev/null || break; sleep 1; done
   if kill -0 $pid 2>/dev/null; then
     echo "timeout"; pkill -9 -f "Volant.app/Contents/MacOS/Volant" || true; kill $pid 2>/dev/null
     echo '{"ok":false,"errors":["timeout"]}' > "$out/report.json"
