@@ -212,24 +212,15 @@ struct StorageView: View {
                     .font(Theme.ui(12.5).monospacedDigit()).foregroundStyle(Theme.secondary)
                 Spacer()
                 Button("Готово") { close() }
-                    .buttonStyle(SecondaryButtonStyle(fill: false))
+                    .controlSize(.large)
                     .fixedSize()
                     .keyboardShortcut(.cancelAction)
-                Button {
-                    confirming = true
-                } label: {
-                    Text("Удалить выбранное")
-                        .lineLimit(1)
-                        .font(Theme.ui(13, weight: .medium)).foregroundStyle(.white)
-                        .padding(.horizontal, 14).frame(minHeight: 30)
-                        .background(RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous).fill(Theme.danger))
-                        .opacity(store.selected.isEmpty || store.deleting ? 0.45 : 1)
-                        .fixedSize()
-                }
-                .buttonStyle(.plain)
-                .fixedSize()
-                .layoutPriority(1)
-                .disabled(store.selected.isEmpty || store.deleting)
+                Button("Удалить выбранное", role: .destructive) { confirming = true }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Theme.danger)
+                    .controlSize(.large)
+                    .fixedSize()
+                    .disabled(store.selected.isEmpty || store.deleting)
             }
         }
         .padding(22)
