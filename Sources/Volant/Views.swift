@@ -428,7 +428,7 @@ struct FramesStrip: View {
             }
         }
         .padding(14)
-        .frame(height: 168)
+        .frame(height: 188)
         .background(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).fill(Theme.surface))
         .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.border))
         .sheet(item: $detail) { FrameDetailView(item: $0, showHours: (model.info?.duration ?? 0) >= 3600) }
