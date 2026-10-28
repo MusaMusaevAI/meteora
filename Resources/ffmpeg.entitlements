@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- ffmpeg inside MeteoraConverter.xpc: inherits the sandbox of the
+	     service that spawns it. Apple requires exactly these two keys for an
+	     inheriting helper; any other entitlement makes launch fail. -->
+	<key>com.apple.security.app-sandbox</key><true/>
+	<key>com.apple.security.inherit</key><true/>
+</dict>
+</plist>

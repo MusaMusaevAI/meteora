@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Converter XPC service: App Sandbox and nothing else. No network, no
+	     user-selected files, no Downloads. It only ever sees the two file
+	     descriptors the app passes over XPC. -->
+	<key>com.apple.security.app-sandbox</key><true/>
+</dict>
+</plist>
