@@ -120,6 +120,7 @@ final class SelfTest {
                     "count": frames.count,
                     "times": frames.map { ($0.time * 10).rounded() / 10 },
                     "letters": frames.map(\.letterCount),
+                    "webCodecs": model.usedDecoder,
                     "snapshotFallback": player.usesSnapshotFallback,
                     "snapshotRetries": player.snapshotRetries,
                     "error": model.sceneError ?? "",

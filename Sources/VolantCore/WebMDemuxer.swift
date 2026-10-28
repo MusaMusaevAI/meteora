@@ -7,6 +7,16 @@ public struct VideoTrackInfo: Equatable, Sendable {
     public var width: Int
     public var height: Int
 
+    /// Codec string for WebCodecs' VideoDecoder, if supported.
+    public var webCodecsCodec: String? {
+        switch codecID {
+        case "V_VP8": return "vp8"
+        case "V_VP9": return "vp09.00.10.08"
+        case "V_AV1": return "av01.0.08M.08"
+        default: return nil
+        }
+    }
+
     public var codecName: String {
         switch codecID {
         case "V_VP8": return "VP8"
@@ -37,11 +47,19 @@ public struct AudioTrackInfo: Equatable, Sendable {
     }
 }
 
-/// One video frame in the stream index (no payload).
+/// One video frame in the stream index (payload stays in the file).
 public struct VideoPacket: Equatable, Sendable {
     public var time: Double      // seconds from start of the recording
     public var size: Int         // compressed size in bytes
     public var isKey: Bool
+    public var offset: UInt64    // payload position in the file
+
+    public init(time: Double, size: Int, isKey: Bool, offset: UInt64 = 0) {
+        self.time = time
+        self.size = size
+        self.isKey = isKey
+        self.offset = offset
+    }
 }
 
 struct BlockRef {
@@ -263,6 +281,12 @@ public final class WebMDemuxer {
 
     public var audioPacketCount: Int { audioBlocks.count }
 
+    /// Compressed bytes of one video frame (≤ 16 MB).
+    public func videoPayload(_ p: VideoPacket) throws -> Data {
+        guard p.size >= 0, p.size <= 16 * 1024 * 1024 else { throw MediaError.malformed("слишком большой кадр") }
+        return try src.read(at: p.offset, count: p.size)
+    }
+
     /// Time span covered by the indexed packets, seconds (bounded).
     public var packetSpan: Double {
         min(Self.maxDuration, max(0, (Double(lastTimeNs) - Double(firstTimeNs ?? 0)) / 1e9))
@@ -396,7 +420,9 @@ public final class WebMDemuxer {
 
         if isVideo {
             let key = simple ? (flags & 0x80) != 0 : !hasReference
-            videoBlocks.append(VideoPacket(time: Double(ns) / 1e9, size: payloadSize, isKey: key))
+            guard (flags >> 1) & 0x03 == 0 else { return } // laced video is not used by real encoders
+            videoBlocks.append(VideoPacket(time: Double(ns) / 1e9, size: payloadSize, isKey: key,
+                                           offset: offset + UInt64(headerLen)))
         } else {
             audioBlocks.append(BlockRef(timeNs: ns, payloadOffset: offset + UInt64(headerLen),
                                         payloadSize: payloadSize, lacing: (flags >> 1) & 0x03))

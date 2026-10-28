@@ -283,7 +283,6 @@ final class MeetingModel: ObservableObject {
         sceneProgress = 0
         let resumeAt = player.currentTime
         let wasPlaying = player.isPlaying
-        player.pause()
 
         defer {
             sceneProgress = nil
@@ -297,6 +296,17 @@ final class MeetingModel: ObservableObject {
             var times = primary
             if thorough { times = (primary + ScenePlanner.secondaryTimes(primary: primary, spikes: spikes)).sorted() }
             let collector = SceneCollector(threshold: sceneThreshold)
+            let video = info.video!
+            // Preferred: decode frames ourselves via WebCodecs (exact, full
+            // resolution, doesn't touch the player). Fallback: seek + snapshot.
+            var codec: String?
+            if let c = video.webCodecsCodec, await player.canDecode(codec: c, width: video.width, height: video.height) {
+                codec = c
+            } else {
+                player.pause()
+            }
+            usedDecoder = codec != nil
+            let demuxer = self.demuxer
 
             for (i, t) in times.enumerated() {
                 if token.isCancelled { break }
@@ -304,10 +314,22 @@ final class MeetingModel: ObservableObject {
                     sceneError = "Показаны первые \(Self.maxFrames) кадров — уменьшите чувствительность, чтобы охватить всю запись."
                     break
                 }
-                // A hair after the keyframe so the decoder lands exactly on it.
-                let thumb = try await player.sample(at: t + 0.02)
+                // A hair after the keyframe so we land exactly on it.
+                let thumb: FrameThumb
+                if let codec, let demuxer, let plan = DecodePlan.packets(for: t + 0.02, in: info.videoPackets) {
+                    let chunks = try await Task.detached(priority: .userInitiated) {
+                        try plan.map { (try demuxer.videoPayload($0), $0.isKey, $0.time) }
+                    }.value
+                    guard let th = try? await player.decodeSample(codec: codec, width: video.width, height: video.height, chunks: chunks) else {
+                        sceneProgress = Double(i + 1) / Double(times.count)
+                        continue
+                    }
+                    thumb = th
+                } else {
+                    thumb = try await player.sample(at: t + 0.02)
+                }
                 if let change = collector.consider(time: t, thumb: thumb, spikes: spikes),
-                   let image = try await player.grabFrame() {
+                   let image = try await (codec != nil ? player.grabDecoded() : player.grabFrame()) {
                     let text = await Task.detached(priority: .userInitiated) { TextRecognizer.recognize(image) }.value
                     let frame = SceneFrame(id: frames.count + 1, time: change, image: image, text: text)
                     let duplicateText = frames.last.map { !text.isEmpty && textSimilarity($0.frame.text, text) > 0.9 } ?? false
@@ -325,9 +347,15 @@ final class MeetingModel: ObservableObject {
         } catch {
             sceneError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         }
-        player.seek(to: resumeAt)
-        if wasPlaying { player.play() }
+        player.releaseDecoded()
+        if !usedDecoder {
+            player.seek(to: resumeAt)
+            if wasPlaying { player.play() }
+        }
     }
+
+    /// Whether the last analysis used WebCodecs (for diagnostics).
+    private(set) var usedDecoder = false
 
     func cancelScenes() { sceneToken?.cancel() }
 

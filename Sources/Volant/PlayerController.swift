@@ -154,16 +154,43 @@ final class PlayerController: NSObject, ObservableObject {
         throw SampleError.failed("Не удалось получить кадр.")
     }
 
+    // MARK: WebCodecs decoding (preferred path for key-frame analysis)
+
+    func canDecode(codec: String, width: Int, height: Int) async -> Bool {
+        let r = try? await eval("return await volant.canDecode(c, w, h)", ["c": codec, "w": width, "h": height])
+        return (r as? Bool) ?? ((r as? NSNumber)?.boolValue ?? false)
+    }
+
+    /// Decodes `chunks` (keyframe first) and returns a thumbnail of the last frame.
+    func decodeSample(codec: String, width: Int, height: Int, chunks: [(Data, Bool, Double)]) async throws -> FrameThumb {
+        let payload: [[Any]] = chunks.map { [$0.0.base64EncodedString(), $0.1, Int(($0.2 * 1_000_000).rounded())] }
+        let r = try await eval("return await volant.decodeSample(c, w, h, chunks)",
+                               ["c": codec, "w": width, "h": height, "chunks": payload])
+        guard let d = r as? [String: Any], let b64 = d["thumb"] as? String, let data = Data(base64Encoded: b64),
+              let thumb = FrameThumb(luma: [UInt8](data)) else {
+            throw SampleError.failed("Не удалось декодировать кадр.")
+        }
+        return thumb
+    }
+
+    func grabDecoded() async throws -> CGImage? {
+        Self.image(fromDataURL: try await eval("return await volant.grabDecoded()") as? String)
+    }
+
+    func releaseDecoded() { call("volant.releaseDecoded()") }
+
+    static func image(fromDataURL s: String?) -> CGImage? {
+        guard let s, s.hasPrefix("data:image/png;base64,"), let comma = s.firstIndex(of: ","),
+              let data = Data(base64Encoded: String(s[s.index(after: comma)...])),
+              data.count < 64 * 1024 * 1024,
+              let src = CGImageSourceCreateWithData(data as CFData, [kCGImageSourceShouldCache: false] as CFDictionary),
+              CGImageSourceGetCount(src) == 1 else { return nil }
+        return CGImageSourceCreateImageAtIndex(src, 0, nil)
+    }
+
     /// Full-resolution image of the frame currently shown.
     func grabFrame() async throws -> CGImage? {
-        if !usesSnapshotFallback,
-           let s = try await eval("return await volant.grab()") as? String,
-           let comma = s.firstIndex(of: ","), s.hasPrefix("data:image/png;base64"),
-           let data = Data(base64Encoded: String(s[s.index(after: comma)...])),
-           data.count < 64 * 1024 * 1024,
-           let src = CGImageSourceCreateWithData(data as CFData, [kCGImageSourceShouldCache: false] as CFDictionary),
-           CGImageSourceGetCount(src) == 1,
-           let img = CGImageSourceCreateImageAtIndex(src, 0, nil) {
+        if !usesSnapshotFallback, let img = Self.image(fromDataURL: try await eval("return await volant.grab()") as? String) {
             return img
         }
         return try await snapshotVideo()

@@ -47,6 +47,23 @@ enum PlayerPage {
       const tctx = thumbCanvas.getContext('2d', { willReadFrequently: true });
       tctx.imageSmoothingEnabled = true; tctx.imageSmoothingQuality = 'high';
 
+      const lumaB64 = (src) => {
+        tctx.drawImage(src, 0, 0, thumbCanvas.width, thumbCanvas.height);
+        const px = tctx.getImageData(0, 0, thumbCanvas.width, thumbCanvas.height).data;
+        const n = thumbCanvas.width * thumbCanvas.height; let s = '';
+        for (let i = 0; i < n; i++) s += String.fromCharCode(Math.round(0.2126 * px[4*i] + 0.7152 * px[4*i+1] + 0.0722 * px[4*i+2]));
+        return btoa(s);
+      };
+      const fromB64 = (s) => { const b = atob(s); const u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
+      const pngOf = (src, vw, vh) => {
+        if (!vw || !vh || vw > 16384 || vh > 16384) return '';
+        const k = Math.min(1, 2560 / Math.max(vw, vh));
+        const c = document.createElement('canvas'); c.width = Math.round(vw * k); c.height = Math.round(vh * k);
+        const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(src, 0, 0, c.width, c.height);
+        try { return c.toDataURL('image/png'); } catch (e) { return ''; }
+      };
+      let lastFrame = null;
+
       const waitFrame = () => new Promise(res => {
         let done = false; const finish = () => { if (!done) { done = true; res(); } };
         if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(finish);
@@ -100,16 +117,29 @@ enum PlayerPage {
           return { thumb: btoa(s), t: v.currentTime };
         },
         // Full-resolution PNG of the current frame (data URL).
-        grab: async () => {
-          const vw = v.videoWidth, vh = v.videoHeight;
-          if (!vw || !vh || vw > 16384 || vh > 16384) return '';
-          const k = Math.min(1, 2560 / Math.max(vw, vh));
-          const w = Math.round(vw * k), h = Math.round(vh * k);
-          const c = document.createElement('canvas'); c.width = w; c.height = h;
-          const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
-          g.drawImage(v, 0, 0, w, h);
-          try { return c.toDataURL('image/png'); } catch (e) { return ''; }
+        grab: async () => pngOf(v, v.videoWidth, v.videoHeight),
+        // WebCodecs path: decode compressed frames handed over by the app —
+        // exact, full resolution, independent of the visible player.
+        canDecode: async (codec, w, h) => {
+          if (typeof VideoDecoder === 'undefined' || typeof EncodedVideoChunk === 'undefined') return false;
+          try { const r = await VideoDecoder.isConfigSupported({ codec, codedWidth: w, codedHeight: h }); return !!r.supported; }
+          catch (e) { return false; }
         },
+        decodeSample: async (codec, w, h, chunks) => {
+          const frame = await new Promise((resolve, reject) => {
+            let last = null;
+            const d = new VideoDecoder({ output: f => { if (last) last.close(); last = f; }, error: e => reject(new Error(String(e))) });
+            d.configure({ codec, codedWidth: w, codedHeight: h, optimizeForLatency: true });
+            for (const c of chunks) d.decode(new EncodedVideoChunk({ type: c[1] ? 'key' : 'delta', timestamp: c[2], data: fromB64(c[0]) }));
+            d.flush().then(() => { try { d.close(); } catch (e) {} resolve(last); }, e => reject(new Error(String(e))));
+          });
+          if (!frame) return { err: 'no frame' };
+          if (lastFrame) lastFrame.close();
+          lastFrame = frame;
+          return { thumb: lumaB64(frame), w: frame.displayWidth, h: frame.displayHeight };
+        },
+        grabDecoded: async () => lastFrame ? pngOf(lastFrame, lastFrame.displayWidth, lastFrame.displayHeight) : '',
+        releaseDecoded: () => { if (lastFrame) { lastFrame.close(); lastFrame = null; } return 0; },
         info: () => ({ w: v.videoWidth, h: v.videoHeight, d: v.duration, rs: v.readyState, ns: v.networkState,
           err: v.error ? v.error.code : 0, msg: v.error ? v.error.message : '', src: v.currentSrc,
           vis: document.visibilityState, vp8: v.canPlayType('video/webm; codecs="vp8, opus"'),

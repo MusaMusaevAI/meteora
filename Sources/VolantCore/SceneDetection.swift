@@ -110,6 +110,28 @@ public enum ScenePlanner {
     }
 }
 
+/// Which compressed frames must be decoded to see the picture at time `t`:
+/// the last keyframe at or before `t` and everything after it up to `t`.
+public enum DecodePlan {
+    public static func packets(for t: Double, in packets: [VideoPacket], maxBytes: Int = 12 * 1024 * 1024) -> ArraySlice<VideoPacket>? {
+        // Binary search for the last packet with time <= t.
+        var lo = 0, hi = packets.count - 1, target = -1
+        while lo <= hi {
+            let mid = (lo + hi) / 2
+            if packets[mid].time <= t { target = mid; lo = mid + 1 } else { hi = mid - 1 }
+        }
+        guard target >= 0 else { return packets.first?.isKey == true ? packets[0 ... 0] : nil }
+        var start = target
+        while start > 0, !packets[start].isKey { start -= 1 }
+        guard packets[start].isKey else { return nil }
+        // Too much to decode (very long GOP): fall back to the keyframe alone.
+        var bytes = 0
+        for i in start ... target { bytes += packets[i].size }
+        if bytes > maxBytes { return packets[start ... start] }
+        return packets[start ... target]
+    }
+}
+
 /// Decides which sampled frames become "key frames" of the meeting.
 public final class SceneCollector {
     public struct Kept: Sendable {
