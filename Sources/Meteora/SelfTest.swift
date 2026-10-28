@@ -210,6 +210,37 @@ final class SelfTest {
             }
         }
 
+        // 5. Documents in every format
+        if model.canExportDocuments {
+            var ex: [String: Any] = [:]
+            let dir = output.appendingPathComponent("exports", isDirectory: true)
+            let meta = ReportExporter.Meta(title: model.title, sourceName: input.lastPathComponent, duration: model.info?.duration ?? 0)
+            for f in ExportFormat.allCases {
+                do {
+                    let r = try TranscriptExporter.export(model.transcript, frames: model.frames.map(\.frame), meta: meta,
+                                                          format: f, options: .standard, baseName: model.title)
+                    let u = try TranscriptExporter.write(r, to: dir, baseName: model.title, format: f)
+                    ex[f.rawValue] = (try? u.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+                } catch {
+                    errors.append("export \(f.rawValue): \(error)")
+                }
+            }
+            report["exports"] = ex
+            model.exportSheetShown = true
+            try? await Task.sleep(nanoseconds: 900_000_000)
+            snapshotSheet("06-export")
+            model.exportSheetShown = false
+            try? await Task.sleep(nanoseconds: 400_000_000)
+        }
+
+        // 6. Batch window (not started)
+        BatchQueue.shared.add([input])
+        BatchWindow.show()
+        try? await Task.sleep(nanoseconds: 900_000_000)
+        snapshotWindow(titled: "Пакетная обработка", as: "07-batch")
+        NSApp.windows.first { $0.title == "Пакетная обработка" }?.close()
+        NSApp.windows.first { $0.contentView is NSHostingView<ContentView> }?.makeKeyAndOrderFront(nil)
+
         model.toast = Toast(message: "Звук сохранён: пример уведомления", revealURL: output)
         try? await Task.sleep(nanoseconds: 600_000_000)
         snapshotWindow("03-loaded")
@@ -266,6 +297,20 @@ final class SelfTest {
               let view = window.contentView?.superview ?? window.contentView,
               let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {
             errors.append("no window for snapshot \(name)")
+            return
+        }
+        view.cacheDisplay(in: view.bounds, to: rep)
+        if let data = rep.representation(using: .png, properties: [:]) {
+            try? data.write(to: output.appendingPathComponent("\(name).png"))
+        }
+    }
+
+    private func snapshotSheet(_ name: String) {
+        guard let main = NSApp.windows.first(where: { $0.contentView is NSHostingView<ContentView> }),
+              let sheet = main.attachedSheet,
+              let view = sheet.contentView?.superview ?? sheet.contentView,
+              let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {
+            errors.append("no sheet for snapshot \(name)")
             return
         }
         view.cacheDisplay(in: view.bounds, to: rep)

@@ -32,6 +32,8 @@ struct AppCommands: Commands {
         CommandGroup(replacing: .newItem) {
             Button("Открыть запись…") { model.presentOpenPanel() }
                 .keyboardShortcut("o")
+            Button("Пакетная обработка…") { BatchWindow.show() }
+                .keyboardShortcut("b", modifiers: [.command, .shift])
             Button("Все записи") { model.requestClose() }
                 .keyboardShortcut("l", modifiers: [.command, .shift])
                 .disabled(model.loadState == .empty)
@@ -62,6 +64,9 @@ struct AppCommands: Commands {
             Button("Найти ключевые кадры") { Task { await model.analyzeScenes() } }
                 .keyboardShortcut("k")
                 .disabled(!model.hasVideo || model.sceneProgress != nil)
+            Button("Экспортировать…") { model.exportSheetShown = true }
+                .keyboardShortcut("e")
+                .disabled(!model.canExportDocuments)
             Button("Сохранить кадры в PDF…") { model.presentSavePDFPanel() }
                 .keyboardShortcut("e", modifiers: [.command, .shift])
                 .disabled(model.frames.isEmpty)
@@ -142,9 +147,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
-        guard let url = urls.first(where: MediaFormats.isSupported) else { return }
+        guard urls.contains(where: MediaFormats.isSupported) else { return }
         showMainWindow()
-        model.open(url)
+        model.openMany(urls)
         NSApp.activate(ignoringOtherApps: true)
     }
 

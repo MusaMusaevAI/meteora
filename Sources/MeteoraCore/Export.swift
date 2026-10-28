@@ -730,7 +730,8 @@ extension TranscriptExporter {
                 rows.append([time(f.time), time(f.time), "кадр", text])
             }
         }
-        let body = rows.map { $0.map(csvCell).joined(separator: ",") }.joined(separator: "\r\n") + "\r\n"
+        // Semicolons: Excel with Russian regional settings splits on «;».
+        let body = rows.map { $0.map(csvCell).joined(separator: ";") }.joined(separator: "\r\n") + "\r\n"
         var data = Data([0xEF, 0xBB, 0xBF]) // BOM: Excel then reads UTF-8
         data.append(Data(body.utf8))
         return data
@@ -745,7 +746,7 @@ extension TranscriptExporter {
             if dangerous.contains(first.value) { value = "'" + value }
         }
         let needsQuotes = value.unicodeScalars.contains { u in
-            u == "," || u == "\"" || u == "\n" || u == "\r"
+            u == ";" || u == "," || u == "\"" || u == "\n" || u == "\r"
         }
         if needsQuotes {
             return "\"" + value.replacingOccurrences(of: "\"", with: "\"\"") + "\""

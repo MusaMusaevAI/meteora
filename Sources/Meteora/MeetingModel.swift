@@ -64,6 +64,7 @@ final class MeetingModel: ObservableObject {
 
     // File
     @Published private(set) var url: URL?
+    @Published var exportSheetShown = false
     @Published private(set) var loadState: LoadState = .empty
     @Published private(set) var info: MediaInfo?
     @Published private(set) var player: PlayerController?
@@ -143,11 +144,23 @@ final class MeetingModel: ObservableObject {
     func presentOpenPanel() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = MediaFormats.contentTypes
-        panel.allowsMultipleSelection = false
+        panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
-        panel.message = "Выберите запись встречи — видео или звук"
+        panel.message = "Выберите запись встречи — видео или звук. Несколько записей расшифруются по очереди."
         panel.prompt = "Открыть"
-        if panel.runModal() == .OK, let url = panel.url { open(url) }
+        guard panel.runModal() == .OK else { return }
+        openMany(panel.urls)
+    }
+
+    /// One file opens here; several go to batch processing.
+    func openMany(_ urls: [URL]) {
+        let supported = urls.filter(MediaFormats.isSupported)
+        if supported.count == 1 {
+            open(supported[0])
+        } else if supported.count > 1 {
+            BatchQueue.shared.add(supported)
+            BatchWindow.show()
+        }
     }
 
     func open(_ url: URL, then action: (() -> Void)? = nil) {

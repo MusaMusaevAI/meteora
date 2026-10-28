@@ -28,6 +28,9 @@ struct BottomPanel: View {
                     }
                 }
                 Spacer()
+                if tab == .transcript, !model.displayedSegments.isEmpty {
+                    TranscriptLayoutPicker()
+                }
                 if tab == .transcript, let p = model.transcribeProgress {
                     HStack(spacing: 8) {
                         ThinProgress(value: p).frame(width: 80)
@@ -84,50 +87,100 @@ struct BottomPanel: View {
 struct TranscriptList: View {
     @ObservedObject var model: MeetingModel
     @ObservedObject var player: PlayerController
+    @ObservedObject var settings = ExportSettings.shared
+
+    /// One row: a paragraph, or a single phrase in phrase mode.
+    private struct Row: Identifiable {
+        var id: Double { start }
+        var start: Double
+        var end: Double
+        var text: String
+    }
+
+    private var rows: [Row] {
+        let segments = model.displayedSegments
+        guard settings.showParagraphs else {
+            return segments.map { Row(start: $0.start, end: $0.end, text: $0.text) }
+        }
+        var opts = settings.options
+        opts.paragraphs = true
+        return TranscriptExporter.paragraphs(segments, options: opts).map { Row(start: $0.start, end: $0.end, text: $0.text) }
+    }
 
     var body: some View {
-        let segments = model.displayedSegments
+        let rows = self.rows
         let hours = (model.info?.duration ?? 0) >= 3600
-        let current = model.transcript?.segmentIndex(at: player.currentTime)
+        let now = player.currentTime
+        let current = rows.lastIndex { $0.start <= now + 0.05 }.flatMap { rows[$0].end + 1.5 >= now ? $0 : nil }
         ScrollViewReader { proxy in
             ScrollView(.vertical) {
-                LazyVStack(alignment: .leading, spacing: 2) {
-                    if segments.isEmpty {
+                LazyVStack(alignment: .leading, spacing: settings.showParagraphs ? 6 : 2) {
+                    if rows.isEmpty {
                         Text(model.transcribeProgress != nil ? "Слушаю запись… первые фразы появятся через несколько секунд."
                                                              : "Речь не найдена.")
                             .font(Theme.ui(12.5)).foregroundStyle(Theme.secondary).padding(.vertical, 6)
                     }
-                    ForEach(Array(segments.enumerated()), id: \.element.id) { i, seg in
+                    ForEach(Array(rows.enumerated()), id: \.element.id) { i, row in
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
-                            Button { player.seek(to: seg.start) } label: {
-                                Text(Timecode.string(seg.start, alwaysHours: hours))
+                            Button { player.seek(to: row.start) } label: {
+                                Text(Timecode.string(row.start, alwaysHours: hours))
                                     .font(Theme.mono).foregroundStyle(i == current ? Theme.accent : Theme.tertiary)
                                     .frame(width: hours ? 64 : 46, alignment: .leading)
                             }
                             .buttonStyle(.plain)
                             .help("Перейти к этому месту")
-                            Text(seg.text)
+                            Text(row.text)
                                 .font(Theme.ui(13)).foregroundStyle(Theme.text)
+                                .lineSpacing(settings.showParagraphs ? 3 : 0)
                                 .textSelection(.enabled)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .padding(.vertical, 5).padding(.horizontal, 8)
+                        .padding(.vertical, settings.showParagraphs ? 7 : 5).padding(.horizontal, 8)
                         .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(i == current ? Theme.accentSoft : .clear))
-                        .id(seg.id)
+                        .id(row.id)
                     }
                 }
             }
             .onChange(of: current) { _, new in
-                if player.isPlaying, let new, new < segments.count {
-                    withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(segments[new].id, anchor: .center) }
+                if player.isPlaying, let new, new < rows.count {
+                    withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(rows[new].id, anchor: .center) }
                 }
             }
             .onChange(of: model.liveSegments.count) { _, _ in
-                if model.transcribeProgress != nil, let last = segments.last {
+                if model.transcribeProgress != nil, let last = rows.last {
                     proxy.scrollTo(last.id, anchor: .bottom)
                 }
             }
         }
+    }
+}
+
+/// Paragraphs | phrases switch in the transcript tab header.
+struct TranscriptLayoutPicker: View {
+    @ObservedObject var settings = ExportSettings.shared
+    var body: some View {
+        HStack(spacing: 2) {
+            option("Абзацы", "text.alignleft", true)
+            option("Фразы", "list.bullet", false)
+        }
+        .padding(2)
+        .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(Theme.surfaceSunken.opacity(0.6)))
+    }
+
+    private func option(_ title: String, _ icon: String, _ value: Bool) -> some View {
+        let on = settings.showParagraphs == value
+        return Button { settings.showParagraphs = value } label: {
+            Image(systemName: icon)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(on ? Theme.text : Theme.tertiary)
+                .frame(width: 26, height: 20)
+                .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(on ? Theme.surface : .clear))
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(value ? "Абзацы: фразы склеены по паузам" : "Каждая фраза отдельно")
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(on ? .isSelected : [])
     }
 }
 
@@ -210,20 +263,9 @@ struct TranscriptCard: View {
             .font(Theme.ui(12.5).monospacedDigit()).foregroundStyle(Theme.text)
         HStack(spacing: 8) {
             Button("Скопировать") { model.copyTranscript() }.buttonStyle(SecondaryButtonStyle())
-            Menu {
-                Button("Текст с таймкодами (.txt)") { model.presentSaveTranscriptPanel(.txt) }
-                Button("Субтитры (.srt)") { model.presentSaveTranscriptPanel(.srt) }
-                Button("Markdown с кадрами — для Claude (.md)") { model.presentSaveTranscriptPanel(.markdown) }
-            } label: {
-                Text("Сохранить…").font(Theme.ui(13, weight: .medium)).frame(maxWidth: .infinity)
-            }
-            .menuStyle(.borderlessButton)
-            .menuIndicator(.hidden)
-            .padding(.horizontal, 12)
-            .frame(minHeight: 30)
-            .background(RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous).fill(Theme.surface))
-            .overlay(RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous).strokeBorder(Theme.hairline))
-            .shadow(color: .black.opacity(0.04), radius: 1, y: 1)
+            Button("Экспорт…") { model.exportSheetShown = true }
+                .buttonStyle(PrimaryButtonStyle())
+                .help("Word, PDF, Markdown, субтитры и другие форматы (⌘E)")
         }
         Button("Расшифровать заново") { Task { await model.transcribe() } }
             .buttonStyle(LinkButtonStyle())

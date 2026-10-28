@@ -162,11 +162,11 @@ final class ExportTests: XCTestCase {
         let data = try TranscriptExporter.export(tr, frames: frames, meta: meta, format: .csv, options: o).primary
         XCTAssertEqual(Array(data.prefix(3)), [0xEF, 0xBB, 0xBF])
         let csv = String(decoding: data.dropFirst(3), as: UTF8.self)
-        XCTAssertTrue(csv.hasPrefix("начало,конец,тип,текст\r\n"), csv)
-        XCTAssertTrue(csv.contains("0:00:00,0:00:01,речь,\"'=HYPERLINK(\"\"http://x\"\",\"\"y\"\")\"\r\n"), csv)
-        XCTAssertTrue(csv.contains(",речь,\"Привет, \"\"мир\"\"\"\r\n"), csv)
-        XCTAssertTrue(csv.contains(",речь,'-2+3\r\n"), csv)
-        XCTAssertTrue(csv.contains("0:00:03,0:00:03,кадр,\"Кадр 1\nСтрока 1\nСтрока 2\"\r\n"), csv)
+        XCTAssertTrue(csv.hasPrefix("начало;конец;тип;текст\r\n"), csv)
+        XCTAssertTrue(csv.contains("0:00:00;0:00:01;речь;\"'=HYPERLINK(\"\"http://x\"\",\"\"y\"\")\"\r\n"), csv)
+        XCTAssertTrue(csv.contains(";речь;\"Привет, \"\"мир\"\"\"\r\n"), csv)
+        XCTAssertTrue(csv.contains(";речь;'-2+3\r\n"), csv)
+        XCTAssertTrue(csv.contains("0:00:03;0:00:03;кадр;\"Кадр 1\nСтрока 1\nСтрока 2\"\r\n"), csv)
 
         XCTAssertEqual(TranscriptExporter.csvCell("@SUM(A1)"), "'@SUM(A1)")
         XCTAssertEqual(TranscriptExporter.csvCell("+1"), "'+1")

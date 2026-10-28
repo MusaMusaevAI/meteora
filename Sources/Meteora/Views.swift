@@ -32,11 +32,18 @@ struct ContentView: View {
         }
         .frame(minWidth: 940, minHeight: 620)
         .onDrop(of: [UTType.fileURL], isTargeted: $dropTargeted) { providers in
-            guard let p = providers.first else { return false }
-            _ = p.loadObject(ofClass: URL.self) { url, _ in
-                guard let url, url.isFileURL, MediaFormats.isSupported(url) else { return }
-                DispatchQueue.main.async { model.open(url) }
+            guard !providers.isEmpty else { return false }
+            let group = DispatchGroup()
+            var urls: [URL] = []
+            let lock = NSLock()
+            for p in providers {
+                group.enter()
+                _ = p.loadObject(ofClass: URL.self) { url, _ in
+                    if let url, url.isFileURL { lock.lock(); urls.append(url); lock.unlock() }
+                    group.leave()
+                }
             }
+            group.notify(queue: .main) { model.openMany(urls) }
             return true
         }
         .overlay(alignment: .bottom) {
@@ -185,6 +192,9 @@ struct MainView: View {
                 .background(Theme.inspector.ignoresSafeArea())
         }
         .animation(.easeOut(duration: 0.2), value: model.frames.count)
+        .sheet(isPresented: $model.exportSheetShown) {
+            ExportSheet(model: model) { model.exportSheetShown = false }
+        }
     }
 }
 
