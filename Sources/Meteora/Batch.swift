@@ -243,7 +243,11 @@ enum BatchWindow {
         w.isReleasedWhenClosed = false
         w.minSize = NSSize(width: 560, height: 480)
         w.backgroundColor = Theme.windowNS
-        w.contentView = NSHostingView(rootView: BatchView())
+        let host = NSHostingView(rootView: BatchView())
+        // The window decides its size; long lists scroll instead of
+        // stretching it past the screen.
+        host.sizingOptions = [.minSize]
+        w.contentView = host
         w.setFrameAutosaveName("MeteoraBatch")
         if !w.setFrameUsingName("MeteoraBatch") { w.center() }
         window = w

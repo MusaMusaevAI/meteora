@@ -108,7 +108,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         w.minSize = NSSize(width: 820, height: 620)
         w.collectionBehavior.insert(.fullScreenPrimary)
         w.backgroundColor = Theme.windowNS
-        w.contentView = NSHostingView(rootView: ContentView(model: model))
+        let host = NSHostingView(rootView: ContentView(model: model))
+        // The window decides its size; long lists scroll instead of
+        // stretching it past the screen.
+        host.sizingOptions = [.minSize]
+        w.contentView = host
         w.setFrameAutosaveName("MeteoraMain3")
         if !w.setFrameUsingName("MeteoraMain3") { w.center() }
         w.delegate = self

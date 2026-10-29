@@ -97,7 +97,11 @@ enum DictionaryWindow {
         w.isReleasedWhenClosed = false
         w.minSize = NSSize(width: 520, height: 420)
         w.backgroundColor = Theme.windowNS
-        w.contentView = NSHostingView(rootView: DictionaryView())
+        let host = NSHostingView(rootView: DictionaryView())
+        // The window decides its size; long lists scroll instead of
+        // stretching it past the screen.
+        host.sizingOptions = [.minSize]
+        w.contentView = host
         w.setFrameAutosaveName("MeteoraDictionary")
         if !w.setFrameUsingName("MeteoraDictionary") { w.center() }
         window = w
