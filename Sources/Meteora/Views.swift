@@ -12,7 +12,11 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            Theme.background.ignoresSafeArea()
+            if model.loadState == .ready {
+                Theme.background.ignoresSafeArea()
+            } else {
+                NebulaBackground().ignoresSafeArea()
+            }
             switch model.loadState {
             case .empty:
                 if journal.entries.isEmpty {
@@ -62,6 +66,7 @@ struct EmptyStateView: View {
         VStack(spacing: 0) {
             Spacer(minLength: 24)
             LogoMark().frame(width: 92, height: 92)
+                .background(GlowHalo(size: 120))
             Text("Meteora")
                 .titleStyle(34)
                 .foregroundStyle(Theme.text)
@@ -143,6 +148,7 @@ struct LoadingView: View {
     var body: some View {
         VStack(spacing: 14) {
             LogoMark().frame(width: 52, height: 52)
+                .background(GlowHalo(size: 70))
             Text(title).titleStyle(20).foregroundStyle(Theme.text).lineLimit(2).multilineTextAlignment(.center)
             ThinProgress(value: progress).frame(width: 260)
             Text("Чтение записи…").font(Theme.ui(12.5)).foregroundStyle(Theme.secondary)
@@ -171,30 +177,112 @@ struct FailureView: View {
 struct MainView: View {
     @ObservedObject var model: MeetingModel
     @ObservedObject var player: PlayerController
+    /// Height of the frames/transcript panel; the player takes the rest.
+    @AppStorage("layout.bottomHeight") private var bottomHeight: Double = 220
+    @AppStorage("layout.sidebarWidth") private var sidebarWidth: Double = 304
+    @AppStorage("layout.bottomCollapsed") private var bottomCollapsed = false
+    @State private var dragStartHeight: Double?
+    @State private var dragStartWidth: Double?
+
+    static let minStage: Double = 220
+    static let minBottom: Double = 120
 
     var body: some View {
         HStack(spacing: 0) {
-            VStack(spacing: 14) {
-                Stage(model: model, player: player)
-                if model.showsFramesTab || model.showsTranscriptTab {
-                    BottomPanel(model: model, player: player)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+            GeometryReader { g in
+                let hasPanel = model.showsFramesTab || model.showsTranscriptTab
+                let available = g.size.height - 4 - 18
+                let maxBottom = max(Self.minBottom, available - Self.minStage - 14)
+                let height = min(max(Self.minBottom, bottomHeight), maxBottom)
+                VStack(spacing: 0) {
+                    Stage(model: model, player: player)
+                    if hasPanel {
+                        SplitHandle(axis: .vertical, collapsed: bottomCollapsed,
+                                    help: bottomCollapsed ? "Показать панель (двойной щелчок)" : "Потяните, чтобы изменить размер; двойной щелчок — скрыть панель") { delta in
+                            if bottomCollapsed { bottomCollapsed = false; bottomHeight = Self.minBottom }
+                            let start = dragStartHeight ?? height
+                            if dragStartHeight == nil { dragStartHeight = height }
+                            bottomHeight = min(max(Self.minBottom, start - delta), maxBottom)
+                        } onEnd: {
+                            dragStartHeight = nil
+                        } onDoubleClick: {
+                            withAnimation(.easeOut(duration: 0.22)) { bottomCollapsed.toggle() }
+                        }
+                        if !bottomCollapsed {
+                            BottomPanel(model: model, player: player, height: height)
+                                .transition(.move(edge: .bottom).combined(with: .opacity))
+                        }
+                    }
                 }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 18)
+                .padding(.top, 4)
             }
-            .padding(.leading, 18)
-            .padding(.trailing, 18)
-            .padding(.bottom, 18)
-            .padding(.top, 4)
             .overlay(alignment: .bottom) { ToastView(model: model).padding(.bottom, 8) }
-            Rectangle().fill(Theme.hairline).frame(width: 1).ignoresSafeArea()
+            SplitHandle(axis: .horizontal, collapsed: false, help: "Потяните, чтобы изменить ширину панели") { delta in
+                let start = dragStartWidth ?? sidebarWidth
+                if dragStartWidth == nil { dragStartWidth = sidebarWidth }
+                sidebarWidth = min(max(270, start - delta), 440)
+            } onEnd: {
+                dragStartWidth = nil
+            } onDoubleClick: {
+                withAnimation(.easeOut(duration: 0.2)) { sidebarWidth = 304 }
+            }
             Sidebar(model: model, player: player)
-                .frame(width: 304)
+                .frame(width: sidebarWidth)
                 .background(Theme.inspector.ignoresSafeArea())
         }
+        .background(NebulaBackground(intensity: 0.55).ignoresSafeArea())
         .animation(.easeOut(duration: 0.2), value: model.frames.count)
         .sheet(isPresented: $model.exportSheetShown) {
             ExportSheet(model: model) { model.exportSheetShown = false }
         }
+    }
+}
+
+/// A thin draggable divider. Vertical axis = between player and panel,
+/// horizontal = between the work area and the inspector.
+struct SplitHandle: View {
+    enum Axis { case vertical, horizontal }
+    var axis: Axis
+    var collapsed: Bool
+    var help: String
+    var onDrag: (Double) -> Void
+    var onEnd: () -> Void
+    var onDoubleClick: () -> Void
+    @State private var hover = false
+    @State private var dragging = false
+
+    var body: some View {
+        let active = hover || dragging
+        ZStack {
+            if axis == .vertical {
+                Color.clear.frame(height: 14)
+                Capsule().fill(active ? Theme.accent.opacity(0.7) : Theme.tertiary.opacity(collapsed ? 0.6 : 0.35))
+                    .frame(width: active ? 48 : 36, height: 4)
+                    .shadow(color: Theme.accent.opacity(active ? 0.45 : 0), radius: 6)
+            } else {
+                Rectangle().fill(active ? Theme.accent.opacity(0.55) : Theme.hairline).frame(width: active ? 2 : 1)
+                Color.clear.frame(width: 8)
+            }
+        }
+        .frame(maxWidth: axis == .vertical ? .infinity : nil, maxHeight: axis == .horizontal ? .infinity : nil)
+        .contentShape(Rectangle())
+        .ignoresSafeArea(edges: axis == .horizontal ? .vertical : [])
+        .onHover { h in
+            hover = h
+            if h { (axis == .vertical ? NSCursor.resizeUpDown : NSCursor.resizeLeftRight).push() } else { NSCursor.pop() }
+        }
+        .gesture(DragGesture(minimumDistance: 1, coordinateSpace: .global)
+            .onChanged { v in
+                dragging = true
+                onDrag(axis == .vertical ? v.translation.height : v.translation.width)
+            }
+            .onEnded { _ in dragging = false; onEnd() })
+        .onTapGesture(count: 2, perform: onDoubleClick)
+        .animation(.easeOut(duration: 0.15), value: active)
+        .help(help)
+        .accessibilityLabel(axis == .vertical ? "Граница плеера и панели" : "Граница боковой панели")
     }
 }
 
@@ -214,7 +302,14 @@ struct Stage: View {
         .clipShape(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
             .strokeBorder(Color.white.opacity(0.06)))
+        // While playing, the slab's rim picks up a faint mother-of-pearl
+        // light — like a meteor's glow on metal.
+        .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
+            .strokeBorder(Nacre.gradient(), lineWidth: 1)
+            .opacity(player.isPlaying ? 0.55 : 0))
         .shadow(color: .black.opacity(0.10), radius: 10, y: 4)
+        .shadow(color: Theme.accent.opacity(player.isPlaying ? 0.30 : 0.08), radius: player.isPlaying ? 26 : 16)
+        .animation(.easeInOut(duration: 0.6), value: player.isPlaying)
     }
 }
 
@@ -443,6 +538,8 @@ struct WaveformScrubber: View {
 struct FramesStrip: View {
     @ObservedObject var model: MeetingModel
     @ObservedObject var player: PlayerController
+    /// Thumbnail height; grows with the panel.
+    var thumbHeight: Double = 94
     @State private var detail: FrameItem?
 
     var body: some View {
@@ -453,7 +550,7 @@ struct FramesStrip: View {
                     LazyHStack(spacing: 12) {
                         ForEach(model.frames) { item in
                             FrameThumbView(item: item, selected: model.selectedFrame == item.id,
-                                           showHours: (model.info?.duration ?? 0) >= 3600)
+                                           showHours: (model.info?.duration ?? 0) >= 3600, height: thumbHeight)
                                 .id(item.id)
                                 .onTapGesture(count: 2) { detail = item }
                                 .onTapGesture {
@@ -463,7 +560,7 @@ struct FramesStrip: View {
                         }
                         if model.sceneProgress != nil {
                             RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.surfaceSunken)
-                                .frame(width: 150, height: 94)
+                                .frame(width: thumbHeight * 1.6, height: thumbHeight)
                                 .overlay(NacreSheen().opacity(0.5).clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous)))
                         }
                     }
@@ -482,13 +579,14 @@ struct FrameThumbView: View {
     var item: FrameItem
     var selected: Bool
     var showHours: Bool
+    var height: Double = 94
     @State private var hover = false
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Image(nsImage: item.preview)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: 150, height: 94)
+                .frame(width: height * 1.6, height: height)
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .strokeBorder(selected ? Theme.accent : hover ? Theme.tertiary : Theme.hairline, lineWidth: selected ? 2 : 1))
@@ -576,14 +674,14 @@ struct RecordingSection: View {
     var body: some View {
         InspectorSection {
             Button { model.requestClose() } label: {
-                HStack(spacing: 3) {
-                    Image(systemName: "chevron.left").font(.system(size: 10, weight: .semibold))
+                HStack(spacing: 5) {
+                    Image(systemName: "chevron.left").font(.system(size: 11, weight: .semibold))
                     Text("Все записи")
                 }
             }
-            .buttonStyle(LinkButtonStyle())
+            .buttonStyle(BackPillStyle())
             .help("Вернуться ко всем записям (⌘W)")
-            .padding(.bottom, 2)
+            .padding(.bottom, 4)
             HStack(alignment: .top, spacing: 8) {
                 Text(model.title).titleStyle(17).foregroundStyle(Theme.text).lineLimit(3)
                     .textSelection(.enabled)

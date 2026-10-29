@@ -7,6 +7,7 @@ import MeteoraASR
 struct BottomPanel: View {
     @ObservedObject var model: MeetingModel
     @ObservedObject var player: PlayerController
+    var height: Double = 220
 
     private var tab: MeetingModel.BottomTab {
         if model.bottomTab == .transcript, model.showsTranscriptTab { return .transcript }
@@ -40,7 +41,8 @@ struct BottomPanel: View {
             }
             Group {
                 switch tab {
-                case .frames: FramesStrip(model: model, player: player)
+                case .frames: FramesStrip(model: model, player: player,
+                                          thumbHeight: min(300, max(70, height - 92 - (model.sceneError == nil ? 0 : 22))))
                 case .transcript: TranscriptList(model: model, player: player)
                 }
             }
@@ -49,7 +51,7 @@ struct BottomPanel: View {
         .padding(.horizontal, 16)
         .padding(.top, 12)
         .padding(.bottom, 10)
-        .frame(height: 220)
+        .frame(height: height)
         .background(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).fill(Theme.surface))
         .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline))
     }

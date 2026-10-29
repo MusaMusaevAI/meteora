@@ -102,7 +102,7 @@ struct OnboardingView: View {
             .padding(.bottom, 22)
         }
         .frame(width: 680, height: 610)
-        .background(Theme.background)
+        .background(NebulaBackground(intensity: 0.8))
         .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: step)
     }
 

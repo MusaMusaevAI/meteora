@@ -301,7 +301,7 @@ struct BatchView: View {
         }
         .padding(.horizontal, 24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Theme.background)
+        .background(NebulaBackground(intensity: 0.6))
         .onDrop(of: [.fileURL], isTargeted: $dropTargeted) { providers in
             for p in providers {
                 _ = p.loadObject(ofClass: URL.self) { url, _ in

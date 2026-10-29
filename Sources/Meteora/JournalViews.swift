@@ -97,6 +97,7 @@ struct HomeView: View {
     private var header: some View {
         HStack(alignment: .center, spacing: 12) {
             LogoMark().frame(width: 34, height: 34)
+                .background(GlowHalo(size: 46))
             VStack(alignment: .leading, spacing: 1) {
                 Text("Meteora").titleStyle(22).foregroundStyle(Theme.text)
                 Text("Перетащите запись в окно или выберите файл")

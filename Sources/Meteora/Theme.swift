@@ -144,6 +144,7 @@ struct PrimaryButtonStyle: ButtonStyle {
                 .frame(maxWidth: .infinity)
                 .background(RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
                     .fill(configuration.isPressed ? Theme.accentPressed : hover ? Theme.accentHover : Theme.accent))
+                .shadow(color: Theme.accent.opacity(hover && isEnabled ? 0.38 : 0), radius: 9, y: 2)
                 .opacity(isEnabled ? 1 : 0.4)
                 .contentShape(Rectangle())
                 .animation(.easeOut(duration: 0.12), value: hover)
@@ -251,6 +252,7 @@ struct ThinProgress: View {
             ZStack(alignment: .leading) {
                 Capsule().fill(onStage ? Color.white.opacity(0.14) : Theme.surfaceSunken)
                 Capsule().fill(onStage ? Theme.stageAccent : Theme.accent).frame(width: w)
+                    .shadow(color: (onStage ? Theme.stageAccent : Theme.accent).opacity(active ? 0.55 : 0), radius: 5)
                 if active {
                     NacreSheen(animated: !reduceMotion)
                         .frame(width: w)
@@ -332,5 +334,150 @@ struct ProgressStatus: View {
                 Button(action, action: perform).buttonStyle(LinkButtonStyle())
             }
         }
+    }
+}
+
+// MARK: - Back control
+
+/// «‹ Все записи»: a quiet accent pill, visible without shouting.
+struct BackPillStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HoverReader { hover in
+            configuration.label
+                .font(Theme.ui(12.5, weight: .semibold))
+                .foregroundStyle(Theme.accent)
+                .padding(.leading, 9)
+                .padding(.trailing, 12)
+                .frame(height: 26)
+                .background(Capsule().fill(hover ? Theme.accentSoft : Theme.accentSoft.opacity(0.7)))
+                .overlay(Capsule().strokeBorder(Theme.accent.opacity(hover ? 0.35 : 0.18)))
+                .shadow(color: Theme.accent.opacity(hover ? 0.25 : 0), radius: 8)
+                .opacity(configuration.isPressed ? 0.7 : 1)
+                .contentShape(Capsule())
+                .animation(.easeOut(duration: 0.14), value: hover)
+        }
+    }
+}
+
+// MARK: - Space: nebula glow and stars
+
+/// Slow, very soft glows drifting behind the interface — a nebula seen
+/// through frosted pearl. Never competes with content: low opacity, huge
+/// blur radius, a full drift cycle takes about a minute. Static under
+/// Reduce Motion.
+struct NebulaBackground: View {
+    /// 0…1: how present the glow is (start screen 1, working view less).
+    var intensity: Double = 1
+    var stars = true
+    @Environment(\.colorScheme) private var scheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        ZStack {
+            Theme.background
+            if reduceMotion {
+                glows(t: 0)
+            } else {
+                TimelineView(.animation(minimumInterval: 1 / 15)) { ctx in
+                    glows(t: ctx.date.timeIntervalSinceReferenceDate)
+                }
+            }
+            if stars && scheme == .dark { Starfield(animated: !reduceMotion).opacity(intensity) }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private func glows(t: Double) -> some View {
+        GeometryReader { g in
+            let w = g.size.width, h = g.size.height
+            let dark = scheme == .dark
+            let k = intensity * (dark ? 1 : 0.75)
+            // (colour, base position, drift radius, period, size, opacity)
+            let blobs: [(Color, CGPoint, CGFloat, Double, CGFloat, Double)] = [
+                (Theme.accent, CGPoint(x: 0.82, y: 0.12), 0.06, 61, 0.75, dark ? 0.28 : 0.16),
+                (Theme.nacre[1], CGPoint(x: 0.12, y: 0.86), 0.07, 73, 0.70, dark ? 0.16 : 0.22),
+                (Theme.nacre[2], CGPoint(x: 0.55, y: 0.98), 0.05, 89, 0.55, dark ? 0.10 : 0.14),
+                (Theme.nacre[0], CGPoint(x: 0.05, y: 0.10), 0.05, 97, 0.50, dark ? 0.12 : 0.16),
+            ]
+            ZStack {
+                ForEach(0..<blobs.count, id: \.self) { i in
+                    let b = blobs[i]
+                    let a = t / b.3 * 2 * .pi + Double(i)
+                    let d = max(w, h) * b.4
+                    Circle()
+                        .fill(RadialGradient(colors: [b.0.opacity(b.5 * k), b.0.opacity(0)],
+                                             center: .center, startRadius: 0, endRadius: d / 2))
+                        .frame(width: d, height: d)
+                        .position(x: w * (b.1.x + b.2 * CGFloat(cos(a))), y: h * (b.1.y + b.2 * CGFloat(sin(a * 0.8))))
+                }
+            }
+            .blendMode(dark ? .screen : .normal)
+        }
+    }
+}
+
+/// Sparse, faint stars for the dark theme. Positions are fixed (seeded),
+/// a few of them breathe slowly.
+struct Starfield: View {
+    var animated = true
+    private static let stars: [(CGFloat, CGFloat, CGFloat, Double)] = {
+        var rng = SplitMix(seed: 0x4D_65_74_65)
+        return (0..<70).map { _ in
+            (CGFloat(rng.unit()), CGFloat(rng.unit()), CGFloat(0.6 + rng.unit() * 1.1), rng.unit())
+        }
+    }()
+
+    var body: some View {
+        if animated {
+            TimelineView(.animation(minimumInterval: 1 / 10)) { ctx in canvas(t: ctx.date.timeIntervalSinceReferenceDate) }
+        } else {
+            canvas(t: 0)
+        }
+    }
+
+    private func canvas(t: Double) -> some View {
+        Canvas { ctx, size in
+            for (i, s) in Self.stars.enumerated() {
+                let twinkle = i % 5 == 0 ? 0.5 + 0.5 * sin(t * 0.7 + s.3 * 20) : 1
+                let alpha = (0.18 + 0.32 * s.3) * twinkle
+                let r = s.2
+                let rect = CGRect(x: s.0 * size.width - r / 2, y: s.1 * size.height - r / 2, width: r, height: r)
+                ctx.fill(Path(ellipseIn: rect), with: .color(.white.opacity(alpha)))
+            }
+        }
+    }
+}
+
+/// Tiny deterministic generator (stable star positions across launches).
+struct SplitMix {
+    var state: UInt64
+    init(seed: UInt64) { state = seed }
+    mutating func next() -> UInt64 {
+        state &+= 0x9E37_79B9_7F4A_7C15
+        var z = state
+        z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
+        z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
+        return z ^ (z >> 31)
+    }
+    mutating func unit() -> Double { Double(next() >> 11) / Double(1 << 53) }
+}
+
+/// A soft glow halo used behind the logo mark.
+struct GlowHalo: View {
+    var size: CGFloat
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 20, paused: reduceMotion)) { ctx in
+            let t = ctx.date.timeIntervalSinceReferenceDate
+            let angle = Angle.degrees(reduceMotion ? 0 : (t * 9).truncatingRemainder(dividingBy: 360))
+            Circle()
+                .fill(AngularGradient(colors: Theme.nacre + [Theme.nacre[0]], center: .center, angle: angle))
+                .frame(width: size, height: size)
+                .blur(radius: size * 0.28)
+                .opacity(0.55)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
