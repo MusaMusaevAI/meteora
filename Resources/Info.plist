@@ -17,6 +17,8 @@
 	<key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
 	<key>NSHighResolutionCapable</key><true/>
 	<key>NSSupportsSuddenTermination</key><false/>
+	<key>NSMicrophoneUsageDescription</key><string>Meteora записывает встречу с выбранного микрофона. Запись сохраняется только на этом Mac, в папке, которую вы выбрали.</string>
+	<key>NSAudioCaptureUsageDescription</key><string>Meteora записывает звук встречи, который играет на Mac (Телемост, Zoom, браузер). Запись сохраняется только на этом Mac, в папке, которую вы выбрали.</string>
 	<key>NSHumanReadableCopyright</key><string>Meteora — verba meteora, scripta manent.</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>

@@ -9,7 +9,9 @@
 	<!-- ~/Downloads/Meteora: where handed-off audio is placed. -->
 	<key>com.apple.security.files.downloads.read-write</key><true/>
 	<!-- Meeting journal: reopen a recording the user already opened, without
-	     asking again. Bookmarks are read-only and only for those files. -->
+	     asking again (read-only bookmarks, only for those files). Recorder:
+	     one read-write bookmark for the folder the user picked for new
+	     recordings. -->
 	<key>com.apple.security.files.bookmarks.app-scope</key><true/>
 	<!-- Required by WebKit in a sandboxed app: without it the web content
 	     process is killed and video can't be shown. The page itself can't
@@ -17,7 +19,14 @@
 	     the bundled player page, a content blocker drops every non
 	     meteora-media:// request, and the app contains no networking code. -->
 	<key>com.apple.security.network.client</key><true/>
-	<!-- Deliberately absent: network server, camera, microphone, Apple Events,
-	     JIT, unsigned executable memory, library validation exceptions. -->
+	<!-- Meeting recording (Recording/): the microphone, AirPods, USB mics and
+	     an iPhone via Continuity through AVCaptureSession, and the system-audio
+	     tap. Only used while the user records; macOS asks once
+	     (NSMicrophoneUsageDescription, NSAudioCaptureUsageDescription) and
+	     shows its orange indicator. Audio is written only to the folder the
+	     user chose; nothing is sent anywhere. -->
+	<key>com.apple.security.device.audio-input</key><true/>
+	<!-- Deliberately absent: network server, camera, Apple Events, JIT,
+	     unsigned executable memory, library validation exceptions. -->
 </dict>
 </plist>
