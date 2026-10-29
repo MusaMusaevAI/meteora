@@ -38,9 +38,6 @@ extension SummaryProgress {
 // MARK: - Model
 
 extension MeetingModel {
-    /// One summarizer for the app: the model stays loaded between meetings.
-    static let summarizer = MeetingSummarizer()
-
     func summarize() async {
         guard let url, let tr = transcript, summaryProgress == nil else { return }
         let controller = SummaryModelController.shared
@@ -54,7 +51,7 @@ extension MeetingModel {
         bottomTab = .summary
         let date = MeetingJournal.meetingDate(for: url)
         do {
-            let s = try await Self.summarizer.summarize(tr, meetingDate: date, progress: { p in
+            let s = try await SummaryModelController.shared.summarizer.summarize(tr, meetingDate: date, progress: { p in
                 Task { @MainActor [weak self] in if self?.summaryProgress != nil { self?.summaryProgress = p } }
             }, isCancelled: { token.isCancelled })
             summary = s

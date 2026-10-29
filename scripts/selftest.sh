@@ -38,7 +38,7 @@ run() { # input-file-name [extra app arguments…]
   open -n -W --env METEORA_SELFTEST=1 --env METEORA_SELFTEST_ASR=1 --stdout "$out/stdout.txt" --stderr "$out/stderr.txt" \
        -a "$APP" --args --selftest "$BASE/in/$file" "$out" --asr-wav "$BASE/in/ru-example.wav" "$@" &
   local pid=$!
-  for _ in $(seq 1 300); do kill -0 $pid 2>/dev/null || break; sleep 1; done
+  for _ in $(seq 1 600); do kill -0 $pid 2>/dev/null || break; sleep 1; done
   if kill -0 $pid 2>/dev/null; then
     echo "timeout"; pkill -9 -f "Meteora.app/Contents/MacOS/Meteora" || true; kill $pid 2>/dev/null
     echo "{\"ok\":false,\"errors\":[\"timeout after: $(tail -1 "$out/progress.txt" 2>/dev/null)\"]}" > "$out/report.json"
@@ -49,7 +49,7 @@ run() { # input-file-name [extra app arguments…]
   python3 -c "import json,sys; sys.exit(0 if json.load(open('$out/report.json')).get('ok') else 1)"
 }
 
-run slides.webm || status=1
+run slides.webm --llm || status=1
 run long-1920.webm || status=1
 # --convert-fixtures <dir>: SelfTest converts every file in <dir> through the
 # converter XPC service (MediaConverter.runSelfTest) into <out>/convert.

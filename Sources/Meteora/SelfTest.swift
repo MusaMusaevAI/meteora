@@ -3,6 +3,7 @@ import AVFoundation
 import SwiftUI
 import MeteoraCore
 import MeteoraASR
+import MeteoraLLM
 
 /// End-to-end check used by CI on a real macOS machine:
 /// `Meteora --selftest <input.webm> <output-dir>`.
@@ -191,6 +192,18 @@ final class SelfTest {
             report["speakers"] = sp
         }
 
+        mark("llm")
+        if CommandLine.arguments.contains("--llm") {
+            let text = "Анна: Обсуждаем запуск рассылки по ПДС. Олег: Предлагаю старт 10 ноября. Анна: Решили: стартуем 10 ноября. Олег подготовит тексты писем до пятницы. Мария проверит сегмент базы."
+            let r = await MeetingSummarizer.runSelfTest(transcriptText: text, output: output)
+            report["llm"] = r
+            if r["ok"] as? Bool != true { errors.append("LLM: \(r["errors"] ?? "?")") }
+            if model.transcript != nil {
+                await model.summarize()
+                report["llmRecording"] = model.summary.map { $0.markdown() } ?? (model.summaryError ?? "none")
+                model.bottomTab = .summary
+            }
+        }
         mark("scenes")
         // 4. Key frames + OCR + reports
         if model.hasVideo, let player = model.player, player.isReady {
