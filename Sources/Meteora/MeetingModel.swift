@@ -296,13 +296,21 @@ final class MeetingModel: ObservableObject {
     @Published var diarizeError: String?
     private var diarizeToken: CancelToken?
 
-    /// Finds who spoke when and labels the transcript («Спикер 1, 2…»).
-    func separateSpeakers() async {
+    /// Finds who spoke when and labels the transcript («Спикер 1, 2…»),
+    /// with the voice model chosen in `SpeakerModelController.shared.tier`
+    /// (downloaded first if needed).
+    /// - Parameter count: exact number of speakers if the user knows it
+    ///   (2…10); nil = automatic (at most 10).
+    func separateSpeakers(count: Int? = nil) async {
         guard let origin = audioOrigin, let url, let tr = transcript, diarizeProgress == nil else { return }
         let controller = SpeakerModelController.shared
-        if !controller.isInstalled {
-            guard await controller.download() else { diarizeError = controller.error; return }
+        let tier = controller.tier
+        if !controller.isReady(tier) {
+            guard await controller.download(tier) else { diarizeError = controller.error; return }
         }
+        let options = SpeakerDiarizer.Options(tier: tier,
+                                              numSpeakers: count.map { min(max(1, $0), SpeakerModelController.maxSpeakers) },
+                                              maxSpeakers: SpeakerModelController.maxSpeakers)
         let token = CancelToken()
         diarizeToken = token
         diarizeError = nil
@@ -310,7 +318,7 @@ final class MeetingModel: ObservableObject {
         let duration = info?.duration
         let result: Result<[SpeakerTurn], Error> = await Task.detached(priority: .userInitiated) { [weak self] in
             do {
-                let d = try SpeakerDiarizer()
+                let d = try SpeakerDiarizer(tier: tier, options: options)
                 let decoder = try await origin.make()
                 let turns = try d.diarize(decoder: decoder, expectedDuration: duration,
                                           isCancelled: { token.isCancelled }, progress: { p in

@@ -234,17 +234,210 @@ public enum SpeakerLinking {
         return out
     }
 
-    static func dot(_ a: [Float], _ b: [Float]) -> Float {
+    public static func dot(_ a: [Float], _ b: [Float]) -> Float {
         var s: Float = 0
         for i in 0 ..< min(a.count, b.count) { s += a[i] * b[i] }
         return s
     }
 
-    static func normalized(_ v: [Float]) -> [Float] {
+    public static func normalized(_ v: [Float]) -> [Float] {
         var n: Float = 0
         for x in v where x.isFinite { n += x * x }
         n = n.squareRoot()
         guard n > 1e-12 else { return [Float](repeating: 0, count: v.count) }
         return v.map { $0.isFinite ? $0 / n : 0 }
+    }
+}
+
+/// Final clean-up of the speakers found by diarization, so one voice is not
+/// reported as two and noise does not become a "participant".
+///
+/// Works on whole speakers (each backed by up to 30 s of their speech),
+/// whose embeddings are far more reliable than the 10-second-chunk
+/// embeddings sherpa clusters with complete linkage — there one odd chunk
+/// (a cough, overlap, a change of microphone distance) is enough to split a
+/// speaker. Steps:
+/// 1. exact count requested → merge the closest pair until it holds;
+/// 2. merge while the closest pair of centroids is at least
+///    `mergeSimilarity` apart (`shortRecordingMergeSimilarity` for
+///    recordings shorter than `shortRecordingSeconds`: there a second
+///    speaker needs stronger evidence);
+/// 3. "tiny" speakers (less than `minSpeakerSeconds` of speech or less than
+///    `minSpeakerShare` of all speech) join their most similar speaker
+///    unless their voice is clearly different (similarity below
+///    `tinyMergeSimilarity`); below `unreliableSeconds`, or without an
+///    embedding, they always join;
+/// 4. never more than `maxSpeakers`.
+/// Pure logic, unit-tested; SpeakerDiarizer supplies the embeddings.
+public enum SpeakerCleanup {
+    public struct Speaker: Sendable {
+        /// Voice embedding (any scale), nil if none could be computed.
+        public var embedding: [Float]?
+        /// Seconds of speech attributed to the speaker.
+        public var seconds: Double
+
+        public init(embedding: [Float]?, seconds: Double) {
+            self.embedding = embedding
+            self.seconds = seconds
+        }
+    }
+
+    public struct Rules: Sendable, Equatable {
+        /// Exact number of speakers wanted (nil = automatic).
+        public var numSpeakers: Int?
+        /// Upper bound on the number of speakers.
+        public var maxSpeakers: Int
+        /// Cosine similarity at which two speakers are the same voice.
+        public var mergeSimilarity: Float
+        /// Recordings shorter than this need stronger evidence for a split.
+        public var shortRecordingSeconds: Double
+        /// `mergeSimilarity` for short recordings (lower = merge sooner).
+        public var shortRecordingMergeSimilarity: Float
+        /// Speakers with less speech than this are "tiny".
+        public var minSpeakerSeconds: Double
+        /// …or with less than this share of all speech.
+        public var minSpeakerShare: Double
+        /// A tiny speaker stays separate only if its similarity to the
+        /// nearest speaker is below this (clearly another voice).
+        public var tinyMergeSimilarity: Float
+        /// Below this much speech an embedding is not trusted at all.
+        public var unreliableSeconds: Double
+
+        public init(numSpeakers: Int? = nil, maxSpeakers: Int = 10,
+                    mergeSimilarity: Float = 0.6,
+                    shortRecordingSeconds: Double = 60,
+                    shortRecordingMergeSimilarity: Float = 0.57,
+                    minSpeakerSeconds: Double = 4,
+                    minSpeakerShare: Double = 0.03,
+                    tinyMergeSimilarity: Float = 0.4,
+                    unreliableSeconds: Double = 1.5) {
+            self.numSpeakers = numSpeakers
+            self.maxSpeakers = maxSpeakers
+            self.mergeSimilarity = mergeSimilarity
+            self.shortRecordingSeconds = shortRecordingSeconds
+            self.shortRecordingMergeSimilarity = shortRecordingMergeSimilarity
+            self.minSpeakerSeconds = minSpeakerSeconds
+            self.minSpeakerShare = minSpeakerShare
+            self.tinyMergeSimilarity = tinyMergeSimilarity
+            self.unreliableSeconds = unreliableSeconds
+        }
+    }
+
+    private struct Group {
+        var members: [Int]
+        var sum: [Float]?
+        var seconds: Double
+        var centroid: [Float]? { sum.map(SpeakerLinking.normalized) }
+    }
+
+    /// Returns, for every input speaker, the index of its final speaker
+    /// (dense, 0-based, numbered in the order of the first member).
+    public static func plan(_ speakers: [Speaker], recordingSeconds: Double, rules: Rules) -> [Int] {
+        guard !speakers.isEmpty else { return [] }
+        var groups: [Group] = speakers.enumerated().map { pair -> Group in
+            let i = pair.offset, s = pair.element
+            let seconds = s.seconds.isFinite ? max(0, s.seconds) : 0
+            var sum: [Float]?
+            if let e = s.embedding, !e.isEmpty {
+                let n = SpeakerLinking.normalized(e)
+                if n.contains(where: { $0 != 0 }) {
+                    let w = Float(max(seconds, 0.01))
+                    sum = n.map { $0 * w }
+                }
+            }
+            return Group(members: [i], sum: sum, seconds: seconds)
+        }
+
+        func similarity(_ a: Int, _ b: Int) -> Float? {
+            guard let x = groups[a].centroid, let y = groups[b].centroid else { return nil }
+            return SpeakerLinking.dot(x, y)
+        }
+        /// Moves group `from` into group `into`.
+        func merge(_ into: Int, _ from: Int) {
+            let src = groups[from]
+            if let s = src.sum {
+                if var d = groups[into].sum {
+                    for k in d.indices where k < s.count { d[k] += s[k] }
+                    groups[into].sum = d
+                } else {
+                    groups[into].sum = s
+                }
+            }
+            groups[into].seconds += src.seconds
+            groups[into].members += src.members
+            groups.remove(at: from)
+        }
+        func closestPair() -> (i: Int, j: Int, sim: Float)? {
+            var best: (i: Int, j: Int, sim: Float)?
+            for i in 0 ..< groups.count {
+                for j in (i + 1) ..< groups.count {
+                    guard let s = similarity(i, j) else { continue }
+                    if best == nil || s > best!.sim { best = (i, j, s) }
+                }
+            }
+            return best
+        }
+        /// One merge towards a target count: a speaker without an embedding
+        /// joins the largest one; otherwise the closest pair merges.
+        func forceMerge() {
+            let blind = groups.indices.filter { groups[$0].sum == nil }
+            if let small = blind.min(by: { groups[$0].seconds < groups[$1].seconds }),
+               let big = groups.indices.filter({ $0 != small }).max(by: { groups[$0].seconds < groups[$1].seconds }) {
+                merge(big, small)
+            } else if let p = closestPair() {
+                merge(p.i, p.j)
+            } else if groups.count > 1 {
+                merge(0, groups.count - 1)
+            }
+        }
+
+        let cap = max(1, rules.maxSpeakers)
+        if let n = rules.numSpeakers {
+            let target = min(max(1, n), cap)
+            while groups.count > target { forceMerge() }
+        } else {
+            // 2. Same voice.
+            let limit = recordingSeconds < rules.shortRecordingSeconds
+                ? rules.shortRecordingMergeSimilarity : rules.mergeSimilarity
+            while groups.count > 1, let p = closestPair(), p.sim >= limit { merge(p.i, p.j) }
+
+            // 3. Tiny speakers, smallest first.
+            while groups.count > 1 {
+                let total = groups.reduce(0) { $0 + $1.seconds }
+                var pick: (seconds: Double, from: Int, into: Int)?
+                for k in groups.indices {
+                    let g = groups[k]
+                    let tiny = g.seconds < rules.minSpeakerSeconds || g.seconds < rules.minSpeakerShare * total
+                    guard tiny || g.sum == nil else { continue }
+                    var target: Int?
+                    var targetSim: Float?
+                    for o in groups.indices where o != k {
+                        let s = similarity(k, o)
+                        let better: Bool
+                        if let t = target {
+                            let a = s ?? -2, b = targetSim ?? -2
+                            better = a > b || (a == b && groups[o].seconds > groups[t].seconds)
+                        } else {
+                            better = true
+                        }
+                        if better { target = o; targetSim = s }
+                    }
+                    guard let into = target else { continue }
+                    let joins = g.sum == nil || targetSim == nil || g.seconds < rules.unreliableSeconds
+                        || targetSim! >= rules.tinyMergeSimilarity
+                    guard joins else { continue }
+                    if pick == nil || g.seconds < pick!.seconds { pick = (g.seconds, k, into) }
+                }
+                guard let p = pick else { break }
+                merge(p.into, p.from)
+            }
+        }
+        // 4. Upper bound.
+        while groups.count > cap { forceMerge() }
+
+        var out = [Int](repeating: 0, count: speakers.count)
+        let ordered = groups.sorted { ($0.members.min() ?? 0) < ($1.members.min() ?? 0) }
+        for (c, g) in ordered.enumerated() { for i in g.members { out[i] = c } }
+        return out
     }
 }

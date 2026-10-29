@@ -48,30 +48,76 @@ final class SpeechModelController: ObservableObject {
     static var vadModelURL: URL? { Bundle.main.url(forResource: "silero_vad", withExtension: "onnx") }
 }
 
-/// The speaker-separation models (pyannote + CAM++), downloaded on demand.
+/// The speaker-separation models, downloaded on demand: the shared pyannote
+/// segmentation plus one voice model per tier (`SpeakerModelTier`:
+/// `.standard` TitaNet-S 46 MB in total, `.accurate` TitaNet-L 107 MB).
+///
+/// API for the UI:
+/// - `tier` — chosen tier, persisted in UserDefaults "speakers.tier";
+/// - `installed` (set of tiers) / `isReady(_:)` / `isInstalled` (chosen tier);
+/// - `downloading` + `progress` (0…1) while a download runs, `error` after
+///   a failure; `download(_:)` (nil = chosen tier), `cancel()`;
+/// - `remove(_:)` deletes a tier's voice model (the shared segmentation goes
+///   with the last tier);
+/// - `sizeText` (chosen tier) / `downloadSizeText(_:)` — download size; `tier.title`,
+///   `tier.detail`, `tier.embeddingName` for labels;
+/// - `maxSpeakers` (10) — upper bound for a "number of speakers" picker
+///   (nil = automatic, else 2…maxSpeakers), passed to
+///   `MeetingModel.separateSpeakers(count:)`.
 @MainActor
 final class SpeakerModelController: ObservableObject {
     static let shared = SpeakerModelController()
+    static let tierKey = "speakers.tier"
+    /// Largest exact count the UI should offer.
+    static let maxSpeakers = 10
 
-    @Published private(set) var isInstalled = ModelStore.speakers.isInstalled
+    @Published var tier: SpeakerModelTier {
+        didSet { UserDefaults.standard.set(tier.rawValue, forKey: Self.tierKey) }
+    }
+    @Published private(set) var installed: Set<SpeakerModelTier> = []
+    /// The tier being downloaded.
+    @Published private(set) var downloading: SpeakerModelTier?
     @Published private(set) var progress: Double?
     @Published private(set) var error: String?
     private var token: CancelToken?
 
-    var sizeText: String { FileSizeText.string(ModelStore.speakers.spec.totalSize) }
+    init() {
+        tier = UserDefaults.standard.string(forKey: Self.tierKey).flatMap(SpeakerModelTier.init(rawValue:))
+            ?? SpeakerModel.defaultTier
+        // The old pyannote + CAM++ folder: keep the segmentation file, drop CAM++.
+        ModelStore.migrateLegacySpeakerModels()
+        refresh()
+    }
 
-    func refresh() { isInstalled = ModelStore.speakers.isInstalled }
+    /// The chosen tier is ready to use.
+    var isInstalled: Bool { installed.contains(tier) }
+    func isReady(_ t: SpeakerModelTier) -> Bool { installed.contains(t) }
 
+    /// Download size of the chosen tier (what is still missing, or the full
+    /// size once installed).
+    var sizeText: String { downloadSizeText(tier) }
+    func downloadSizeText(_ t: SpeakerModelTier) -> String {
+        let missing = t.missingSize
+        return FileSizeText.string(missing > 0 ? missing : t.totalSize)
+    }
+
+    func refresh() {
+        installed = Set(SpeakerModelTier.allCases.filter { $0.isInstalled })
+    }
+
+    /// Downloads and verifies a tier (nil = the chosen one).
     @discardableResult
-    func download() async -> Bool {
+    func download(_ which: SpeakerModelTier? = nil) async -> Bool {
         guard progress == nil else { return false }
+        let target = which ?? tier
         let t = CancelToken()
         token = t
         error = nil
+        downloading = target
         progress = 0
-        defer { progress = nil; token = nil; refresh() }
+        defer { progress = nil; downloading = nil; token = nil; refresh() }
         do {
-            try await ModelStore.speakers.install(progress: { p in
+            try await target.install(progress: { p in
                 Task { @MainActor in if SpeakerModelController.shared.progress != nil { SpeakerModelController.shared.progress = p } }
             }, isCancelled: { t.isCancelled })
             return true
@@ -84,6 +130,14 @@ final class SpeakerModelController: ObservableObject {
     }
 
     func cancel() { token?.cancel() }
+
+    /// Deletes a tier's voice model. Not during a download (the shared
+    /// segmentation model may be removed with the last tier).
+    func remove(_ t: SpeakerModelTier) {
+        guard downloading == nil else { return }
+        try? t.remove()
+        refresh()
+    }
 }
 
 /// Saved transcripts, so reopening a recording shows its text instantly.

@@ -79,6 +79,7 @@ final class StorageModel: ObservableObject {
             }
         }.value
         SpeechModelController.shared.refresh()
+        SpeakerModelController.shared.refresh()
         if doomed.contains(where: { $0.section == .summaryModel }) { SummaryModelController.shared.unloadAll() }
         SummaryModelController.shared.refresh()
         selected = []
@@ -105,11 +106,20 @@ final class StorageModel: ObservableObject {
                                    detail: ModelStore.shared.isInstalled ? "Установлена и проверена" : "Загружена не полностью",
                                    bytes: ModelStore.directorySize(modelDir), urls: [modelDir]))
         }
-        let speakerDir = ModelStore.speakers.directory
-        if fm.fileExists(atPath: speakerDir.path) {
-            out.append(StorageItem(id: "model-speakers", section: .model, title: "\(SpeakerModel.displayName) — разделение по спикерам",
-                                   detail: ModelStore.speakers.isInstalled ? "Установлена и проверена" : "Загружена не полностью",
-                                   bytes: ModelStore.directorySize(speakerDir), urls: [speakerDir]))
+        // Speaker separation: shared segmentation + one voice model per tier.
+        let segmentation = ModelStore.speakerSegmentation
+        if fm.fileExists(atPath: segmentation.directory.path) {
+            out.append(StorageItem(id: "model-speakers", section: .model, title: "pyannote 3.0 — разделение по спикерам (общая часть)",
+                                   detail: segmentation.isInstalled ? "Установлена и проверена" : "Загружена не полностью",
+                                   bytes: ModelStore.directorySize(segmentation.directory), urls: [segmentation.directory]))
+        }
+        for tier in SpeakerModelTier.allCases {
+            let store = tier.store
+            guard fm.fileExists(atPath: store.directory.path) else { continue }
+            out.append(StorageItem(id: "model-speakers-\(tier.rawValue)", section: .model,
+                                   title: "\(tier.embeddingName) — голоса спикеров, \(tier.title.lowercased())",
+                                   detail: store.isInstalled ? "Установлена и проверена" : "Загружена не полностью",
+                                   bytes: ModelStore.directorySize(store.directory), urls: [store.directory]))
         }
 
         // 1b. Summary models (three sizes)

@@ -96,8 +96,8 @@ public enum ModelError: Error, LocalizedError {
 }
 
 /// Where the model lives and how it gets there.
-/// One instance per model: `ModelStore.shared` is GigaAM, `ModelStore.speakers`
-/// the speaker-separation pair (see SpeakerModelStore.swift).
+/// One instance per model: `ModelStore.shared` is GigaAM; the speaker models
+/// (`speakerSegmentation`, `speakerEmbedding(_:)`) are in SpeakerModelStore.swift.
 public final class ModelStore: @unchecked Sendable {
     public static let shared = ModelStore()
 
