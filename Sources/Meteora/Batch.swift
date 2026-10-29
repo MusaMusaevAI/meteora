@@ -172,7 +172,10 @@ final class BatchQueue: ObservableObject {
             let reused = transcript != nil
             if transcript == nil {
                 set(id, .transcribing(0))
-                if recognizer == nil { recognizer = try SpeechRecognizer(store: .shared, vadModel: vad) }
+                if recognizer == nil {
+                    recognizer = try SpeechRecognizer(store: .shared, vadModel: vad,
+                                                      hotwords: TermDictionaryStore.shared.recognizerHints)
+                }
                 let rec = recognizer!
                 let segments: [TranscriptSegment] = try await Task.detached(priority: .userInitiated) {
                     let decoder = try await origin.make()

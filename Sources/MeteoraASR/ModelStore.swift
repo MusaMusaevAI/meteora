@@ -21,6 +21,9 @@ public struct ModelSpec: Sendable {
     public var hosts: [String]
     /// Repository used for files without an explicit `source`.
     public var repo: String
+    /// Optional companion files: downloaded with the model (best effort) and
+    /// verified the same way, but not required for `isInstalled`.
+    public var extras: [ModelFile] = []
 
     public var totalSize: Int64 { files.reduce(0) { $0 + $1.size } }
 
@@ -53,11 +56,25 @@ public enum SpeechModel {
                   sha256: tokensSHA256),
     ]
 
+    /// SentencePiece tokenizer of the same model, from Sber's own repository
+    /// (ai-sage/GigaAM-v3, MIT), pinned to the commit of the `e2e_rnnt`
+    /// branch. The sherpa-onnx export ships only tokens.txt (no scores);
+    /// recognizer hints need the piece scores to split a term into exactly
+    /// the pieces the model emits. SHA-256 = Git LFS object id (API tree and
+    /// LFS pointer both checked). Optional: without it hints are off.
+    public static let tokenizerFile = "tokenizer.model"
+    public static let extras: [ModelFile] = [
+        ModelFile(name: tokenizerFile, size: 255_336,
+                  sha256: "828c12c991019eef952a960661f25a92d6ad279591e2ea466b4aeddf1d20a18a",
+                  source: "ai-sage/GigaAM-v3/resolve/7655ad717f8122257385bb4b2f373db3697e8680/tokenizer.model"),
+    ]
+
     public static var totalSize: Int64 { files.reduce(0) { $0 + $1.size } }
 
     static func urls(for file: ModelFile) -> [URL] { spec.urls(for: file) }
 
-    public static let spec = ModelSpec(id: id, displayName: displayName, files: files, hosts: hosts, repo: repo)
+    public static let spec = ModelSpec(id: id, displayName: displayName, files: files, hosts: hosts, repo: repo,
+                                       extras: extras)
 }
 
 public enum ModelError: Error, LocalizedError {
@@ -124,6 +141,8 @@ public final class ModelStore: @unchecked Sendable {
 
     /// Downloads missing files, verifies every hash, then marks the model
     /// as installed. Safe to call again after a failure or cancellation.
+    /// Optional `extras` are fetched afterwards; their failure (or
+    /// cancellation) does not undo the install.
     public func install(progress: @escaping @Sendable (Double) -> Void,
                         isCancelled: @escaping @Sendable () -> Bool) async throws {
         try fm.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -131,37 +150,8 @@ public final class ModelStore: @unchecked Sendable {
         let total = Double(spec.totalSize)
         var done: Int64 = 0
         for file in spec.files {
-            let dest = path(file.name)
-            if (try? Self.sha256(of: dest)) == file.sha256 {
-                done += file.size
-                progress(Double(done) / total)
-                continue
-            }
-            try? fm.removeItem(at: dest)
-            var lastError: Error = ModelError.network("нет доступа к серверам")
-            var ok = false
-            for url in spec.urls(for: file) {
-                if isCancelled() { throw ModelError.cancelled }
-                do {
-                    let base = done
-                    let tmp = try await Downloader.download(url, expectedSize: file.size, isCancelled: isCancelled) { got in
-                        progress(Double(base + got) / total)
-                    }
-                    guard try Self.sha256(of: tmp) == file.sha256 else {
-                        try? fm.removeItem(at: tmp)
-                        lastError = ModelError.integrity(file.name)
-                        continue // try the next host
-                    }
-                    try fm.moveItem(at: tmp, to: dest)
-                    ok = true
-                    break
-                } catch ModelError.cancelled {
-                    throw ModelError.cancelled
-                } catch {
-                    lastError = error
-                }
-            }
-            guard ok else { throw lastError }
+            let base = done
+            try await fetch(file, isCancelled: isCancelled) { got in progress(Double(base + got) / total) }
             done += file.size
             progress(Double(done) / total)
         }
@@ -170,6 +160,60 @@ public final class ModelStore: @unchecked Sendable {
         } catch {
             throw ModelError.io(error.localizedDescription)
         }
+        // Optional files: the model works without them.
+        try? await installExtras(isCancelled: isCancelled)
+    }
+
+    /// Optional files that are not present with the pinned hash.
+    public var missingExtras: [ModelFile] {
+        spec.extras.filter { verifiedExtra($0.name) == nil }
+    }
+
+    /// Downloads the optional files that are missing (for models installed
+    /// before an extra was added). Same HTTPS + SHA-256 rules as `install`.
+    public func installExtras(isCancelled: @escaping @Sendable () -> Bool) async throws {
+        try fm.createDirectory(at: directory, withIntermediateDirectories: true)
+        for file in spec.extras {
+            try await fetch(file, isCancelled: isCancelled) { _ in }
+        }
+    }
+
+    /// The optional file `name`, if it is on disk with the pinned SHA-256
+    /// (hashed on every call: extras are small).
+    public func verifiedExtra(_ name: String) -> URL? {
+        guard let file = spec.extras.first(where: { $0.name == name }) else { return nil }
+        let url = path(name)
+        guard (try? fm.attributesOfItem(atPath: url.path)[.size] as? NSNumber)?.int64Value == file.size,
+              (try? Self.sha256(of: url)) == file.sha256 else { return nil }
+        return url
+    }
+
+    /// Puts one file in place: kept if already verified, otherwise
+    /// downloaded from each host in turn until one passes the hash check.
+    private func fetch(_ file: ModelFile, isCancelled: @escaping @Sendable () -> Bool,
+                       progress: @escaping (Int64) -> Void) async throws {
+        let dest = path(file.name)
+        if (try? Self.sha256(of: dest)) == file.sha256 { return }
+        try? fm.removeItem(at: dest)
+        var lastError: Error = ModelError.network("нет доступа к серверам")
+        for url in spec.urls(for: file) {
+            if isCancelled() { throw ModelError.cancelled }
+            do {
+                let tmp = try await Downloader.download(url, expectedSize: file.size, isCancelled: isCancelled, progress: progress)
+                guard try Self.sha256(of: tmp) == file.sha256 else {
+                    try? fm.removeItem(at: tmp)
+                    lastError = ModelError.integrity(file.name)
+                    continue // try the next host
+                }
+                try fm.moveItem(at: tmp, to: dest)
+                return
+            } catch ModelError.cancelled {
+                throw ModelError.cancelled
+            } catch {
+                lastError = error
+            }
+        }
+        throw lastError
     }
 
     public static func sha256(of url: URL) throws -> String {
