@@ -100,10 +100,11 @@ enum DictionaryWindow {
         let host = NSHostingView(rootView: DictionaryView())
         // The window decides its size; long lists scroll instead of
         // stretching it past the screen.
-        host.sizingOptions = [.minSize]
+        host.sizingOptions = []
         w.contentView = host
-        w.setFrameAutosaveName("MeteoraDictionary")
-        if !w.setFrameUsingName("MeteoraDictionary") { w.center() }
+        w.setContentSize(NSSize(width: 600, 560))
+        w.setFrameAutosaveName("MeteoraDictionary2")
+        if !w.setFrameUsingName("MeteoraDictionary2") { w.center() }
         window = w
         w.makeKeyAndOrderFront(nil)
     }

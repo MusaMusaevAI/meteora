@@ -246,10 +246,11 @@ enum BatchWindow {
         let host = NSHostingView(rootView: BatchView())
         // The window decides its size; long lists scroll instead of
         // stretching it past the screen.
-        host.sizingOptions = [.minSize]
+        host.sizingOptions = []
         w.contentView = host
-        w.setFrameAutosaveName("MeteoraBatch")
-        if !w.setFrameUsingName("MeteoraBatch") { w.center() }
+        w.setContentSize(NSSize(width: 640, 600))
+        w.setFrameAutosaveName("MeteoraBatch2")
+        if !w.setFrameUsingName("MeteoraBatch2") { w.center() }
         window = w
         w.makeKeyAndOrderFront(nil)
     }
