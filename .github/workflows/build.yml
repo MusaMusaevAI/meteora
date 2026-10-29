@@ -88,7 +88,13 @@ jobs:
           retention-days: 14
       - name: Fail if tests failed
         if: steps.tests.outcome != 'success' || steps.selftest.outcome != 'success'
-        run: exit 1
+        run: |
+          # Surface the reasons as annotations (readable without the logs).
+          grep -E "error:|XCTAssert|failed \(" logs/tests.txt | grep -v warning | sort -u | head -8 | while read -r l; do echo "::error title=tests::${l:0:300}"; done || true
+          for r in out/selftest/*/report.json; do
+            python3 -c "import json,sys; d=json.load(open(sys.argv[1])); [print('::error title=selftest::'+sys.argv[1].split('/')[-2]+': '+str(e)[:300]) for e in d.get('errors',[])]" "$r" || true
+          done
+          exit 1
 
   publish:
     needs: macos
