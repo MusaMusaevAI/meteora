@@ -35,7 +35,7 @@ if [ -f /tmp/ru-example.wav ]; then
 fi
 ls -la "$DATA/Documents/Fixtures"
 
-SIMCTL_CHILD_METEORA_SELFTEST=1 SIMCTL_CHILD_METEORA_SELFTEST_LLM=1 \
+SIMCTL_CHILD_METEORA_SELFTEST=1 SIMCTL_CHILD_METEORA_SELFTEST_LLM=1 SIMCTL_CHILD_METEORA_LLM_FORCE_CPU=1 \
   xcrun simctl launch --console-pty "$UDID" "$BUNDLE" > "$OUT/console.txt" 2>&1 &
 LPID=$!
 status=1

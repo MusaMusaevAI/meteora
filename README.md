@@ -35,6 +35,12 @@
 
 Требуется macOS 14 или новее, на Apple Silicon или Intel.
 
+## iPhone
+
+Та же расшифровка (GigaAM-v3), говорящие, итоги и экспорт — на iPhone, без облака. Запись идёт и при заблокированном экране; таймер, пауза и «Стоп» — на экране блокировки и в Dynamic Island. Общая папка в iCloud Drive связывает iPhone с Mac: записи с iPhone Mac расшифровывает автопапкой, записи с Mac появляются на iPhone.
+
+Установка с бесплатным Apple ID: скачайте `Meteora-iOS.zip` из ветки `build-output` (папка `ios/`), откройте `iOS/Meteora.xcodeproj` в Xcode, выберите свою команду (Apple ID) в Signing & Capabilities для целей Meteora и MeteoraLiveActivity, подключите iPhone и нажмите Run. Подписи бесплатного аккаунта хватает на 7 дней — затем снова Run; данные сохраняются. Нужен iOS 17 или новее.
+
 ## Быстрые клавиши
 
 | | |

@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 import MeteoraCore
+import MeteoraLLM
 
 /// CI self-test in the simulator (METEORA_SELFTEST=1). Walks through the
 /// app with the fixtures in Documents/Fixtures, snapshots every screen into
@@ -75,6 +76,7 @@ final class SelfTest {
         mark("playback")
         var playback: [String: Any] = [:]
         for r in Library.shared.items {
+            session = nil
             router.open(r.id)
             let ok = await wait(60) { self.session?.id == r.id && self.session?.isLoading == false }
             guard ok, let s = session else { errors.append("open \(r.path): timeout"); continue }
@@ -98,6 +100,8 @@ final class SelfTest {
         // 5. Transcription, speakers, summary on the speech fixture.
         if let r = speech {
             mark("transcribe")
+            session = nil
+            await sleep(0.5)
             router.open(r.id)
             _ = await wait(60) { self.session?.id == r.id && self.session?.isLoading == false }
             snapshot("03-meeting")
@@ -134,17 +138,26 @@ final class SelfTest {
                 }
 
                 if withLLM {
-                    mark("summary")
+                    // The speech sample is a poem: the summary must refuse
+                    // to invent a meeting (grounding), not fail otherwise.
+                    mark("summary-refusal")
                     let t2 = Date()
                     await s.summarize()
-                    var llm: [String: Any] = ["seconds": Date().timeIntervalSince(t2)]
-                    if let sum = s.summary {
-                        llm["title"] = sum.title
-                        llm["summary"] = sum.summary
-                        llm["keyPoints"] = sum.keyPoints
-                    }
-                    if let e = s.jobError { llm["error"] = e; errors.append("summary: \(e)") }
+                    var refusal: [String: Any] = ["seconds": Date().timeIntervalSince(t2)]
+                    if let sum = s.summary { refusal["unexpectedSummary"] = sum.title }
+                    let refused = s.jobError?.contains("не нашлось разговора") == true
+                    refusal["refused"] = refused
+                    if !refused, s.summary != nil { errors.append("summary invented a meeting from a poem: \(s.summary?.title ?? "")") }
+                    if let e = s.jobError, !refused { errors.append("summary: \(e)") }
+                    s.jobError = nil
+                    report["summaryOnPoem"] = refusal
+
+                    // A real (short) meeting: the full on-device pipeline.
+                    mark("summary")
+                    let text = "Анна: Обсуждаем запуск рассылки по ПДС. Олег: Предлагаю старт 10 ноября. Анна: Решили: стартуем 10 ноября. Олег подготовит тексты писем до пятницы. Мария проверит сегмент базы."
+                    let llm = await MeetingSummarizer.runSelfTest(transcriptText: text, output: out)
                     report["llm"] = llm
+                    if llm["ok"] as? Bool != true { errors.append("llm: \(llm["errors"] ?? llm)") }
                 }
                 NotificationCenter.default.post(name: SelfTestHooks.showSummaryTab, object: nil)
                 await sleep(1)
