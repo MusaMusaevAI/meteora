@@ -51,12 +51,16 @@ public struct CloudConfig: Sendable, Equatable {
     public var apiKey: String
     /// Only used by `.compatible` (e.g. OpenRouter, DeepSeek, a corporate gateway).
     public var baseURL: String
+    /// Hide personal data on this Mac before sending (see `PIIGuard`).
+    public var protectPersonalData: Bool
 
-    public init(provider: CloudProvider, model: String, apiKey: String, baseURL: String? = nil) {
+    public init(provider: CloudProvider, model: String, apiKey: String, baseURL: String? = nil,
+                protectPersonalData: Bool = true) {
         self.provider = provider
         self.model = model
         self.apiKey = apiKey
         self.baseURL = baseURL ?? provider.defaultBaseURL
+        self.protectPersonalData = protectPersonalData
     }
 }
 
@@ -66,6 +70,8 @@ public enum CloudError: Error, LocalizedError, Equatable {
     case http(Int, String)
     case emptyAnswer
     case network(String)
+    /// Personal-data protection failed; nothing was sent.
+    case guardFailed(String)
 
     public var errorDescription: String? {
         switch self {
@@ -80,13 +86,18 @@ public enum CloudError: Error, LocalizedError, Equatable {
             }
         case .emptyAnswer: return "Модель вернула пустой ответ."
         case .network(let m): return "Нет связи с сервером: \(m)"
+        case .guardFailed(let m):
+            return "Защита персональных данных не сработала (\(m)) — текст встречи не отправлен. Попробуйте ещё раз или выключите защиту в настройках итогов."
         }
     }
 }
 
 /// Meeting summaries through a cloud model. Same prompts and parser as the
 /// local model, so results look the same. Requests go straight from this Mac
-/// to the provider over HTTPS; nothing is cached or logged.
+/// to the provider over HTTPS; nothing is cached or logged. With
+/// `protectPersonalData` the transcript is masked on this Mac first and the
+/// provider only sees placeholders (fail closed: if masking fails, nothing
+/// is sent).
 public final class CloudSummarizer: @unchecked Sendable {
     public let config: CloudConfig
     /// Transcripts longer than this are summarized in parts (cloud contexts
@@ -117,15 +128,44 @@ public final class CloudSummarizer: @unchecked Sendable {
     public func summarize(_ transcript: Transcript, meetingDate: Date? = nil,
                           progress: @escaping @Sendable (SummaryProgress) -> Void = { _ in },
                           isCancelled: @escaping @Sendable () -> Bool = { false }) async throws -> MeetingSummary {
-        let lines = MeetingTranscriptText.lines(transcript)
+        var lines = MeetingTranscriptText.lines(transcript)
         guard !lines.isEmpty else { throw SummaryError.emptyTranscript }
-        let speakers = MeetingTranscriptText.speakers(transcript)
+        var speakers = MeetingTranscriptText.speakers(transcript)
+
+        // Personal data never leaves the Mac: mask lines and speaker names,
+        // keep the map here, put originals back into the answer below.
+        var pii: PIIGuard?
+        if config.protectPersonalData {
+            progress(SummaryProgress(stage: .protectingData, fraction: 0.02))
+            do {
+                var g = try PIIGuard(speakers: speakers)
+                var maskedLines: [String] = []
+                maskedLines.reserveCapacity(lines.count)
+                for (i, line) in lines.enumerated() {
+                    if i % 200 == 0 && isCancelled() { throw LLMError.cancelled }
+                    maskedLines.append(try g.mask(line))
+                }
+                var maskedSpeakers: [String] = []
+                for s in speakers { maskedSpeakers.append(try g.mask(s)) }
+                lines = maskedLines
+                speakers = maskedSpeakers
+                pii = g
+            } catch LLMError.cancelled {
+                throw LLMError.cancelled
+            } catch {
+                throw CloudError.guardFailed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+            }
+        }
+        let guarded = !(pii?.map.isEmpty ?? true)
+        func ask(_ messages: [ChatMessage], maxTokens: Int) async throws -> String {
+            try await complete(guarded ? Self.withPIINote(messages) : messages, maxTokens: maxTokens)
+        }
         let full = lines.joined(separator: "\n")
 
-        let parsed: MeetingSummaryParser.Parsed
+        var parsed: MeetingSummaryParser.Parsed
         if full.count <= Self.singlePassCharacters {
             progress(SummaryProgress(stage: .writing, fraction: 0.1))
-            parsed = MeetingSummaryParser.parse(try await complete(Prompts.final(transcript: full, speakers: speakers), maxTokens: 2000))
+            parsed = MeetingSummaryParser.parse(try await ask(Prompts.final(transcript: full, speakers: speakers), maxTokens: 2000))
         } else {
             let chunks = MeetingTranscriptText.chunks(lines, budget: Self.singlePassCharacters / 2, count: { $0.count })
             var notes: [String] = []
@@ -133,16 +173,24 @@ public final class CloudSummarizer: @unchecked Sendable {
                 if isCancelled() { throw LLMError.cancelled }
                 progress(SummaryProgress(stage: .readingPart(index: i + 1, count: chunks.count),
                                          fraction: 0.8 * Double(i) / Double(chunks.count)))
-                let p = MeetingSummaryParser.parse(try await complete(
+                let p = MeetingSummaryParser.parse(try await ask(
                     Prompts.map(chunk: chunk, index: i + 1, count: chunks.count, speakers: speakers), maxTokens: 1500))
                 notes.append(MeetingSummarizer.notes(p, part: i + 1, range: MeetingSummarizer.timeRange(chunk)))
             }
             progress(SummaryProgress(stage: .combining, fraction: 0.85))
-            parsed = MeetingSummaryParser.parse(try await complete(
+            parsed = MeetingSummaryParser.parse(try await ask(
                 Prompts.reduce(notes: notes.joined(separator: "\n\n"), speakers: speakers), maxTokens: 2000))
         }
         if isCancelled() { throw LLMError.cancelled }
         guard !parsed.isEmpty else { throw SummaryError.unreadableAnswer }
+        // Originals back in, on this Mac. Intermediate notes stay masked.
+        if let g = pii {
+            parsed.title = g.unmask(parsed.title)
+            parsed.summary = g.unmask(parsed.summary)
+            parsed.keyPoints = parsed.keyPoints.map { g.unmask($0) }
+            parsed.decisions = parsed.decisions.map { g.unmask($0) }
+            parsed.actionItems = parsed.actionItems.map { g.unmask($0) }
+        }
         var topic = parsed.title
         if topic.isEmpty {
             topic = parsed.summary.split(whereSeparator: { ".!?".contains($0) }).first.map(String.init) ?? ""
@@ -151,6 +199,17 @@ public final class CloudSummarizer: @unchecked Sendable {
         return MeetingSummary(title: MeetingSummary.composeTitle(topic: topic, date: meetingDate),
                               summary: parsed.summary, keyPoints: parsed.keyPoints,
                               decisions: parsed.decisions, actionItems: parsed.actionItems)
+    }
+
+    /// Tells the model what the placeholders are (system message).
+    static func withPIINote(_ messages: [ChatMessage]) -> [ChatMessage] {
+        var out = messages
+        if let i = out.firstIndex(where: { $0.role == .system }) {
+            out[i].content += "\n" + PIIGuard.modelNote
+        } else {
+            out.insert(ChatMessage(.system, PIIGuard.modelNote), at: 0)
+        }
+        return out
     }
 
     // MARK: Requests

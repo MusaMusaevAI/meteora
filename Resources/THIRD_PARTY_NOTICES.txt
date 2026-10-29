@@ -50,6 +50,12 @@ llama.cpp b11970 (language model runtime, statically linked; includes ggml)
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 
+guardrails-llm-filter v0.1.2 (personal-data detection rules, ported to Swift in PIIMasking.swift)
+  Copyright 2026 Cloud.ru. Apache License 2.0.
+  https://github.com/cloud-ru-tech/guardrails-llm-filter (configs/guardrails_regex_rules.yaml,
+  pkg/guardrails/regex/validation; commit bbd6f27467a53ff3869b59449edf4209f85ae675).
+  Modified: subset of rules, one address branch narrowed, Meteora rules added.
+
 FFmpeg 7.1.5 (conversion of rare media formats; separate program, not linked into Meteora)
   Location: Meteora.app/Contents/XPCServices/com.musamusaev.meteora.converter.xpc/Contents/MacOS/ffmpeg
   Copyright (c) 2000-2026 the FFmpeg developers. https://ffmpeg.org
