@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import MeteoraCore
+import MeteoraASR
 
 // MARK: - Appearance settings
 
