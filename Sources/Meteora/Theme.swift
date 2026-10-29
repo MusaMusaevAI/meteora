@@ -49,6 +49,18 @@ enum Theme {
     /// Mother-of-pearl: blue, lilac, rose, champagne.
     static let nacre: [Color] = ([0xBCD4EC, 0xD6CDEE, 0xEBC6D6, 0xF1E2CC, 0xC9E3E4] as [UInt32]).map { Color(nsColor: NSColor(hex: $0)) }
 
+    /// Speaker labels: muted hues from the same pearl family, legible in
+    /// both themes. Repeats after six speakers.
+    static let speakerColors: [Color] = [
+        dynamic(light: 0x33506B, dark: 0x9DB8D3),
+        dynamic(light: 0x8A4B63, dark: 0xE0A9BE),
+        dynamic(light: 0x2F6B66, dark: 0x8FCFC8),
+        dynamic(light: 0x7A5A1F, dark: 0xE2C287),
+        dynamic(light: 0x5B4A8A, dark: 0xBDB0EA),
+        dynamic(light: 0x6B5B4B, dark: 0xC9B8A6),
+    ]
+    static func speakerColor(_ index: Int) -> Color { speakerColors[((index % speakerColors.count) + speakerColors.count) % speakerColors.count] }
+
     static let radius: CGFloat = 12
     static let controlRadius: CGFloat = 7
 

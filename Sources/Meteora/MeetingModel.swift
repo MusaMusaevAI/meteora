@@ -263,6 +263,36 @@ final class MeetingModel: ObservableObject {
         NSWorkspace.shared.activateFileViewerSelecting([url])
     }
 
+    /// Speakers in order of first appearance.
+    var speakers: [String] {
+        var seen: [String] = []
+        for s in displayedSegments { if let sp = s.speaker, !seen.contains(sp) { seen.append(sp) } }
+        return seen
+    }
+
+    func speakerIndex(_ name: String) -> Int { speakers.firstIndex(of: name) ?? 0 }
+
+    /// Renames a speaker everywhere in this meeting's transcript and saves it.
+    func renameSpeaker(_ old: String, to new: String) {
+        let name = new.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, name != old, let url, var tr = transcript else { return }
+        tr.segments = tr.segments.map { s in
+            var s = s
+            if s.speaker == old { s.speaker = name }
+            return s
+        }
+        transcript = tr
+        // Save the renamed version of the stored (uncorrected) transcript too.
+        if var saved = TranscriptStore.load(for: url) {
+            saved.segments = saved.segments.map { s in
+                var s = s
+                if s.speaker == old { s.speaker = name }
+                return s
+            }
+            TranscriptStore.save(saved, for: url)
+        }
+    }
+
     /// Re-reads the saved transcript through the (changed) dictionary.
     func reapplyDictionary() {
         guard let url, transcribeProgress == nil, let saved = TranscriptStore.load(for: url) else { return }

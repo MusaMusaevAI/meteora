@@ -97,20 +97,24 @@ struct TranscriptList: View {
         var start: Double
         var end: Double
         var text: String
+        var speaker: String?
     }
 
     private var rows: [Row] {
         let segments = model.displayedSegments
         guard settings.showParagraphs else {
-            return segments.map { Row(start: $0.start, end: $0.end, text: $0.text) }
+            return segments.map { Row(start: $0.start, end: $0.end, text: $0.text, speaker: $0.speaker) }
         }
         var opts = settings.options
         opts.paragraphs = true
-        return TranscriptExporter.paragraphs(segments, options: opts).map { Row(start: $0.start, end: $0.end, text: $0.text) }
+        return TranscriptExporter.paragraphs(segments, options: opts).map {
+            Row(start: $0.start, end: $0.end, text: $0.text, speaker: $0.speaker)
+        }
     }
 
     var body: some View {
         let rows = self.rows
+        let speakerList = model.speakers
         let hours = (model.info?.duration ?? 0) >= 3600
         let now = player.currentTime
         let current = rows.lastIndex { $0.start <= now + 0.05 }.flatMap { rows[$0].end + 1.5 >= now ? $0 : nil }
@@ -131,11 +135,18 @@ struct TranscriptList: View {
                             }
                             .buttonStyle(.plain)
                             .help("Перейти к этому месту")
-                            Text(row.text)
-                                .font(Theme.ui(13)).foregroundStyle(Theme.text)
-                                .lineSpacing(settings.showParagraphs ? 3 : 0)
-                                .textSelection(.enabled)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                            VStack(alignment: .leading, spacing: 2) {
+                                if let sp = row.speaker, i == 0 || rows[i - 1].speaker != sp {
+                                    Text(sp)
+                                        .font(Theme.ui(11.5, weight: .semibold))
+                                        .foregroundStyle(Theme.speakerColor(speakerList.firstIndex(of: sp) ?? 0))
+                                }
+                                Text(row.text)
+                                    .font(Theme.ui(13)).foregroundStyle(Theme.text)
+                                    .lineSpacing(settings.showParagraphs ? 3 : 0)
+                                    .textSelection(.enabled)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .padding(.vertical, settings.showParagraphs ? 7 : 5).padding(.horizontal, 8)
                         .background(RoundedRectangle(cornerRadius: 6, style: .continuous)
@@ -302,5 +313,60 @@ struct StorageButton: View {
         .buttonStyle(.plain)
         .onHover { hover = $0 }
         .help("Что Meteora хранит на диске и что можно удалить (⌘,)")
+    }
+}
+
+// MARK: - Speakers
+
+/// Who spoke: colour, editable name, share of phrases.
+struct SpeakersSection: View {
+    @ObservedObject var model: MeetingModel
+
+    var body: some View {
+        let speakers = model.speakers
+        let counts = Dictionary(grouping: model.displayedSegments.compactMap(\.speaker), by: { $0 }).mapValues(\.count)
+        InspectorSection("Говорящие") {
+            VStack(spacing: 6) {
+                ForEach(Array(speakers.enumerated()), id: \.element) { i, name in
+                    SpeakerRow(name: name, color: Theme.speakerColor(i), phrases: counts[name] ?? 0) { new in
+                        model.renameSpeaker(name, to: new)
+                    }
+                }
+            }
+            Text("Нажмите на имя, чтобы переименовать — везде в расшифровке и в экспорте.")
+                .font(Theme.ui(11)).foregroundStyle(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+private struct SpeakerRow: View {
+    var name: String
+    var color: Color
+    var phrases: Int
+    var rename: (String) -> Void
+    @State private var text = ""
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Circle().fill(color).frame(width: 8, height: 8)
+                .shadow(color: color.opacity(0.6), radius: 3)
+            TextField("Имя", text: $text)
+                .textFieldStyle(.plain)
+                .font(Theme.ui(12.5, weight: .medium))
+                .foregroundStyle(Theme.text)
+                .focused($focused)
+                .onSubmit { rename(text) }
+                .padding(.horizontal, 6).frame(height: 24)
+                .background(RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .fill(focused ? Theme.surface : Color.clear))
+                .overlay(RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .strokeBorder(focused ? Theme.accent.opacity(0.5) : Color.clear))
+            Text(ru(phrases, "фраза", "фразы", "фраз"))
+                .font(Theme.ui(11).monospacedDigit()).foregroundStyle(Theme.tertiary)
+        }
+        .onAppear { text = name }
+        .onChange(of: name) { _, n in text = n }
+        .onChange(of: focused) { _, f in if !f, text != name { rename(text) } }
     }
 }

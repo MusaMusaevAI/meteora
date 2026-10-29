@@ -656,6 +656,7 @@ struct Sidebar: View {
                 VStack(spacing: 0) {
                     RecordingSection(model: model)
                     if model.audioOrigin != nil { Hairline(); TranscriptCard(model: model) }
+                    if !model.speakers.isEmpty { Hairline(); SpeakersSection(model: model) }
                     Hairline()
                     AudioSection(model: model)
                     if model.hasVideo { Hairline(); FramesSection(model: model) }
