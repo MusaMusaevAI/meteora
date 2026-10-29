@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import MeteoraCore
 import MeteoraASR
 
@@ -99,6 +100,10 @@ struct TranscriptList: View {
     @ObservedObject var model: MeetingModel
     @ObservedObject var player: PlayerController
     @ObservedObject var settings = ExportSettings.shared
+    /// Row being edited (its start) and the draft text.
+    @State private var editing: Double?
+    @State private var draft = ""
+    @FocusState private var editorFocused: Bool
 
     /// One row: a paragraph, or a single phrase in phrase mode.
     private struct Row: Identifiable {
@@ -150,12 +155,27 @@ struct TranscriptList: View {
                                         .font(Theme.ui(11.5, weight: .semibold))
                                         .foregroundStyle(Theme.speakerColor(speakerList.firstIndex(of: sp) ?? 0))
                                 }
-                                Text(row.text)
-                                    .font(Theme.ui(13)).foregroundStyle(Theme.text)
-                                    .lineSpacing(settings.showParagraphs ? 3 : 0)
-                                    .textSelection(.enabled)
+                                if editing == row.start {
+                                    editor(row)
+                                } else {
+                                    Text(row.text)
+                                        .font(Theme.ui(13)).foregroundStyle(Theme.text)
+                                        .lineSpacing(settings.showParagraphs ? 3 : 0)
+                                        .textSelection(.enabled)
+                                }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                            .onTapGesture(count: 2) { beginEditing(row) }
+                            .contextMenu {
+                                Button("Исправить текст…") { beginEditing(row) }
+                                Button("Перейти к этому месту") { player.seek(to: row.start) }
+                                Button("Скопировать") {
+                                    NSPasteboard.general.clearContents()
+                                    NSPasteboard.general.setString(row.text, forType: .string)
+                                }
+                            }
+                            .help(model.transcript != nil ? "Двойной щелчок — исправить текст" : "")
                         }
                         .padding(.vertical, settings.showParagraphs ? 7 : 5).padding(.horizontal, 8)
                         .background(RoundedRectangle(cornerRadius: 6, style: .continuous)
@@ -170,7 +190,7 @@ struct TranscriptList: View {
                 }
             }
             .onChange(of: current) { _, new in
-                if player.isPlaying, let new, new < rows.count {
+                if editing == nil, player.isPlaying, let new, new < rows.count {
                     withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(rows[new].id, anchor: .center) }
                 }
             }
@@ -178,6 +198,45 @@ struct TranscriptList: View {
                 if model.transcribeProgress != nil, let last = rows.last {
                     proxy.scrollTo(last.id, anchor: .bottom)
                 }
+            }
+        }
+    }
+}
+
+extension TranscriptList {
+    private func beginEditing(_ row: Row) {
+        guard model.transcript != nil, model.transcribeProgress == nil else { return }
+        draft = row.text
+        editing = row.start
+        DispatchQueue.main.async { editorFocused = true }
+    }
+
+    private func commit(_ row: Row) {
+        if draft != row.text { model.editTranscript(start: row.start, end: row.end, text: draft) }
+        editing = nil
+    }
+
+    @ViewBuilder private func editor(_ row: Row) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            TextField("Текст фразы", text: $draft, axis: .vertical)
+                .textFieldStyle(.plain)
+                .font(Theme.ui(13))
+                .lineLimit(1 ... 12)
+                .focused($editorFocused)
+                .padding(8)
+                .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.background.opacity(0.6)))
+                .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Theme.accent.opacity(0.6)))
+                .onSubmit { commit(row) }
+                .onExitCommand { editing = nil }
+            HStack(spacing: 8) {
+                Button("Сохранить") { commit(row) }
+                    .buttonStyle(SecondaryButtonStyle())
+                    .keyboardShortcut(.return, modifiers: .command)
+                Button("Отмена") { editing = nil }
+                    .buttonStyle(.plain).foregroundStyle(Theme.secondary)
+                Spacer()
+                Text("⏎ — сохранить, Esc — отмена. Пустой текст удалит фразу.")
+                    .font(Theme.ui(11)).foregroundStyle(Theme.tertiary)
             }
         }
     }

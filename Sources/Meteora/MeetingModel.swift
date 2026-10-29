@@ -207,6 +207,7 @@ final class MeetingModel: ObservableObject {
                     if let a = info.audio, a.codecID == "A_OPUS" { self.audioOrigin = .webm(demuxer, a) }
                     self.player = WebPlayerController(fileURL: url, audioOnly: info.video == nil)
                     self.finishOpening(url, then: action)
+                    if info.video == nil { self.guardAudioPlayback(token: token) }
                 }
             } catch {
                 await MainActor.run {
@@ -257,6 +258,51 @@ final class MeetingModel: ObservableObject {
         if info.audio != nil { audioOrigin = .asset(playable) }
         player = NativePlayerController(url: playable)
         finishOpening(url, then: action)
+    }
+
+    /// Temporary .m4a played instead of a WebM that WebKit refused.
+    private var playbackCopy: URL?
+
+    /// Audio-only WebM: if WebKit can't play it (some encoders' files, an
+    /// error, or nothing after a few seconds), decode it ourselves — the
+    /// same path transcription uses — into a temporary .m4a and play that
+    /// with AVFoundation. The original file is untouched.
+    private func guardAudioPlayback(token: CancelToken) {
+        guard let web = player, let origin = audioOrigin else { return }
+        Task { @MainActor [weak self] in
+            let deadline = Date().addingTimeInterval(8)
+            while !web.isReady && web.mediaErrorCode == 0 && Date() < deadline {
+                try? await Task.sleep(nanoseconds: 200_000_000)
+            }
+            guard let self, !token.isCancelled, self.player === web else { return }
+            if web.isReady && web.mediaErrorCode == 0 && web.duration > 0 { return }
+            web.log("fallback:native")
+            do {
+                let copy = try await Task.detached(priority: .userInitiated) { () -> URL in
+                    let source = try await origin.make()
+                    let dest = FileManager.default.temporaryDirectory
+                        .appendingPathComponent("meteora-play-\(UUID().uuidString).m4a")
+                    try AudioExporter.export(decoder: source, analysis: nil,
+                                             options: AudioExportOptions(quality: .high, normalize: false),
+                                             to: dest, isCancelled: { token.isCancelled })
+                    return dest
+                }.value
+                guard !token.isCancelled, self.player === web else {
+                    try? FileManager.default.removeItem(at: copy)
+                    return
+                }
+                let wasPlaying = web.isPlaying, at = web.currentTime
+                web.tearDown()
+                self.playbackCopy = copy
+                self.engine = "webm→m4a"
+                let native = NativePlayerController(url: copy)
+                self.player = native
+                if at > 0 { native.seek(to: at) }
+                if wasPlaying { native.play() }
+            } catch {
+                web.log("fallback:failed \(error.localizedDescription)")
+            }
+        }
     }
 
     private func finishOpening(_ url: URL, then action: (() -> Void)?) {
@@ -380,6 +426,33 @@ final class MeetingModel: ObservableObject {
         }
     }
 
+    /// Manual correction: the phrases of one transcript row (a phrase, or
+    /// a paragraph from `start` to `end`) become `text`. A paragraph's
+    /// phrases merge into one; empty text removes the row. Saved at once.
+    func editTranscript(start: Double, end: Double, text: String) {
+        let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url, var tr = transcript, transcribeProgress == nil else { return }
+        func apply(_ segs: [TranscriptSegment]) -> [TranscriptSegment] {
+            let idx = segs.indices.filter { segs[$0].start >= start - 0.001 && segs[$0].start <= end + 0.001 }
+            guard let first = idx.first, let last = idx.last else { return segs }
+            var out = segs
+            if t.isEmpty {
+                for i in idx.reversed() { out.remove(at: i) }
+            } else {
+                out[first].text = t
+                out[first].end = max(out[first].end, segs[last].end)
+                for i in idx.dropFirst().reversed() { out.remove(at: i) }
+            }
+            return out
+        }
+        tr.segments = apply(tr.segments)
+        transcript = tr
+        if var saved = TranscriptStore.load(for: url) {
+            saved.segments = apply(saved.segments)
+            TranscriptStore.save(saved, for: url)
+        }
+    }
+
     /// Re-reads the saved transcript through the (changed) dictionary.
     func reapplyDictionary() {
         guard let url, transcribeProgress == nil, let saved = TranscriptStore.load(for: url) else { return }
@@ -421,6 +494,7 @@ final class MeetingModel: ObservableObject {
         demuxer = nil
         audioOrigin = nil
         if engine == "converted", let m = mediaURL { try? FileManager.default.removeItem(at: m) }
+        if let p = playbackCopy { try? FileManager.default.removeItem(at: p); playbackCopy = nil }
         mediaURL = nil
         engine = ""
         info = nil

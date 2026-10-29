@@ -25,7 +25,7 @@ enum RecordingFormat {
 // MARK: - Opus in WebM (the normal path)
 
 /// Encodes with the system Opus encoder (AudioToolbox) — 48 kHz mono,
-/// 20 ms packets, ~32 kbit/s, about 14 MB per hour — and muxes into WebM.
+/// 20 ms packets, ~48 kbit/s, about 22 MB per hour — and muxes into WebM.
 final class OpusWebMSink: RecordingSink {
     let url: URL
     let formatName: String
@@ -35,9 +35,9 @@ final class OpusWebMSink: RecordingSink {
     private let writer: WebMOpusWriter
 
     /// Whether this Mac can encode Opus. Checked once.
-    static let isEncoderAvailable: Bool = makeEncoder(bitRate: 32_000) != nil
+    static let isEncoderAvailable: Bool = makeEncoder(bitRate: 48_000) != nil
 
-    init(url: URL, bitRate: Int = 32_000) throws {
+    init(url: URL, bitRate: Int = 48_000) throws {
         guard let converter = Self.makeEncoder(bitRate: bitRate) else { throw RecorderError.encoderUnavailable }
         self.url = url
         self.converter = converter
@@ -112,43 +112,114 @@ final class OpusWebMSink: RecordingSink {
     }
 }
 
-// MARK: - AAC in M4A (fallback)
+// MARK: - AAC in M4A
 
-/// Used only if the Opus encoder is missing. Unlike WebM, an .m4a is
-/// readable only after `finish()` — a crash loses the file.
+/// AAC in a fragmented .m4a via AVAssetWriter: plays everywhere (QuickTime,
+/// Finder preview, phones), and thanks to 10-second fragments a crash loses
+/// at most the last few seconds — the file stays readable.
 final class AACFileSink: RecordingSink {
     let url: URL
-    let formatName = "M4A · AAC · 48 кГц · моно · 64 кбит/с"
-    private var file: AVAudioFile?
-    private let pcm: AVAudioPCMBuffer
+    let formatName: String
+    private let writer: AVAssetWriter
+    private let input: AVAssetWriterInput
+    private let format: CMAudioFormatDescription
+    private var sampleTime: Int64 = 0
 
-    init(url: URL) throws {
+    init(url: URL, bitRate: Int = 64_000) throws {
         self.url = url
-        let settings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatMPEG4AAC,
-            AVSampleRateKey: RecordingFormat.sampleRate,
-            AVNumberOfChannelsKey: 1,
-            AVEncoderBitRateKey: 64_000,
-        ]
+        formatName = "M4A · AAC · 48 кГц · моно · \(bitRate / 1000) кбит/с"
+        try? FileManager.default.removeItem(at: url)
         do {
-            file = try AVAudioFile(forWriting: url, settings: settings, commonFormat: .pcmFormatFloat32, interleaved: false)
+            writer = try AVAssetWriter(outputURL: url, fileType: .m4a)
         } catch {
             throw RecorderError.folder(error.localizedDescription)
         }
-        pcm = AVAudioPCMBuffer(pcmFormat: RecordingFormat.pcm, frameCapacity: AVAudioFrameCount(RecordingFormat.frameSize))!
+        writer.movieFragmentInterval = CMTime(seconds: 10, preferredTimescale: 600)
+        input = AVAssetWriterInput(mediaType: .audio, outputSettings: [
+            AVFormatIDKey: kAudioFormatMPEG4AAC,
+            AVSampleRateKey: RecordingFormat.sampleRate,
+            AVNumberOfChannelsKey: 1,
+            AVEncoderBitRateKey: bitRate,
+        ])
+        input.expectsMediaDataInRealTime = true
+        guard writer.canAdd(input) else { throw RecorderError.encoding("AAC") }
+        writer.add(input)
+        var fd: CMAudioFormatDescription?
+        let st = CMAudioFormatDescriptionCreate(allocator: kCFAllocatorDefault, asbd: RecordingFormat.pcm.streamDescription,
+                                                layoutSize: 0, layout: nil, magicCookieSize: 0, magicCookie: nil,
+                                                extensions: nil, formatDescriptionOut: &fd)
+        guard st == noErr, let fd else { throw RecorderError.encoding("AAC \(st)") }
+        format = fd
+        guard writer.startWriting() else {
+            throw RecorderError.folder(writer.error?.localizedDescription ?? "AAC")
+        }
+        writer.startSession(atSourceTime: .zero)
     }
 
     func append(_ frame: UnsafeBufferPointer<Float>) throws {
-        guard let file else { return }
-        let n = min(frame.count, Int(pcm.frameCapacity))
-        pcm.floatChannelData![0].update(from: frame.baseAddress!, count: n)
-        pcm.frameLength = AVAudioFrameCount(n)
-        do { try file.write(from: pcm) } catch { throw RecorderError.encoding(error.localizedDescription) }
+        guard let base = frame.baseAddress, frame.count > 0 else { return }
+        let bytes = frame.count * MemoryLayout<Float>.size
+        var block: CMBlockBuffer?
+        var st = CMBlockBufferCreateWithMemoryBlock(allocator: kCFAllocatorDefault, memoryBlock: nil, blockLength: bytes,
+                                                    blockAllocator: kCFAllocatorDefault, customBlockSource: nil,
+                                                    offsetToData: 0, dataLength: bytes,
+                                                    flags: kCMBlockBufferAssureMemoryNowFlag, blockBufferOut: &block)
+        guard st == noErr, let block else { throw RecorderError.encoding("AAC \(st)") }
+        st = CMBlockBufferReplaceDataBytes(with: base, blockBuffer: block, offsetIntoDestination: 0, dataLength: bytes)
+        guard st == noErr else { throw RecorderError.encoding("AAC \(st)") }
+        var sample: CMSampleBuffer?
+        st = CMAudioSampleBufferCreateReadyWithPacketDescriptions(
+            allocator: kCFAllocatorDefault, dataBuffer: block, formatDescription: format, sampleCount: frame.count,
+            presentationTimeStamp: CMTime(value: sampleTime, timescale: CMTimeScale(RecordingFormat.sampleRate)),
+            packetDescriptions: nil, sampleBufferOut: &sample)
+        guard st == noErr, let sample else { throw RecorderError.encoding("AAC \(st)") }
+        sampleTime += Int64(frame.count)
+        // Real-time input is almost always ready; wait a moment if not.
+        var waited = 0
+        while !input.isReadyForMoreMediaData && waited < 400 {
+            usleep(500)
+            waited += 1
+        }
+        guard input.append(sample) else {
+            throw RecorderError.encoding(writer.error?.localizedDescription ?? "AAC")
+        }
     }
 
     func flush() {}
 
     func finish() throws {
-        file = nil // closing writes the index
+        input.markAsFinished()
+        let done = DispatchSemaphore(value: 0)
+        writer.finishWriting { done.signal() }
+        done.wait()
+        if writer.status != .completed {
+            throw RecorderError.encoding(writer.error?.localizedDescription ?? "AAC")
+        }
+    }
+}
+
+/// What the recorder writes.
+enum RecordingFileFormat: String, CaseIterable, Identifiable {
+    /// AAC in .m4a — opens anywhere. The default.
+    case m4a
+    /// Opus in .webm — half the size, the format Telemost uses.
+    case webm
+
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .m4a: return "M4A (AAC)"
+        case .webm: return "WebM (Opus)"
+        }
+    }
+    var subtitle: String {
+        switch self {
+        case .m4a: return "Открывается везде: QuickTime, телефон, мессенджеры. ~29 МБ в час."
+        case .webm: return "Вдвое компактнее, как записи Телемоста. Открывается в Meteora и браузерах. ~22 МБ в час."
+        }
+    }
+    static let key = "recorder.format"
+    static var current: RecordingFileFormat {
+        UserDefaults.standard.string(forKey: key).flatMap(RecordingFileFormat.init(rawValue:)) ?? .m4a
     }
 }

@@ -386,10 +386,12 @@ struct LibrarySidebar: View {
 
             Hairline()
             HStack(spacing: 2) {
+                footerButton("gearshape", "Настройки (⌘,)") { SettingsWindow.show(model: model) }
                 footerButton("square.stack.3d.up", "Пакетная обработка (⌘⇧B)") { BatchWindow.show() }
                 footerButton("character.book.closed", "Словарь (⌘⇧D)") { DictionaryWindow.show() }
-                footerButton("internaldrive", "Хранилище (⌘,)") { StorageWindow.show(model: model) }
+                footerButton("internaldrive", "Хранилище") { SettingsWindow.show(.storage, model: model) }
                 Spacer()
+                UpdateBadge(model: model)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
@@ -615,5 +617,26 @@ struct TitleTab: View {
         .overlay(Capsule().strokeBorder(Theme.hairline))
         .frame(maxWidth: 520)
         .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+/// Shown in the library footer when a newer build is out.
+private struct UpdateBadge: View {
+    let model: MeetingModel
+    @ObservedObject var updates = UpdateChecker.shared
+    var body: some View {
+        if case .available(let build) = updates.state {
+            Button { SettingsWindow.show(.updates, model: model) } label: {
+                HStack(spacing: 4) {
+                    Circle().fill(Theme.accent).frame(width: 6, height: 6)
+                    Text("Обновление").font(Theme.ui(11, weight: .semibold))
+                }
+                .foregroundStyle(Theme.accent)
+                .padding(.horizontal, 8).frame(height: 22)
+                .background(Capsule().fill(Theme.accentSoft))
+            }
+            .buttonStyle(.plain)
+            .help("Доступна сборка \(build)")
+        }
     }
 }

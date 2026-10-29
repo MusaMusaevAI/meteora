@@ -444,6 +444,9 @@ struct NebulaBackground: View {
     var animated = true
     @Environment(\.colorScheme) private var scheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Settings → Оформление.
+    @AppStorage(AppearanceSettings.meteorsKey) private var meteorsOn = true
+    @AppStorage(AppearanceSettings.skyKey) private var skyOn = true
 
     var body: some View {
         ZStack {
@@ -455,7 +458,7 @@ struct NebulaBackground: View {
                 LinearGradient(colors: [Color(nsColor: NSColor(hex: 0xDDE3EC)).opacity(0.9 * intensity), .clear],
                                startPoint: .top, endPoint: .center)
             }
-            if reduceMotion || !animated {
+            if reduceMotion || !animated || !skyOn {
                 glows(t: 0)
             } else {
                 // Drift cycles take about a minute: 6 frames a second is smooth.
@@ -464,8 +467,8 @@ struct NebulaBackground: View {
                 }
             }
             if stars {
-                Starfield(animated: !reduceMotion && animated, light: scheme == .light).opacity(intensity)
-                if !reduceMotion { MeteorShower(light: scheme == .light).opacity(min(1, intensity * 1.4)) }
+                Starfield(animated: !reduceMotion && animated && skyOn, light: scheme == .light).opacity(intensity)
+                if !reduceMotion && meteorsOn { MeteorShower(light: scheme == .light).opacity(min(1, intensity * 1.4)) }
             }
         }
         .allowsHitTesting(false)

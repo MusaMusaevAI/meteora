@@ -13,9 +13,13 @@ struct MeteoraApp: App {
     var body: some Scene {
         Settings { EmptyView() }
             .commands {
+                CommandGroup(after: .appInfo) {
+                    Button("Проверить обновления…") { UpdateChecker.shared.checkInteractively() }
+                }
                 CommandGroup(replacing: .appSettings) {
-                    Button("Хранилище…") { StorageWindow.show(model: delegate.model) }
+                    Button("Настройки…") { SettingsWindow.show(model: delegate.model) }
                         .keyboardShortcut(",")
+                    Button("Хранилище…") { SettingsWindow.show(.storage, model: delegate.model) }
                     Button("Словарь…") { DictionaryWindow.show() }
                         .keyboardShortcut("d", modifiers: [.command, .shift])
                 }
@@ -144,7 +148,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        AppearanceSettings.apply()
         showMainWindow()
+        UpdateChecker.shared.checkOnLaunchIfNeeded()
         TermDictionaryStore.shared.onChange = { [weak self] in self?.model.reapplyDictionary() }
         // A finished recording opens right away and is transcribed.
         MeetingRecorder.shared.onFinished = { [weak self] url in

@@ -361,6 +361,13 @@ final class SelfTest {
         try? await Task.sleep(nanoseconds: 700_000_000)
         snapshotWindow(titled: "Словарь", as: "08-dictionary")
         NSApp.windows.first { $0.title == "Словарь" }?.close()
+        for (section, name) in [(SettingsSection.appearance, "11-settings"), (.recording, "12-settings-recording"),
+                                (.summaries, "13-settings-summaries"), (.autoFolders, "14-settings-autofolders")] {
+            SettingsWindow.show(section, model: model)
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            snapshotWindow(titled: "Настройки", as: name)
+        }
+        NSApp.windows.first { $0.title == "Настройки" }?.close()
         NSApp.windows.first { $0.contentView is NSHostingView<ContentView> }?.makeKeyAndOrderFront(nil)
 
         model.toast = Toast(message: "Звук сохранён: пример уведомления", revealURL: output)
@@ -380,6 +387,44 @@ final class SelfTest {
             report["convert"] = r
             if r["ok"] as? Bool != true { errors.append("convert: \((r["errors"] as? [String] ?? []).joined(separator: "; "))") }
         }
+        // Files the recorder made must play in the player, not just decode.
+        mark("recorded-playback")
+        var recorded: [String: Any] = [:]
+        for name in ["recording-test.webm", "recording-test.m4a"] {
+            let f = output.appendingPathComponent(name)
+            guard FileManager.default.fileExists(atPath: f.path) else { continue }
+            model.open(f)
+            var entry: [String: Any] = [:]
+            guard await wait(30, { self.model.loadState == .ready || self.isFailed }), !isFailed else {
+                errors.append("recorded \(name): load \(model.loadState)")
+                continue
+            }
+            // Give the WebKit player its chance, then the native fallback.
+            _ = await wait(25) {
+                guard let p = self.model.player else { return false }
+                return (p.isReady && p.duration > 0) || self.model.engine == "webm→m4a"
+            }
+            _ = await wait(15) { self.model.player?.isReady == true }
+            if let p = model.player {
+                entry["engine"] = model.engine
+                entry["ready"] = p.isReady
+                entry["mediaError"] = p.mediaErrorCode
+                entry["duration"] = p.duration
+                entry["diagnostics"] = p.diagnostics
+                if p.isReady {
+                    p.play()
+                    try? await Task.sleep(nanoseconds: 1_500_000_000)
+                    entry["advancedTo"] = p.currentTime
+                    p.pause()
+                    if p.currentTime < 0.5 { errors.append("recorded \(name): playback did not advance (\(p.currentTime))") }
+                } else {
+                    errors.append("recorded \(name): player not ready (\(model.engine), code \(p.mediaErrorCode))")
+                }
+            }
+            recorded[name] = entry
+        }
+        report["recordedPlayback"] = recorded
+        model.close()
         finish()
     }
 

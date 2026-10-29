@@ -127,8 +127,10 @@ final class MeetingRecorder: ObservableObject {
             return
         }
         folderName = RecordingFolder.displayName
-        let useOpus = OpusWebMSink.isEncoderAvailable
-        if !useOpus { recorderLog.error("Opus encoder unavailable, falling back to AAC in .m4a") }
+        let useOpus = RecordingFileFormat.current == .webm && OpusWebMSink.isEncoderAvailable
+        if RecordingFileFormat.current == .webm && !useOpus {
+            recorderLog.error("Opus encoder unavailable, falling back to AAC in .m4a")
+        }
         let url = RecordingFolder.newFileURL(in: folder, fileExtension: useOpus ? "webm" : "m4a")
         let sink: RecordingSink
         do {

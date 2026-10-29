@@ -130,6 +130,8 @@ public final class CloudSummarizer: @unchecked Sendable {
                           isCancelled: @escaping @Sendable () -> Bool = { false }) async throws -> MeetingSummary {
         var lines = MeetingTranscriptText.lines(transcript)
         guard !lines.isEmpty else { throw SummaryError.emptyTranscript }
+        guard SummaryGrounding.assess(SummaryGrounding.spokenText(transcript)) == .ok else { throw SummaryError.notAMeeting }
+        let groundingIndex = SummaryGrounding.Index(lines.joined(separator: "\n"))
         var speakers = MeetingTranscriptText.speakers(transcript)
 
         // Personal data never leaves the Mac: mask lines and speaker names,
@@ -191,6 +193,8 @@ public final class CloudSummarizer: @unchecked Sendable {
             parsed.decisions = parsed.decisions.map { g.unmask($0) }
             parsed.actionItems = parsed.actionItems.map { g.unmask($0) }
         }
+        parsed = SummaryGrounding.filter(parsed, against: groundingIndex)
+        if SummaryGrounding.isVoid(parsed) { throw SummaryError.notAMeeting }
         var topic = parsed.title
         if topic.isEmpty {
             topic = parsed.summary.split(whereSeparator: { ".!?".contains($0) }).first.map(String.init) ?? ""

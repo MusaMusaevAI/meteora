@@ -183,6 +183,8 @@ struct SummarySection: View {
 struct SummarySettingsSheet: View {
     @ObservedObject var llm = SummaryModelController.shared
     var dismiss: () -> Void
+    /// Inside the Settings window: no own title, no «Готово».
+    var embedded = false
     @State private var provider: CloudProvider = .anthropic
     @State private var key = ""
     @State private var modelName = ""
@@ -193,9 +195,11 @@ struct SummarySettingsSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Итоги встречи").titleStyle(20).foregroundStyle(Theme.text)
-            Text("Чем составлять краткое содержание, решения и задачи.")
-                .font(Theme.ui(12)).foregroundStyle(Theme.secondary).padding(.top, 3)
+            if !embedded {
+                Text("Итоги встречи").titleStyle(20).foregroundStyle(Theme.text)
+                Text("Чем составлять краткое содержание, решения и задачи.")
+                    .font(Theme.ui(12)).foregroundStyle(Theme.secondary).padding(.top, 3)
+            }
 
             Text("На этом Mac — без интернета").font(Theme.ui(12, weight: .semibold)).foregroundStyle(Theme.secondary)
                 .padding(.top, 18).padding(.bottom, 8)
@@ -210,15 +214,17 @@ struct SummarySettingsSheet: View {
             HStack {
                 if let e = llm.error { Text(e).font(Theme.ui(11.5)).foregroundStyle(Theme.danger).lineLimit(2) }
                 Spacer()
-                Button("Готово", action: dismiss)
-                    .buttonStyle(PrimaryButtonStyle()).frame(width: 120)
-                    .keyboardShortcut(.defaultAction)
+                if !embedded {
+                    Button("Готово", action: dismiss)
+                        .buttonStyle(PrimaryButtonStyle()).frame(width: 120)
+                        .keyboardShortcut(.defaultAction)
+                }
             }
-            .padding(.top, 20)
+            .padding(.top, embedded ? 8 : 20)
         }
-        .padding(24)
-        .frame(width: 560)
-        .background(Theme.background)
+        .padding(embedded ? 0 : 24)
+        .frame(width: embedded ? nil : 560)
+        .background(embedded ? Color.clear : Theme.background)
         .onAppear {
             if case .cloud(let p) = llm.engine { provider = p }
             loadProvider()

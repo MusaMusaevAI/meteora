@@ -34,8 +34,12 @@ extension MeetingRecorder {
         report["tone"] = tone.dictionary
         let mix = await Task.detached(priority: .userInitiated) { RecordingSelfTestRunner.mixTwoSources() }.value
         report["mix"] = mix.dictionary
+        let m4aURL = output.appendingPathComponent("recording-test.m4a")
+        let aac = await Task.detached(priority: .userInitiated) { RecordingSelfTestRunner.encodeToneAAC(to: m4aURL) }.value
+        report["toneM4A"] = aac.dictionary
+        report["defaultFormat"] = RecordingFileFormat.current.rawValue
 
-        report["ok"] = tone.ok && mix.ok && nameOK
+        report["ok"] = tone.ok && mix.ok && nameOK && aac.ok
         return report
     }
 
@@ -139,6 +143,58 @@ enum RecordingSelfTestRunner {
                 && abs(decoded - seconds) < 0.1
                 && rms > 0.05
                 && abs(frequency - 440) < 20
+        } catch {
+            r.error = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        }
+        return r
+    }
+
+    /// The same tone through the AAC sink; read back with AVAudioFile.
+    static func encodeToneAAC(to url: URL, seconds: Double = 3) -> RecordingSelfTestResult {
+        var r = RecordingSelfTestResult()
+        do {
+            let sink = try AACFileSink(url: url)
+            r.notes["format"] = sink.formatName
+            let queue = DispatchQueue(label: "com.musamusaev.meteora.recorder.selftest-aac")
+            let core = RecordingCore(inputs: [.microphone], sink: sink, queue: queue)
+            let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 48_000, channels: 1, interleaved: false)!
+            let total = Int(seconds * 48_000)
+            let finished: Result<URL, Error> = queue.sync {
+                var produced = 0
+                while produced < total {
+                    let n = min(1_024, total - produced)
+                    let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(n))!
+                    buffer.frameLength = AVAudioFrameCount(n)
+                    let p = buffer.floatChannelData![0]
+                    for i in 0 ..< n { p[i] = Float(0.3 * sin(2 * Double.pi * 440 * Double(produced + i) / 48_000)) }
+                    core.ingest(buffer, from: .microphone)
+                    produced += n
+                }
+                return Result { try core.finish() }
+            }
+            _ = try finished.get()
+            let file = try AVAudioFile(forReading: url)
+            let duration = Double(file.length) / file.processingFormat.sampleRate
+            let buf = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(file.length))!
+            try file.read(into: buf)
+            let p = buf.floatChannelData![0]
+            let rate = file.processingFormat.sampleRate
+            var sum = 0.0, crossings = 0, measured = 0
+            var previous: Float = 0
+            for i in Int(rate * 0.1) ..< Int(buf.frameLength) {
+                let v = p[i]
+                sum += Double(v * v)
+                if (previous < 0) != (v < 0) { crossings += 1 }
+                previous = v
+                measured += 1
+            }
+            let rms = measured > 0 ? (sum / Double(measured)).squareRoot() : 0
+            let frequency = measured > 0 ? Double(crossings) / 2 / (Double(measured) / rate) : 0
+            r.values["duration"] = duration
+            r.values["rms"] = rms
+            r.values["frequency"] = frequency
+            r.values["bytes"] = Double((try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0)
+            r.ok = abs(duration - seconds) < 0.15 && rms > 0.05 && abs(frequency - 440) < 20
         } catch {
             r.error = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         }

@@ -151,6 +151,9 @@ jobs:
           cd out
           echo "$GITHUB_SHA" > SOURCE_SHA
           echo "$JOB_STATUS" > STATUS
+          # Build number of this run (= CFBundleVersion of the app): the app's
+          # update check compares it with its own.
+          echo "$GITHUB_RUN_NUMBER" > BUILD
           git init -q -b build-output
           git -c user.name="meteora-ci" -c user.email="meteora-ci@users.noreply.github.com" add -A
           git -c user.name="meteora-ci" -c user.email="meteora-ci@users.noreply.github.com" commit -qm "build $GITHUB_SHA"

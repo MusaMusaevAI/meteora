@@ -189,13 +189,17 @@ struct StorageView: View {
     @State private var confirming = false
     var onChange: () -> Void
     var close: () -> Void
+    /// Inside the Settings window: no own title, no «Готово».
+    var embedded = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Хранилище").titleStyle(22).foregroundStyle(Theme.text)
-                Text("Отметьте, что можно удалить. Сами записи встреч Meteora не копирует и не трогает.")
-                    .font(Theme.ui(12.5)).foregroundStyle(Theme.secondary)
+            if !embedded {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Хранилище").titleStyle(22).foregroundStyle(Theme.text)
+                    Text("Отметьте, что можно удалить. Сами записи встреч Meteora не копирует и не трогает.")
+                        .font(Theme.ui(12.5)).foregroundStyle(Theme.secondary)
+                }
             }
 
             ScrollView {
@@ -242,10 +246,12 @@ struct StorageView: View {
                                             : "Выбрано: \(FileSizeText.string(store.selectedBytes))")
                     .font(Theme.ui(12.5).monospacedDigit()).foregroundStyle(Theme.secondary)
                 Spacer()
-                Button("Готово") { close() }
-                    .controlSize(.large)
-                    .fixedSize()
-                    .keyboardShortcut(.cancelAction)
+                if !embedded {
+                    Button("Готово") { close() }
+                        .controlSize(.large)
+                        .fixedSize()
+                        .keyboardShortcut(.cancelAction)
+                }
                 Button("Удалить выбранное", role: .destructive) { confirming = true }
                     .buttonStyle(.borderedProminent)
                     .tint(Theme.danger)
@@ -254,9 +260,9 @@ struct StorageView: View {
                     .disabled(store.selected.isEmpty || store.deleting)
             }
         }
-        .padding(22)
-        .frame(width: 580, height: 560)
-        .background(Theme.background)
+        .padding(embedded ? 0 : 22)
+        .frame(width: embedded ? nil : 580, height: embedded ? 440 : 560)
+        .background(embedded ? Color.clear : Theme.background)
         .onAppear { store.reload() }
         .confirmationDialog("Удалить выбранное (\(FileSizeText.string(store.selectedBytes)))?", isPresented: $confirming) {
             Button("Удалить", role: .destructive) {
