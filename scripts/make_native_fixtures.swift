@@ -88,37 +88,35 @@ var asbd = AudioStreamBasicDescription(mSampleRate: rate, mFormatID: kAudioForma
 CMAudioFormatDescriptionCreate(allocator: nil, asbd: &asbd, layoutSize: 0, layout: nil, magicCookieSize: 0,
                                magicCookie: nil, extensions: nil, formatDescriptionOut: &desc)
 
-/// Waits for an input with a deadline, so a stalled writer fails instead of hanging.
-func waitReady(_ input: AVAssetWriterInput) {
-    let deadline = Date().addingTimeInterval(20)
-    while !input.isReadyForMoreMediaData {
-        if writer.status == .failed { print("writer failed: \(writer.error?.localizedDescription ?? "?")"); exit(1) }
-        if Date() > deadline { print("writer stalled"); exit(1) }
-        usleep(1000)
+// Feed both inputs the way AVAssetWriter expects: each asks for data on its
+// own queue whenever it can take more, so neither stalls waiting for the
+// other to catch up.
+let frames = total * Int(fps)
+let group = DispatchGroup()
+var frameIndex = 0
+group.enter()
+vIn.requestMediaDataWhenReady(on: DispatchQueue(label: "video")) {
+    while vIn.isReadyForMoreMediaData {
+        if frameIndex >= frames { vIn.markAsFinished(); group.leave(); return }
+        var pb: CVPixelBuffer?
+        CVPixelBufferPoolCreatePixelBuffer(nil, adaptor.pixelBufferPool!, &pb)
+        guard let pb else { fatalError("no pixel buffer") }
+        CVPixelBufferLockBaseAddress(pb, [])
+        let ctx = CGContext(data: CVPixelBufferGetBaseAddress(pb), width: width, height: height, bitsPerComponent: 8,
+                            bytesPerRow: CVPixelBufferGetBytesPerRow(pb), space: CGColorSpaceCreateDeviceRGB(),
+                            bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue)!
+        draw(ctx, slide: slides[min(slides.count - 1, frameIndex / (slideSeconds * Int(fps)))])
+        CVPixelBufferUnlockBaseAddress(pb, [])
+        adaptor.append(pb, withPresentationTime: CMTime(value: CMTimeValue(frameIndex), timescale: fps))
+        frameIndex += 1
     }
 }
-
-// Interleave video and audio in time order: the writer stalls one input
-// while it waits for the other to catch up.
-let frames = total * Int(fps)
 var pos = 0
-for i in 0..<frames {
-    waitReady(vIn)
-    var pb: CVPixelBuffer?
-    CVPixelBufferPoolCreatePixelBuffer(nil, adaptor.pixelBufferPool!, &pb)
-    guard let pb else { fatalError("no pixel buffer") }
-    CVPixelBufferLockBaseAddress(pb, [])
-    let ctx = CGContext(data: CVPixelBufferGetBaseAddress(pb), width: width, height: height, bitsPerComponent: 8,
-                        bytesPerRow: CVPixelBufferGetBytesPerRow(pb), space: CGColorSpaceCreateDeviceRGB(),
-                        bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue)!
-    draw(ctx, slide: slides[min(slides.count - 1, i / (slideSeconds * Int(fps)))])
-    CVPixelBufferUnlockBaseAddress(pb, [])
-    adaptor.append(pb, withPresentationTime: CMTime(value: CMTimeValue(i), timescale: fps))
-
-    let audioUntil = i == frames - 1 ? pcm.count : min(pcm.count, Int(Double(i + 1) / Double(fps) * rate))
-    while pos < audioUntil {
-        waitReady(aIn)
-        let n = min(1024, audioUntil - pos)
+group.enter()
+aIn.requestMediaDataWhenReady(on: DispatchQueue(label: "audio")) {
+    while aIn.isReadyForMoreMediaData {
+        if pos >= pcm.count { aIn.markAsFinished(); group.leave(); return }
+        let n = min(1024, pcm.count - pos)
         var block: CMBlockBuffer?
         CMBlockBufferCreateWithMemoryBlock(allocator: nil, memoryBlock: nil, blockLength: n * 4, blockAllocator: nil,
                                            customBlockSource: nil, offsetToData: 0, dataLength: n * 4, flags: 0, blockBufferOut: &block)
@@ -133,8 +131,7 @@ for i in 0..<frames {
         pos += n
     }
 }
-vIn.markAsFinished()
-aIn.markAsFinished()
+if group.wait(timeout: .now() + 120) == .timedOut { print("writer stalled"); exit(1) }
 
 let done = DispatchSemaphore(value: 0)
 writer.finishWriting { done.signal() }

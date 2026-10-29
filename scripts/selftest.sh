@@ -21,7 +21,7 @@ if command -v swift >/dev/null; then
   fx=$!
   for _ in $(seq 1 240); do kill -0 $fx 2>/dev/null || break; sleep 1; done
   if kill -0 $fx 2>/dev/null; then echo "fixture maker timed out"; kill -9 $fx; rm -f "$BASE/in/slides.mp4"; fi
-  wait $fx 2>/dev/null || echo "no mp4 fixture"
+  wait $fx 2>/dev/null || { echo "no mp4 fixture"; rm -f "$BASE/in/slides.mp4"; }
 fi
 if [ -f "$BASE/in/ru-example.wav" ]; then
   afconvert -f m4af -d aac "$BASE/in/ru-example.wav" "$BASE/in/speech.m4a" || true

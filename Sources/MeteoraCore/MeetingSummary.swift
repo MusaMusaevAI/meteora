@@ -525,7 +525,7 @@ public enum MeetingTranscriptText {
     /// counted by `count`). A line longer than the budget is split at
     /// sentence ends, then at spaces, then hard.
     public static func chunks(_ lines: [String], budget: Int, count: (String) -> Int) -> [String] {
-        let budget = max(64, budget)
+        let budget = max(8, budget)
         var pieces: [(String, Int)] = []
         for line in lines {
             let n = count(line)

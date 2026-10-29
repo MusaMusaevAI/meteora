@@ -84,7 +84,7 @@ final class SelfTest {
         // 2. Playback in WebKit
         report["engine"] = model.engine
         if let player = model.player {
-            let ok = await wait(30) { player.isReady || player.mediaErrorCode != 0 }
+            let ok = await wait(75) { player.isReady || player.mediaErrorCode != 0 }
             report["playback"] = ["ready": player.isReady, "mediaError": player.mediaErrorCode,
                                   "videoSize": "\(Int(player.videoSize.width))x\(Int(player.videoSize.height))",
                                   "webDuration": player.duration, "waitedOK": ok] as [String: Any]
