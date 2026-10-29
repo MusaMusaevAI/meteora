@@ -81,6 +81,7 @@ class PlayerController: NSObject, ObservableObject {
 final class WebPlayerController: PlayerController {
     private var seenMessageTypes = Set<String>()
     private var crashCount = 0
+    private var watchdogReloads = 0
 
     let webView: WKWebView
     private let world = WKContentWorld.world(name: "meteora")
@@ -320,7 +321,21 @@ extension WebPlayerController: WKNavigationDelegate, WKUIDelegate {
         nil
     }
 
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { log("nav:finish") }
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        log("nav:finish")
+        // Watchdog: now and then WebKit leaves the <video> without a source
+        // (networkState 3, no request reaches our scheme). Reload the page
+        // up to twice if nothing has loaded after a while.
+        let attempt = watchdogReloads
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 12_000_000_000)
+            guard let self, !self.isReady, self.mediaErrorCode == 0, self.watchdogReloads == attempt,
+                  self.watchdogReloads < 2, self.fileURL != nil else { return }
+            self.watchdogReloads += 1
+            self.log("watchdog:reload \(self.watchdogReloads)")
+            self.webView.load(URLRequest(url: PlayerPage.pageURL))
+        }
+    }
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { log("nav:fail \(error)") }
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         log("nav:failProvisional \(error)")
