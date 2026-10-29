@@ -31,11 +31,27 @@ public final class SpeechRecognizer {
 
     private let recognizer: OpaquePointer
     private let vad: OpaquePointer
+    /// Hint phrases joined by «/» (sherpa-onnx's separator), NUL-terminated;
+    /// nil = no hints, plain greedy search.
+    private let hintsBuffer: [CChar]?
+
+    /// Hint phrases actually given to the decoder (empty = hints off).
+    public let hints: [String]
+    /// Why requested hints are off (nil when they are on or not requested).
+    public let hintsNote: String?
 
     /// - Parameters:
     ///   - store: where the GigaAM files are installed (must be verified).
     ///   - vadModel: bundled Silero VAD model.
-    public init(store: ModelStore, vadModel: URL, threads: Int = max(1, min(4, ProcessInfo.processInfo.activeProcessorCount - 1))) throws {
+    ///   - hotwords: recognizer hints — phrases written the way the model
+    ///     writes them (see `TermHints.phrases(from:)`). Non-empty switches
+    ///     decoding to modified beam search (4 paths) with contextual
+    ///     biasing; needs the optional tokenizer file (`SpeechModel.extras`).
+    ///     If it is missing or does not match, hints are off (`hintsNote`)
+    ///     and recognition works exactly as without them.
+    ///   - hotwordScore: bonus per matched token (sherpa-onnx default 1.5).
+    public init(store: ModelStore, vadModel: URL, threads: Int = max(1, min(4, ProcessInfo.processInfo.activeProcessorCount - 1)),
+                hotwords: [String] = [], hotwordScore: Float = 1.5) throws {
         guard store.isInstalled else { throw ModelError.notInstalled }
         var owned: [UnsafeMutablePointer<CChar>] = []
         defer { owned.forEach { free($0) } }
@@ -45,19 +61,53 @@ public final class SpeechRecognizer {
             return UnsafePointer(p)
         }
 
-        var cfg = SherpaOnnxOfflineRecognizerConfig()
-        cfg.feat_config.sample_rate = Int32(Self.sampleRate)
-        cfg.feat_config.feature_dim = 64
-        cfg.model_config.transducer.encoder = c(store.path("encoder.int8.onnx").path)
-        cfg.model_config.transducer.decoder = c(store.path("decoder.onnx").path)
-        cfg.model_config.transducer.joiner = c(store.path("joiner.onnx").path)
-        cfg.model_config.tokens = c(store.path("tokens.txt").path)
-        cfg.model_config.num_threads = Int32(threads)
-        cfg.model_config.provider = c("cpu")
-        cfg.model_config.model_type = c("nemo_transducer")
-        cfg.decoding_method = c("greedy_search")
-        cfg.max_active_paths = 4
-        guard let r = SherpaOnnxCreateOfflineRecognizer(&cfg) else { throw RecognizerError.modelLoad }
+        var hintList: [String] = []
+        var note: String?
+        var vocabPath: String?
+        if !hotwords.isEmpty {
+            do {
+                let prepared = try SpeechRecognizer.prepareHints(hotwords, store: store)
+                hintList = prepared.phrases
+                vocabPath = prepared.vocab.path
+                if hintList.isEmpty { note = "ни один термин словаря не записывается токенами модели" }
+            } catch {
+                note = "\(error)"
+            }
+        }
+
+        func makeRecognizer(withHints: Bool) -> OpaquePointer? {
+            var cfg = SherpaOnnxOfflineRecognizerConfig()
+            cfg.feat_config.sample_rate = Int32(SpeechRecognizer.sampleRate)
+            cfg.feat_config.feature_dim = 64
+            cfg.model_config.transducer.encoder = c(store.path("encoder.int8.onnx").path)
+            cfg.model_config.transducer.decoder = c(store.path("decoder.onnx").path)
+            cfg.model_config.transducer.joiner = c(store.path("joiner.onnx").path)
+            cfg.model_config.tokens = c(store.path("tokens.txt").path)
+            cfg.model_config.num_threads = Int32(threads)
+            cfg.model_config.provider = c("cpu")
+            cfg.model_config.model_type = c("nemo_transducer")
+            cfg.max_active_paths = 4
+            if withHints, let vocabPath {
+                // Hints are encoded per stream (no hotwords file): sherpa-onnx
+                // splits each phrase with this vocabulary into model tokens.
+                cfg.decoding_method = c("modified_beam_search")
+                cfg.hotwords_score = hotwordScore
+                cfg.model_config.modeling_unit = c("bpe")
+                cfg.model_config.bpe_vocab = c(vocabPath)
+            } else {
+                cfg.decoding_method = c("greedy_search")
+            }
+            return SherpaOnnxCreateOfflineRecognizer(&cfg)
+        }
+
+        var useHints = !hintList.isEmpty
+        var created = makeRecognizer(withHints: useHints)
+        if created == nil, useHints {
+            note = "движок не принял подсказки"
+            useHints = false
+            created = makeRecognizer(withHints: false)
+        }
+        guard let r = created else { throw RecognizerError.modelLoad }
 
         var v = SherpaOnnxVadModelConfig()
         v.silero_vad.model = c(vadModel.path)
@@ -75,6 +125,9 @@ public final class SpeechRecognizer {
         }
         recognizer = r
         vad = d
+        hints = useHints ? hintList : []
+        hintsNote = note
+        hintsBuffer = useHints ? Array(hintList.joined(separator: "/").utf8CString) : nil
     }
 
     deinit {
@@ -82,9 +135,46 @@ public final class SpeechRecognizer {
         SherpaOnnxDestroyOfflineRecognizer(recognizer)
     }
 
+    struct HintsUnavailable: Error, CustomStringConvertible {
+        let description: String
+    }
+
+    /// Checks the tokenizer against the installed model, writes the
+    /// vocabulary sherpa-onnx needs next to the model (derived from verified
+    /// files only) and keeps the phrases every character of which the model
+    /// can write.
+    static func prepareHints(_ phrases: [String], store: ModelStore) throws -> (phrases: [String], vocab: URL) {
+        guard let tokenizerURL = store.verifiedExtra(SpeechModel.tokenizerFile) else {
+            throw HintsUnavailable(description: "нет проверенного файла \(SpeechModel.tokenizerFile)")
+        }
+        let tokenizer = try HintTokenizer(modelData: Data(contentsOf: tokenizerURL))
+        try tokenizer.check(tokensFile: store.path("tokens.txt"))
+        let vocab = store.path("hints.vocab")
+        let text = tokenizer.vocabText
+        if (try? String(contentsOf: vocab, encoding: .utf8)) != text {
+            try text.write(to: vocab, atomically: true, encoding: .utf8)
+        }
+        var out: [String] = []
+        var seen = Set<String>()
+        for p in phrases {
+            let clean = TermHints.clean(p.precomposedStringWithCanonicalMapping)
+            guard !clean.isEmpty, tokenizer.canEncode(clean), seen.insert(clean).inserted else { continue }
+            out.append(clean)
+            if out.count >= TermHints.maxPhrases { break }
+        }
+        return (out, vocab)
+    }
+
     /// Recognizes one chunk of 16 kHz mono audio.
     func recognize(_ samples: UnsafePointer<Float>, count: Int) -> String {
-        guard count > 0, let stream = SherpaOnnxCreateOfflineStream(recognizer) else { return "" }
+        guard count > 0 else { return "" }
+        let created: OpaquePointer?
+        if let h = hintsBuffer {
+            created = h.withUnsafeBufferPointer { SherpaOnnxCreateOfflineStreamWithHotwords(recognizer, $0.baseAddress) }
+        } else {
+            created = SherpaOnnxCreateOfflineStream(recognizer)
+        }
+        guard let stream = created else { return "" }
         defer { SherpaOnnxDestroyOfflineStream(stream) }
         SherpaOnnxAcceptWaveformOffline(stream, Int32(Self.sampleRate), samples, Int32(count))
         SherpaOnnxDecodeOfflineStream(recognizer, stream)

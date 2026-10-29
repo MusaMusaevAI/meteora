@@ -149,15 +149,75 @@ final class SelfTest {
             asr["runtime"] = SpeechRecognizer.runtimeVersion
             asr["vadBundled"] = SpeechModelController.vadModelURL != nil
             if speech.isInstalled, let wav = asrWav, let vad = SpeechModelController.vadModelURL {
+                // The tokenizer for recognizer hints is an optional extra:
+                // fetch it if the model came from a cache made before it.
+                if !ModelStore.shared.missingExtras.isEmpty {
+                    let te = Date()
+                    do {
+                        try await ModelStore.shared.installExtras(isCancelled: { false })
+                    } catch {
+                        errors.append("hints tokenizer download: \(error)")
+                    }
+                    asr["extrasDownloadSeconds"] = Date().timeIntervalSince(te)
+                }
+                asr["hintsTokenizerVerified"] = ModelStore.shared.verifiedExtra(SpeechModel.tokenizerFile) != nil
                 do {
                     let samples = try Self.readMono16k(wav)
-                    let t5 = Date()
-                    let rec = try SpeechRecognizer(store: .shared, vadModel: vad)
-                    let segs = rec.transcribe(samples16k: samples)
                     asr["wavSeconds"] = Double(samples.count) / 16_000
-                    asr["wavDecodeSeconds"] = Date().timeIntervalSince(t5)
-                    asr["wavText"] = segs.map(\.text).joined(separator: " ")
-                    if segs.isEmpty { errors.append("ASR: no text from Russian sample") }
+                    // Lower-case words without punctuation, «ё» as «е».
+                    func words(_ text: String) -> [String] {
+                        text.lowercased().replacingOccurrences(of: "ё", with: "е")
+                            .split(whereSeparator: { !$0.isLetter && !$0.isNumber })
+                            .map(String.init)
+                    }
+                    func run(_ hotwords: [String]) throws -> [String: Any] {
+                        let tl = Date()
+                        let rec = try SpeechRecognizer(store: .shared, vadModel: vad, hotwords: hotwords)
+                        let td = Date()
+                        let text = rec.transcribe(samples16k: samples).map(\.text).joined(separator: " ")
+                        return ["text": text, "loadSeconds": td.timeIntervalSince(tl), "decodeSeconds": Date().timeIntervalSince(td),
+                                "hintsActive": rec.hints.count, "hintsNote": rec.hintsNote ?? ""]
+                    }
+                    // Known reference: the start of the sample (Pushkin).
+                    let reference = words("Ничьих не требуя похвал, счастлив уж я надеждой сладкой, что дева с трепетом любви посмотрит, может быть, украдкой")
+                    func recall(_ text: String) -> Double {
+                        var hyp = words(text)
+                        var hit = 0
+                        for w in reference {
+                            if let i = hyp.firstIndex(of: w) { hyp.remove(at: i); hit += 1 }
+                        }
+                        return Double(hit) / Double(max(1, reference.count))
+                    }
+                    let unrelated = TermHints.phrases(from: StarterTerms.pensions)
+                    let plain = try run([])
+                    let mixed = try run(["украдкой"] + unrelated)
+                    let negative = try run(unrelated)
+                    let t0 = plain["text"] as? String ?? ""
+                    let t1 = mixed["text"] as? String ?? ""
+                    let t2 = negative["text"] as? String ?? ""
+                    asr["wavText"] = t0
+                    asr["wavDecodeSeconds"] = plain["decodeSeconds"]
+                    if t0.isEmpty { errors.append("ASR: no text from Russian sample") }
+                    // Words of unrelated hints that appear only with hints = injected.
+                    let plainWords = Set(words(t0))
+                    let hintWords = Set(unrelated.flatMap { words($0) })
+                    let injected = Set(words(t1) + words(t2)).intersection(hintWords).subtracting(plainWords)
+                    let r0 = recall(t0), r1 = recall(t1)
+                    asr["hints"] = [
+                        "plain": plain, "mixed": mixed, "unrelatedOnly": negative,
+                        "mixedHintCount": 1 + unrelated.count,
+                        "recallPlain": r0, "recallMixed": r1, "recallUnrelatedOnly": recall(t2),
+                        "notWorse": r1 >= r0,
+                        "unrelatedOnlyUnchanged": t2 == t0,
+                        "injected": Array(injected).sorted(),
+                        "beamSlowdown": (mixed["decodeSeconds"] as? Double ?? 0) / max(0.001, plain["decodeSeconds"] as? Double ?? 0),
+                    ] as [String: Any]
+                    if (mixed["hintsActive"] as? Int ?? 0) == 0 {
+                        errors.append("ASR hints inactive: \(mixed["hintsNote"] ?? "")")
+                    } else {
+                        if r1 < r0 { errors.append("ASR hints made the sample worse: \(r0) → \(r1)") }
+                        if !injected.isEmpty { errors.append("ASR hints injected words: \(injected.sorted())") }
+                    }
                 } catch {
                     errors.append("ASR wav: \(error)")
                 }

@@ -574,10 +574,11 @@ final class MeetingModel: ObservableObject {
         transcribeStarted = Date()
         bottomTab = .transcript
         let duration = info?.duration ?? 0
+        let hints = TermDictionaryStore.shared.recognizerHints
 
         let result: Result<[TranscriptSegment], Error> = await Task.detached(priority: .userInitiated) { [weak self] in
             do {
-                let recognizer = try SpeechRecognizer(store: .shared, vadModel: vad)
+                let recognizer = try SpeechRecognizer(store: .shared, vadModel: vad, hotwords: hints)
                 let decoder = try await origin.make()
                 let segments = try recognizer.transcribe(decoder: decoder, isCancelled: { token.isCancelled }, progress: { p in
                     Task { @MainActor in if self?.transcribeProgress != nil { self?.transcribeProgress = p } }
@@ -835,4 +836,19 @@ extension MeetingModel {
     var showsFramesTab: Bool { hasVideo && (!frames.isEmpty || sceneProgress != nil || scenesDone) }
     var showsTranscriptTab: Bool { transcript != nil || transcribeProgress != nil || !liveSegments.isEmpty }
     var showsSummaryTab: Bool { summary != nil || summaryProgress != nil }
+}
+
+/// «Подсказки распознавателю»: dictionary terms are given to GigaAM as
+/// hotwords so it prefers them while decoding (TermCorrector still fixes
+/// the text afterwards). Stored in UserDefaults, on by default.
+enum RecognizerHintsSetting {
+    static let key = "asr.hints"
+    static var isOn: Bool { UserDefaults.standard.object(forKey: key) as? Bool ?? true }
+}
+
+extension TermDictionaryStore {
+    /// The dictionary as recognizer hints, or [] when the setting is off.
+    var recognizerHints: [String] {
+        RecognizerHintsSetting.isOn ? TermHints.phrases(from: terms) : []
+    }
 }

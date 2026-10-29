@@ -40,4 +40,19 @@ final class TermDictionaryTests: XCTestCase {
         XCTAssertEqual(parsed[2].variants, ["x\"y"])
         XCTAssertEqual(TermCSV.parse(Data("ОПС,о пэ эс\nНПФ".utf8)).map(\.text), ["ОПС", "НПФ"])
     }
+
+    func testRecognizerHints() {
+        let p = TermHints.phrases(from: [
+            Term(text: "ПДС", variants: ["пэдээс"]),
+            Term(text: "автоплатёж"),
+            Term(text: " Яндекс  Трекер "),
+            Term(text: "Я"),
+            Term(text: "ПДС"),
+        ])
+        // Written forms only (never the spoken variants), sentence-start
+        // capital for lower-case terms, «е» spelling of «ё».
+        XCTAssertEqual(p, ["ПДС", "автоплатёж", "Автоплатёж", "автоплатеж", "Автоплатеж", "Яндекс Трекер"])
+        XCTAssertEqual(TermHints.clean("«газ/фонд»: -1С-"), "газ фонд 1С")
+        XCTAssertEqual(TermHints.phrases(from: StarterTerms.pensions).filter { $0.contains("/") || $0.contains(":") }, [])
+    }
 }
