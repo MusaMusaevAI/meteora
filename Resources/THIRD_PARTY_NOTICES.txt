@@ -19,6 +19,37 @@ Silero VAD (voice activity detection model, bundled)
   Copyright (c) Silero Team. MIT License.
   https://github.com/snakers4/silero-vad
 
+Qwen3.5-4B (language model for meeting summaries, downloaded on demand)
+  Copyright (c) Alibaba Cloud, Qwen Team. Apache License 2.0.
+  https://huggingface.co/Qwen/Qwen3.5-4B
+  GGUF quantization (Q4_K_M): https://huggingface.co/unsloth/Qwen3.5-4B-GGUF
+
+llama.cpp b11970 (language model runtime, statically linked; includes ggml)
+  https://github.com/ggml-org/llama.cpp (commit 522021325546ea322b0b1e58a50f9dbf03a5f197)
+  Build configuration: LLAMA_CPP_BUILD.txt. License text also in LLAMA_CPP_LICENSE.txt.
+
+  MIT License
+
+  Copyright (c) 2023-2026 The ggml authors
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
 FFmpeg 7.1.5 (conversion of rare media formats; separate program, not linked into Meteora)
   Location: Meteora.app/Contents/XPCServices/com.musamusaev.meteora.converter.xpc/Contents/MacOS/ffmpeg
   Copyright (c) 2000-2026 the FFmpeg developers. https://ffmpeg.org

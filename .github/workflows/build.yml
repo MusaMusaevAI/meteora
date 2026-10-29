@@ -42,6 +42,23 @@ jobs:
         run: |
           R=https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16/resolve/main
           curl -fsSL --retry 3 -o /tmp/ru-example.wav "$R/test_wavs/example.wav" || echo "no sample"
+      # llama.cpp (meteora summaries): built from pinned, verified source as
+      # a static archive (scripts/build_llama.sh). Needed before the unit
+      # tests, which link every target.
+      - name: Restore llama.cpp build
+        id: llama-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: Vendor/llama
+          key: llama-b11970-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/build_llama.sh') }}
+      - name: llama.cpp (pinned source, static, universal)
+        run: scripts/build_llama.sh 2>&1 | tee logs/llama.txt
+      - name: Save llama.cpp build
+        if: steps.llama-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: Vendor/llama
+          key: llama-b11970-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/build_llama.sh') }}
       - name: Unit tests
         id: tests
         continue-on-error: true
@@ -66,6 +83,25 @@ jobs:
       - name: Build app
         id: app
         run: scripts/build_app.sh 2>&1 | tee logs/build.txt
+      # Summary model for the LLM self-test (~2.7 GB): restored from the cache
+      # keyed by its pinned SHA-256, downloaded and verified only on a miss.
+      # The app verifies it again before use.
+      - name: Restore summary model
+        id: llm-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/Downloads/Meteora-CI-models
+          key: llm-qwen3.5-4b-q4km-00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4
+      - name: Summary model (hash-pinned)
+        id: llm-model
+        continue-on-error: true
+        run: scripts/fetch_summary_model.sh 2>&1 | tee logs/llm-model.txt
+      - name: Save summary model
+        if: steps.llm-cache.outputs.cache-hit != 'true' && steps.llm-model.outcome == 'success'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/Downloads/Meteora-CI-models
+          key: llm-qwen3.5-4b-q4km-00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4
       - name: Self-test (sandboxed app, real WebKit)
         id: selftest
         continue-on-error: true

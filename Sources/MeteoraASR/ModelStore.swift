@@ -193,8 +193,9 @@ public final class ModelStore: @unchecked Sendable {
     }
 }
 
-/// HTTPS-only downloader with progress and cancellation.
-enum Downloader {
+/// HTTPS-only downloader with progress and cancellation. Public so the
+/// summary model (MeteoraLLM) uses exactly the same hardened code path.
+public enum Downloader {
     final class Delegate: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
         let progress: (Int64) -> Void
         let isCancelled: () -> Bool
@@ -250,12 +251,13 @@ enum Downloader {
         }
     }
 
-    static func download(_ url: URL, expectedSize: Int64, isCancelled: @escaping () -> Bool,
-                         progress: @escaping (Int64) -> Void) async throws -> URL {
+    public static func download(_ url: URL, expectedSize: Int64, isCancelled: @escaping () -> Bool,
+                                progress: @escaping (Int64) -> Void) async throws -> URL {
         guard url.scheme == "https" else { throw ModelError.network("только HTTPS") }
         let cfg = URLSessionConfiguration.ephemeral
         cfg.timeoutIntervalForRequest = 60
-        cfg.timeoutIntervalForResource = 3600
+        // At least an hour; large files get as long as ~200 KB/s needs.
+        cfg.timeoutIntervalForResource = max(3600, Double(expectedSize) / 200_000)
         cfg.httpCookieStorage = nil
         cfg.urlCache = nil
         let delegate = Delegate(maxBytes: expectedSize + 1024, progress: progress, isCancelled: isCancelled)

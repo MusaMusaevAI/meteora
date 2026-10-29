@@ -2,14 +2,16 @@ import SwiftUI
 import AppKit
 import MeteoraCore
 import MeteoraASR
+import MeteoraLLM
 
 /// Everything Meteora keeps on disk, so the user can see it and clean up.
 struct StorageItem: Identifiable, Hashable {
     enum Section: Int, CaseIterable {
-        case model, transcripts, exports, temp
+        case model, summaryModel, transcripts, exports, temp
         var title: String {
             switch self {
             case .model: return "Модель распознавания речи"
+            case .summaryModel: return "Модель для резюме встреч"
             case .transcripts: return "Сохранённые расшифровки"
             case .exports: return "Переданный звук — «Загрузки/Meteora»"
             case .temp: return "Временные файлы"
@@ -18,6 +20,7 @@ struct StorageItem: Identifiable, Hashable {
         var note: String? {
             switch self {
             case .model: return "Без неё расшифровка не работает — придётся скачать заново."
+            case .summaryModel: return "Без неё резюме встреч не составляются — придётся скачать заново."
             case .transcripts: return "Meteora показывает их при повторном открытии записи."
             case .exports: return "Файлы будут перемещены в Корзину."
             case .temp: return nil
@@ -76,6 +79,8 @@ final class StorageModel: ObservableObject {
             }
         }.value
         SpeechModelController.shared.refresh()
+        if doomed.contains(where: { $0.section == .summaryModel }) { SummaryModelController.shared.summarizer.unload() }
+        SummaryModelController.shared.refresh()
         selected = []
         deleting = false
         reload()
@@ -105,6 +110,15 @@ final class StorageModel: ObservableObject {
             out.append(StorageItem(id: "model-speakers", section: .model, title: "\(SpeakerModel.displayName) — разделение по спикерам",
                                    detail: ModelStore.speakers.isInstalled ? "Установлена и проверена" : "Загружена не полностью",
                                    bytes: ModelStore.directorySize(speakerDir), urls: [speakerDir]))
+        }
+
+        // 1b. Summary model
+        let summaryDir = SummaryModelStore.shared.directory
+        if fm.fileExists(atPath: summaryDir.path) {
+            out.append(StorageItem(id: "summary-model", section: .summaryModel,
+                                   title: "\(SummaryModel.displayName) — резюме встреч",
+                                   detail: SummaryModelStore.shared.isInstalled ? "Установлена и проверена" : "Загружена не полностью",
+                                   bytes: ModelStore.directorySize(summaryDir), urls: [summaryDir]))
         }
 
         // 2. Cached transcripts

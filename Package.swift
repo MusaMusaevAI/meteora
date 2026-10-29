@@ -9,6 +9,11 @@ let sherpaLibs = [
     "sherpa-onnx-fstfar", "sherpa-onnx-fst", "kaldi-native-fbank-core", "kissfft-float",
     "onnxruntime", "ssentencepiece_core", "utf8proc",
 ]
+// Static llama.cpp (universal: arm64 with Metal, x86_64 CPU), built from
+// pinned, verified source by scripts/build_llama.sh into Vendor/llama/lib.
+// Static on purpose: an ad-hoc signed app with library validation can't load
+// a third-party dynamic framework.
+let llamaLib = Context.packageDirectory + "/Vendor/llama/lib"
 
 let package = Package(
     name: "Meteora",
@@ -41,6 +46,23 @@ let package = Package(
             dependencies: ["MeteoraCore", "CSherpaOnnx"],
             path: "Sources/MeteoraASR"
         ),
+        // C API of llama.cpp (on-device language model for meeting summaries).
+        .target(
+            name: "CLlama",
+            path: "Sources/CLlama",
+            exclude: ["README.md"],
+            linkerSettings: [.unsafeFlags(["-L", llamaLib]), .linkedLibrary("meteora-llama"),
+                             .linkedLibrary("c++"), .linkedFramework("Accelerate"),
+                             .linkedFramework("Metal"), .linkedFramework("MetalKit"),
+                             .linkedFramework("Foundation")]
+        ),
+        // On-device meeting summaries: llama.cpp wrapper, model download and
+        // verification, map-reduce summarizer. No UI.
+        .target(
+            name: "MeteoraLLM",
+            dependencies: ["MeteoraCore", "MeteoraASR", "CLlama"],
+            path: "Sources/MeteoraLLM"
+        ),
         // NSXPC protocol shared by the app and the converter service.
         .target(
             name: "MeteoraConverterProtocol",
@@ -55,7 +77,7 @@ let package = Package(
         ),
         .executableTarget(
             name: "Meteora",
-            dependencies: ["MeteoraCore", "MeteoraASR", "MeteoraConverterProtocol"],
+            dependencies: ["MeteoraCore", "MeteoraASR", "MeteoraLLM", "MeteoraConverterProtocol"],
             path: "Sources/Meteora"
         ),
         .testTarget(

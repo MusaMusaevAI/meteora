@@ -9,6 +9,7 @@ APP=build/Meteora.app
 
 scripts/fetch_vendor.sh
 scripts/build_ffmpeg.sh   # no-op when Vendor/ffmpeg is up to date (CI cache)
+scripts/build_llama.sh    # no-op when Vendor/llama is up to date (CI cache)
 swift build -c release --arch arm64 --arch x86_64 --product Meteora
 swift build -c release --arch arm64 --arch x86_64 --product MeteoraConverter
 BIN_DIR=$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)
@@ -23,6 +24,13 @@ cp Resources/THIRD_PARTY_NOTICES.txt "$APP/Contents/Resources/"
 cp -R Resources/Onboarding "$APP/Contents/Resources/Onboarding"
 cp Vendor/ffmpeg/CONFIGURE.txt "$APP/Contents/Resources/FFMPEG_BUILD.txt"
 cp Vendor/ffmpeg/COPYING.LGPLv2.1 "$APP/Contents/Resources/FFMPEG_LICENSE_LGPL-2.1.txt"
+cp Vendor/llama/LICENSE "$APP/Contents/Resources/LLAMA_CPP_LICENSE.txt"
+cp Vendor/llama/CONFIGURE.txt "$APP/Contents/Resources/LLAMA_CPP_BUILD.txt"
+
+# llama.cpp must be linked statically: with library validation an ad-hoc
+# signed app can't load a third-party dylib, the app would not even launch.
+LINKED=$(otool -L "$APP/Contents/MacOS/Meteora")
+if grep -i -E 'llama|ggml' <<<"$LINKED"; then echo "Meteora links llama.cpp dynamically"; exit 1; fi
 
 # Converter XPC service: its own bundle, Info.plist and sandbox; ffmpeg next
 # to its executable (Contents/MacOS/ffmpeg) so it can be spawned from there.
