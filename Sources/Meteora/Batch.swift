@@ -128,16 +128,16 @@ final class BatchQueue: ObservableObject {
     func start() {
         guard !isRunning, items.contains(where: { $0.status == .waiting }) else { return }
         guard destination != nil || chooseDestination(), let dest = destination else { return }
-        guard SpeechModelController.shared.isInstalled, let vad = SpeechModelController.vadModelURL else { return }
+        guard SpeechModelController.shared.isInstalled, SpeechModelController.vadModelURL != nil else { return }
         let token = CancelToken()
         self.token = token
         isRunning = true
         Task {
             let scoped = dest.startAccessingSecurityScopedResource()
-            var recognizer: SpeechRecognizer?
+            let processor = MeetingProcessor()
             while let index = items.firstIndex(where: { $0.status == .waiting }) {
                 if token.isCancelled { break }
-                await process(index, dest: dest, vad: vad, recognizer: &recognizer, token: token)
+                await process(index, dest: dest, processor: processor, token: token)
                 updateBadge()
             }
             for i in items.indices where items[i].status == .waiting && token.isCancelled { items[i].status = .cancelled }
@@ -153,69 +153,27 @@ final class BatchQueue: ObservableObject {
         if let i = items.firstIndex(where: { $0.id == id }) { items[i].status = status }
     }
 
-    private func process(_ index: Int, dest: URL, vad: URL, recognizer: inout SpeechRecognizer?, token: CancelToken) async {
+    private func process(_ index: Int, dest: URL, processor: MeetingProcessor, token: CancelToken) async {
         let item = items[index]
         let id = item.id
-        let url = item.url
         set(id, .reading(0))
-        var temporary: URL?
-        defer { if let temporary { try? FileManager.default.removeItem(at: temporary) } }
+        let job = MeetingJob(url: item.url, title: item.title, destination: dest,
+                             formats: ExportSettings.shared.ordered, options: ExportSettings.shared.options,
+                             reuseTranscript: reuseTranscripts)
         do {
-            let media = try await LoadedMedia.load(url, isCancelled: { token.isCancelled }, progress: { p in
-                Task { @MainActor in BatchQueue.shared.set(id, .reading(p)) }
-            })
-            temporary = media.temporary
-            MeetingJournal.shared.record(url: url, info: media.info, transcript: TranscriptStore.load(for: url))
-            guard let origin = media.origin else { throw MediaError.unplayable }
-
-            var transcript = reuseTranscripts ? TermDictionaryStore.shared.correct(TranscriptStore.load(for: url)) : nil
-            let reused = transcript != nil
-            if transcript == nil {
-                set(id, .transcribing(0))
-                if recognizer == nil {
-                    recognizer = try SpeechRecognizer(store: .shared, vadModel: vad,
-                                                      hotwords: TermDictionaryStore.shared.recognizerHints)
+            let outcome = try await processor.process(job, token: token) { stage in
+                switch stage {
+                case .reading(let p): BatchQueue.shared.set(id, .reading(p))
+                case .transcribing(let p): BatchQueue.shared.set(id, .transcribing(p))
+                case .speakers, .summary, .saving: BatchQueue.shared.set(id, .saving)
                 }
-                let rec = recognizer!
-                let segments: [TranscriptSegment] = try await Task.detached(priority: .userInitiated) {
-                    let decoder = try await origin.make()
-                    return try rec.transcribe(decoder: decoder, isCancelled: { token.isCancelled }, progress: { p in
-                        Task { @MainActor in BatchQueue.shared.set(id, .transcribing(p)) }
-                    }, onSegment: { _ in })
-                }.value
-                if token.isCancelled { set(id, .cancelled); return }
-                let tr = TermDictionaryStore.shared.corrector.correct(
-                    Transcript(sourceName: url.lastPathComponent, duration: media.info.duration,
-                               engine: SpeechRecognizer.engineName, segments: segments))
-                TranscriptStore.save(tr, for: url)
-                MeetingJournal.shared.updateTranscript(for: url, transcript: tr)
-                transcript = tr
             }
-
-            set(id, .saving)
-            let settings = ExportSettings.shared
-            let formats = settings.ordered
-            let options = settings.options
-            let meta = ReportExporter.Meta(title: item.title, sourceName: url.lastPathComponent, duration: media.info.duration)
-            let base = item.title
-            let tr = transcript
-            let written = try await Task.detached(priority: .userInitiated) { () -> Int in
-                var n = 0
-                for f in formats {
-                    let result = try TranscriptExporter.export(tr, frames: [], meta: meta, format: f, options: options, baseName: base)
-                    try TranscriptExporter.write(result, to: dest, baseName: base, format: f)
-                    n += 1
-                }
-                return n
-            }.value
-            set(id, .done(files: written, reused: reused))
+            set(id, .done(files: outcome.written.count, reused: outcome.reusedTranscript))
         } catch {
             if token.isCancelled {
                 set(id, .cancelled)
-            } else if (error as? ExportError) == .nothingToExport {
-                set(id, .failed("Речи в записи не найдено"))
             } else {
-                set(id, .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription))
+                set(id, .failed(MeetingProcessor.message(error)))
             }
         }
     }

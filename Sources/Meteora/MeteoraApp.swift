@@ -149,7 +149,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppearanceSettings.apply()
-        showMainWindow()
+        let isSelfTest = ProcessInfo.processInfo.environment["METEORA_SELFTEST"] == "1"
+        // Opened by macOS at login with auto-folders on: stay in the menu bar.
+        let quietStart = !isSelfTest && LoginItem.wasLaunchedAtLogin && AutoFolderStore.shared.hasEnabledFolders
+        installAutoFolders(isSelfTest: isSelfTest)
+        AutoFolderStore.shared.onOpenSettings = { [weak self] in
+            guard let self else { return }
+            SettingsWindow.show(.autoFolders, model: self.model)
+        }
+        if !quietStart { showMainWindow() }
         UpdateChecker.shared.checkOnLaunchIfNeeded()
         TermDictionaryStore.shared.onChange = { [weak self] in self?.model.reapplyDictionary() }
         // A finished recording opens right away and is transcribed.
@@ -161,11 +169,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 Task { await model.transcribe() }
             }
         }
-        NSApp.activate(ignoringOtherApps: true)
+        if !quietStart { NSApp.activate(ignoringOtherApps: true) }
         NSApp.servicesProvider = self
         NSUpdateDynamicServices()
         let args = CommandLine.arguments
-        let isSelfTest = ProcessInfo.processInfo.environment["METEORA_SELFTEST"] == "1"
         if !isSelfTest, !Onboarding.isDone {
             OnboardingWindow.show(model: model)
         }
@@ -189,7 +196,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { selfTest == nil }
+    /// Background mode: with an auto-folder on, closing the window keeps
+    /// Meteora running in the menu bar.
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        selfTest == nil && !AutoFolderStore.shared.keepsAppRunning
+    }
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
 

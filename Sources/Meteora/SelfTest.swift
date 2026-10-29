@@ -353,6 +353,12 @@ final class SelfTest {
         if let r = report["recorder"] as? [String: Any], r["ok"] as? Bool == false {
             errors.append("recorder: \(r["errors"] ?? r)")
         }
+        if let wav = asrWav {
+            mark("autofolders")
+            let af = await AutoFolderStore.runSelfTest(fixtures: wav, output: output)
+            report["autofolders"] = af
+            if af["ok"] as? Bool == false { errors.append("autofolders: \(af["errors"] ?? af)") }
+        }
         RecordingWindow.show()
         try? await Task.sleep(nanoseconds: 700_000_000)
         snapshotWindow(titled: "Запись встречи", as: "09-recorder")
