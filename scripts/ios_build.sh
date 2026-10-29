@@ -55,7 +55,10 @@ cp -R iOS/Meteora.xcodeproj "$PKG/iOS/"
 cp iOS/Meteora/Info.plist "$PKG/iOS/Meteora/Info.plist"
 cp iOS/LiveActivity/Info.plist "$PKG/iOS/LiveActivity/Info.plist"
 # Not needed for the iPhone build.
-rm -rf "$PKG/Tests/MeteoraCoreTests/Fixtures" "$PKG/motion" "$PKG/docs"
+rm -rf "$PKG/motion" "$PKG/docs"
+# Test fixtures aren't needed, but the package declares the folder.
+rm -rf "$PKG/Tests/MeteoraCoreTests/Fixtures" && mkdir -p "$PKG/Tests/MeteoraCoreTests/Fixtures" \
+  && touch "$PKG/Tests/MeteoraCoreTests/Fixtures/.keep"
 cat > "$PKG/КАК УСТАНОВИТЬ НА iPHONE.txt" <<'TXT'
 1. Откройте iOS/Meteora.xcodeproj в Xcode.
 2. Подключите iPhone кабелем (или по Wi-Fi), выберите его вверху окна.
