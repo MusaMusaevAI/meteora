@@ -138,7 +138,7 @@ struct PrivacyNote: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 6) {
             Image(systemName: "lock")
-            Text("Записи не покидают этот Mac. Интернет нужен один раз — скачать модель речи.")
+            Text("Записи не покидают этот Mac. Интернет нужен только для загрузки моделей.")
         }
         .font(Theme.ui(11.5))
         .foregroundStyle(Theme.tertiary)

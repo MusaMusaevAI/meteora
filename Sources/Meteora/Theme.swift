@@ -486,8 +486,8 @@ struct GlowHalo: View {
             Circle()
                 .fill(AngularGradient(colors: Theme.nacre + [Theme.nacre[0]], center: .center, angle: angle))
                 .frame(width: size, height: size)
-                .blur(radius: size * 0.28)
-                .opacity(0.55)
+                .blur(radius: size * 0.34)
+                .opacity(0.38)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
