@@ -11,7 +11,8 @@
 	<!-- Meeting journal: reopen a recording the user already opened, without
 	     asking again (read-only bookmarks, only for those files). Recorder:
 	     one read-write bookmark for the folder the user picked for new
-	     recordings. -->
+	     recordings. Auto-folders: one read-write bookmark per folder the
+	     user picked in the Open panel (e.g. Documents/Телемост). -->
 	<key>com.apple.security.files.bookmarks.app-scope</key><true/>
 	<!-- Required by WebKit in a sandboxed app: without it the web content
 	     process is killed and video can't be shown. The page itself can't
