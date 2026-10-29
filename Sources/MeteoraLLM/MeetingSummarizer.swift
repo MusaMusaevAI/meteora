@@ -13,6 +13,11 @@ public struct SummaryProgress: Sendable, Equatable {
     public var stage: Stage
     /// 0…1 over the whole job.
     public var fraction: Double
+
+    public init(stage: Stage, fraction: Double) {
+        self.stage = stage
+        self.fraction = fraction
+    }
 }
 
 public enum SummaryError: Error, LocalizedError {
