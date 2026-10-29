@@ -61,18 +61,67 @@ enum Theme {
     ]
     static func speakerColor(_ index: Int) -> Color { speakerColors[((index % speakerColors.count) + speakerColors.count) % speakerColors.count] }
 
-    static let radius: CGFloat = 12
-    static let controlRadius: CGFloat = 7
+    static let radius: CGFloat = 14
+    static let controlRadius: CGFloat = 10
 
+    /// Interface text: Onest — a contemporary grotesque drawn for Cyrillic.
     static func ui(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight)
+        AppFont.font(AppFont.text, size: size, weight: weight)
     }
-    /// Kept for call sites that want a larger title; same family, no serif.
-    static func display(_ size: CGFloat, weight: Font.Weight = .semibold) -> Font {
-        .system(size: size, weight: weight)
+    /// Titles and the wordmark: Unbounded — wide, a little spacey. Optically
+    /// larger than Onest, so it is drawn a bit smaller.
+    static func display(_ size: CGFloat, weight: Font.Weight = .medium) -> Font {
+        AppFont.font(AppFont.display, size: size * 0.86, weight: weight)
     }
-    static let mono = Font.system(size: 12, weight: .regular).monospacedDigit()
-    static let numbers = Font.system(size: 12.5).monospacedDigit()
+    static let mono = ui(12).monospacedDigit()
+    static let numbers = ui(12.5).monospacedDigit()
+}
+
+/// Bundled variable fonts (registered by ATSApplicationFontsPath). Falls
+/// back to the system font if a family is missing.
+enum AppFont {
+    static let text = "Onest"
+    static let display = "Unbounded"
+    private static let wghtTag = 0x7767_6874 // 'wght'
+    private static var cache: [String: Font] = [:]
+    private static let lock = NSLock()
+
+    static func weightValue(_ w: Font.Weight) -> CGFloat {
+        switch w {
+        case .ultraLight: return 200
+        case .thin: return 250
+        case .light: return 300
+        case .regular: return 400
+        case .medium: return 500
+        case .semibold: return 600
+        case .bold: return 700
+        case .heavy: return 800
+        case .black: return 900
+        default: return 400
+        }
+    }
+
+    static func font(_ family: String, size: CGFloat, weight: Font.Weight) -> Font {
+        let key = "\(family)|\(size)|\(weightValue(weight))"
+        lock.lock(); defer { lock.unlock() }
+        if let f = cache[key] { return f }
+        let f: Font
+        if let ns = nsFont(family, size: size, weight: weight) {
+            f = Font(ns as CTFont)
+        } else {
+            f = .system(size: size, weight: weight)
+        }
+        cache[key] = f
+        return f
+    }
+
+    static func nsFont(_ family: String, size: CGFloat, weight: Font.Weight) -> NSFont? {
+        let variation = [NSNumber(value: wghtTag): NSNumber(value: Double(weightValue(weight)))]
+        let desc = NSFontDescriptor(fontAttributes: [.family: family])
+            .addingAttributes([NSFontDescriptor.AttributeName(rawValue: kCTFontVariationAttribute as String): variation])
+        guard let f = NSFont(descriptor: desc, size: size), f.familyName == family else { return nil }
+        return f
+    }
 }
 
 /// Russian plural forms: ru(1, "фраза", "фразы", "фраз") → "1 фраза".
@@ -92,9 +141,10 @@ extension NSColor {
 }
 
 extension View {
-    /// Large titles get negative tracking, as SF Pro Display does natively.
+    /// Titles: Unbounded from 18 pt, Onest below.
     func titleStyle(_ size: CGFloat, weight: Font.Weight = .semibold) -> some View {
-        font(.system(size: size, weight: weight)).tracking(size >= 20 ? -0.022 * size : -0.1)
+        font(size >= 18 ? Theme.display(size, weight: weight == .semibold ? .medium : weight) : Theme.ui(size, weight: weight))
+            .tracking(size >= 18 ? -0.01 * size : -0.1)
     }
 }
 
@@ -144,18 +194,25 @@ private struct HoverReader<Content: View>: View {
     var body: some View { content(hover).onHover { hover = $0 } }
 }
 
+/// The one strong action: a softly lit accent capsule. A thin highlight on
+/// the top edge and a faint glow make it read as glass, not a flat block.
 struct PrimaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     func makeBody(configuration: Configuration) -> some View {
         HoverReader { hover in
+            let shape = RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
             configuration.label
-                .font(Theme.ui(13, weight: .medium))
+                .font(Theme.ui(13, weight: .semibold))
                 .foregroundStyle(Theme.onAccent)
-                .padding(.horizontal, 14)
-                .frame(minHeight: 30)
+                .padding(.horizontal, 16)
+                .frame(minHeight: 32)
                 .frame(maxWidth: .infinity)
-                .background(RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
-                    .fill(configuration.isPressed ? Theme.accentPressed : hover ? Theme.accentHover : Theme.accent))
+                .background(shape.fill(LinearGradient(
+                    colors: configuration.isPressed ? [Theme.accentPressed, Theme.accentPressed]
+                        : [hover ? Theme.accentHover : Theme.accent, Theme.accentPressed],
+                    startPoint: .top, endPoint: .bottom)))
+                .overlay(shape.strokeBorder(LinearGradient(colors: [.white.opacity(0.28), .white.opacity(0.02)],
+                                                           startPoint: .top, endPoint: .bottom), lineWidth: 1))
                 .shadow(color: Theme.accent.opacity(hover && isEnabled ? 0.38 : 0), radius: 9, y: 2)
                 .opacity(isEnabled ? 1 : 0.4)
                 .contentShape(Rectangle())
@@ -170,16 +227,17 @@ struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         HoverReader { hover in
             configuration.label
-                .font(Theme.ui(13, weight: .regular))
+                .font(Theme.ui(13, weight: .medium))
                 .foregroundStyle(Theme.text)
-                .padding(.horizontal, 12)
-                .frame(minHeight: 30)
+                .padding(.horizontal, 14)
+                .frame(minHeight: 32)
                 .frame(maxWidth: fill ? .infinity : nil)
                 .background(RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
                     .fill(configuration.isPressed ? Theme.surfaceSunken : Theme.surface))
                 .overlay(RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
-                    .strokeBorder(hover ? Theme.tertiary.opacity(0.7) : Theme.hairline))
-                .shadow(color: .black.opacity(0.04), radius: 1, y: 1)
+                    .strokeBorder(hover ? Theme.accent.opacity(0.45) : Theme.hairline))
+                .shadow(color: hover ? Theme.accent.opacity(0.18) : .black.opacity(0.05), radius: hover ? 7 : 2, y: 1)
+                .animation(.easeOut(duration: 0.12), value: hover)
                 .opacity(isEnabled ? 1 : 0.4)
                 .contentShape(Rectangle())
         }
@@ -232,8 +290,8 @@ struct PillPicker<Value: Hashable & Identifiable>: View {
                     Text(label(option))
                         .font(Theme.ui(12.5, weight: selected ? .medium : .regular))
                         .foregroundStyle(selected ? Theme.text : Theme.secondary)
-                        .frame(maxWidth: .infinity, minHeight: 24)
-                        .background(RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .frame(maxWidth: .infinity, minHeight: 26)
+                        .background(RoundedRectangle(cornerRadius: 7, style: .continuous)
                             .fill(selected ? Theme.surface : Color.clear)
                             .shadow(color: .black.opacity(selected ? 0.10 : 0), radius: 1.5, y: 1))
                         .contentShape(Rectangle())
@@ -387,6 +445,13 @@ struct NebulaBackground: View {
     var body: some View {
         ZStack {
             Theme.background
+            if scheme == .light {
+                // Daylight sky: the pearl ground cools toward a pale steel
+                // blue at the top, so faint stars still have something to
+                // glow against.
+                LinearGradient(colors: [Color(nsColor: NSColor(hex: 0xDDE3EC)).opacity(0.9 * intensity), .clear],
+                               startPoint: .top, endPoint: .center)
+            }
             if reduceMotion {
                 glows(t: 0)
             } else {
@@ -394,7 +459,10 @@ struct NebulaBackground: View {
                     glows(t: ctx.date.timeIntervalSinceReferenceDate)
                 }
             }
-            if stars && scheme == .dark { Starfield(animated: !reduceMotion).opacity(intensity) }
+            if stars {
+                Starfield(animated: !reduceMotion, light: scheme == .light).opacity(intensity)
+                if !reduceMotion { MeteorShower(light: scheme == .light).opacity(min(1, intensity * 1.4)) }
+            }
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
@@ -433,6 +501,9 @@ struct NebulaBackground: View {
 /// a few of them breathe slowly.
 struct Starfield: View {
     var animated = true
+    /// Daylight: stars are dusty blue and lilac specks with a few four-point
+    /// glints, instead of white points.
+    var light = false
     private static let stars: [(CGFloat, CGFloat, CGFloat, Double)] = {
         var rng = SplitMix(seed: 0x4D_65_74_65)
         return (0..<70).map { _ in
@@ -452,10 +523,27 @@ struct Starfield: View {
         Canvas { ctx, size in
             for (i, s) in Self.stars.enumerated() {
                 let twinkle = i % 5 == 0 ? 0.5 + 0.5 * sin(t * 0.7 + s.3 * 20) : 1
-                let alpha = (0.18 + 0.32 * s.3) * twinkle
-                let r = s.2
-                let rect = CGRect(x: s.0 * size.width - r / 2, y: s.1 * size.height - r / 2, width: r, height: r)
-                ctx.fill(Path(ellipseIn: rect), with: .color(.white.opacity(alpha)))
+                let r = s.2 * (light ? 1.25 : 1)
+                let x = s.0 * size.width, y = s.1 * size.height
+                let rect = CGRect(x: x - r / 2, y: y - r / 2, width: r, height: r)
+                if light {
+                    // Denser near the top, where the sky is bluest.
+                    let fade = max(0, 1 - Double(s.1) * 1.1)
+                    let color = i % 3 == 0 ? Color(nsColor: NSColor(hex: 0x8C7FB8)) : Color(nsColor: NSColor(hex: 0x5F7FA3))
+                    let alpha = (0.22 + 0.38 * s.3) * twinkle * (0.35 + 0.65 * fade)
+                    ctx.fill(Path(ellipseIn: rect), with: .color(color.opacity(alpha)))
+                    if i % 9 == 0 {
+                        // A four-point glint.
+                        let g = 3.2 + 2.4 * s.3
+                        var p = Path()
+                        p.move(to: CGPoint(x: x - g, y: y)); p.addLine(to: CGPoint(x: x + g, y: y))
+                        p.move(to: CGPoint(x: x, y: y - g)); p.addLine(to: CGPoint(x: x, y: y + g))
+                        ctx.stroke(p, with: .color(color.opacity(alpha * 0.8)), lineWidth: 0.6)
+                    }
+                } else {
+                    let alpha = (0.18 + 0.32 * s.3) * twinkle
+                    ctx.fill(Path(ellipseIn: rect), with: .color(.white.opacity(alpha)))
+                }
             }
         }
     }
@@ -491,5 +579,104 @@ struct GlowHalo: View {
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+
+// MARK: - Shooting stars
+
+/// Now and then — every 15–40 seconds — one, sometimes two or three, thin
+/// meteors cross the upper sky. An easter egg for the name; never more.
+struct MeteorShower: View {
+    var light = false
+    @State private var meteors: [Meteor] = []
+    @State private var task: Task<Void, Never>?
+
+    struct Meteor: Identifiable {
+        let id = UUID()
+        var start: CGPoint   // unit coordinates
+        var angle: Double    // radians, downward to the side
+        var length: CGFloat  // points
+        var travel: CGFloat  // points
+        var duration: Double
+    }
+
+    var body: some View {
+        GeometryReader { g in
+            ZStack {
+                ForEach(meteors) { m in
+                    MeteorStreak(meteor: m, size: g.size, light: light)
+                }
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+        .onAppear {
+            task?.cancel()
+            task = Task { @MainActor in
+                var rng = SplitMix(seed: UInt64(Date().timeIntervalSince1970 * 1000))
+                try? await Task.sleep(nanoseconds: UInt64((6 + rng.unit() * 10) * 1e9))
+                while !Task.isCancelled {
+                    let count = rng.unit() < 0.18 ? (rng.unit() < 0.3 ? 3 : 2) : 1
+                    for k in 0..<count {
+                        let leftToRight = rng.unit() < 0.5
+                        let m = Meteor(start: CGPoint(x: 0.15 + rng.unit() * 0.7, y: 0.04 + rng.unit() * 0.3),
+                                       angle: (leftToRight ? 0.32 : .pi - 0.32) + (rng.unit() - 0.5) * 0.25,
+                                       length: 90 + CGFloat(rng.unit()) * 110,
+                                       travel: 260 + CGFloat(rng.unit()) * 220,
+                                       duration: 0.9 + rng.unit() * 0.5)
+                        meteors.append(m)
+                        let id = m.id
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: UInt64((m.duration + 0.3) * 1e9))
+                            meteors.removeAll { $0.id == id }
+                        }
+                        if k < count - 1 { try? await Task.sleep(nanoseconds: UInt64((0.25 + rng.unit() * 0.6) * 1e9)) }
+                    }
+                    try? await Task.sleep(nanoseconds: UInt64((15 + rng.unit() * 25) * 1e9))
+                }
+            }
+        }
+        .onDisappear { task?.cancel(); task = nil }
+    }
+}
+
+private struct MeteorStreak: View {
+    let meteor: MeteorShower.Meteor
+    let size: CGSize
+    let light: Bool
+    @State private var born = Date()
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 60)) { ctx in
+            let raw = min(1, max(0, ctx.date.timeIntervalSince(born) / meteor.duration))
+            streak(CGFloat(raw * raw * 0.35 + raw * 0.65))  // gentle acceleration
+        }
+    }
+
+    private func streak(_ p: CGFloat) -> some View {
+        let dx = CGFloat(cos(meteor.angle)), dy = CGFloat(sin(meteor.angle))
+        let head = CGPoint(x: meteor.start.x * size.width + dx * meteor.travel * p,
+                           y: meteor.start.y * size.height + dy * meteor.travel * p)
+        let tailLen = meteor.length * min(1, p * 2.2)
+        let tail = CGPoint(x: head.x - dx * tailLen, y: head.y - dy * tailLen)
+        let core: Color = light ? Color(nsColor: NSColor(hex: 0x4E6E93)) : .white
+        let glow: Color = light ? Color(nsColor: NSColor(hex: 0x9C8CD0)) : Theme.nacre[0]
+        // Fade in fast, burn out at the end.
+        let alpha = Double(p < 0.15 ? p / 0.15 : max(0, 1 - (p - 0.55) / 0.45))
+        let w = max(1, size.width), h = max(1, size.height)
+        let from = UnitPoint(x: tail.x / w, y: tail.y / h), to = UnitPoint(x: head.x / w, y: head.y / h)
+        return ZStack {
+            Path { $0.move(to: tail); $0.addLine(to: head) }
+                .stroke(LinearGradient(colors: [glow.opacity(0), glow.opacity(0.55)], startPoint: from, endPoint: to),
+                        style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .blur(radius: 2)
+            Path { $0.move(to: tail); $0.addLine(to: head) }
+                .stroke(LinearGradient(colors: [core.opacity(0), core.opacity(0.95)], startPoint: from, endPoint: to),
+                        style: StrokeStyle(lineWidth: 1.1, lineCap: .round))
+            Circle().fill(core).frame(width: 2.4, height: 2.4).position(head)
+                .shadow(color: glow, radius: 4)
+        }
+        .opacity(alpha * (light ? 0.75 : 0.9))
     }
 }

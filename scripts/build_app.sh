@@ -22,6 +22,8 @@ printf 'APPL????' > "$APP/Contents/PkgInfo"
 cp Vendor/models/silero_vad.onnx "$APP/Contents/Resources/silero_vad.onnx"
 cp Resources/THIRD_PARTY_NOTICES.txt "$APP/Contents/Resources/"
 cp -R Resources/Onboarding "$APP/Contents/Resources/Onboarding"
+# Interface fonts (SIL Open Font License): registered via ATSApplicationFontsPath.
+cp -R Resources/Fonts "$APP/Contents/Resources/Fonts"
 cp Vendor/ffmpeg/CONFIGURE.txt "$APP/Contents/Resources/FFMPEG_BUILD.txt"
 cp Vendor/ffmpeg/COPYING.LGPLv2.1 "$APP/Contents/Resources/FFMPEG_LICENSE_LGPL-2.1.txt"
 cp Vendor/llama/LICENSE "$APP/Contents/Resources/LLAMA_CPP_LICENSE.txt"

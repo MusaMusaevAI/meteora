@@ -89,3 +89,10 @@ FFmpeg 7.1.5 (conversion of rare media formats; separate program, not linked int
       mpeg4_unpack_bframes,null,vp9_superframe_split
     --enable-filter=aresample,scale,format,null,anull,aformat,bwdif
     --enable-protocol=fd,pipe,file
+
+
+Interface fonts
+---------------
+Onest — Copyright 2021 The Onest Project Authors. SIL Open Font License 1.1.
+Unbounded — Copyright 2022 The Unbounded Project Authors. SIL Open Font License 1.1.
+Source: https://github.com/google/fonts (ofl/onest, ofl/unbounded). Licence texts: Contents/Resources/Fonts/*-OFL.txt.

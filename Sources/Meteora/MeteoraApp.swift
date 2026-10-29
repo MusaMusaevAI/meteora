@@ -38,7 +38,7 @@ struct AppCommands: Commands {
                 .keyboardShortcut("r", modifiers: [.command, .shift])
             Button("Пакетная обработка…") { BatchWindow.show() }
                 .keyboardShortcut("b", modifiers: [.command, .shift])
-            Button("Все записи") { model.requestClose() }
+            Button("Закрыть запись") { model.requestClose() }
                 .keyboardShortcut("l", modifiers: [.command, .shift])
                 .disabled(model.loadState == .empty)
         }
@@ -95,22 +95,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             w.makeKeyAndOrderFront(nil)
             return
         }
-        let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1200, height: 780),
+        // Three panes want room: as large as the screen comfortably allows.
+        let screen = NSScreen.main?.visibleFrame.size ?? NSSize(width: 1440, height: 900)
+        let size = NSSize(width: min(1480, max(1100, screen.width - 80)), height: min(940, max(720, screen.height - 60)))
+        let w = NSWindow(contentRect: NSRect(origin: .zero, size: size),
                          styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
                          backing: .buffered, defer: false)
         w.title = "Meteora"
         w.titlebarAppearsTransparent = true
         w.titleVisibility = .visible
         w.isReleasedWhenClosed = false
-        w.minSize = NSSize(width: 940, height: 640)
+        w.minSize = NSSize(width: 820, height: 620)
+        w.collectionBehavior.insert(.fullScreenPrimary)
         w.backgroundColor = Theme.windowNS
         w.contentView = NSHostingView(rootView: ContentView(model: model))
-        w.setFrameAutosaveName("MeteoraMain")
-        if !w.setFrameUsingName("MeteoraMain") { w.center() }
+        w.setFrameAutosaveName("MeteoraMain3")
+        if !w.setFrameUsingName("MeteoraMain3") { w.center() }
         w.delegate = self
         mainWindow = w
-        titleWatch = model.$url.sink { [weak w] url in
-            w?.title = url.map { sanitizedBaseName($0) } ?? "Meteora"
+        titleWatch = model.$url.combineLatest(model.$customTitle).sink { [weak w] url, custom in
+            w?.title = custom ?? url.map { sanitizedBaseName($0) } ?? "Meteora"
             w?.representedURL = url
         }
         w.makeKeyAndOrderFront(nil)
@@ -122,6 +126,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         guard sender == mainWindow, model.loadState != .empty else { return true }
         model.requestClose()
         return false
+    }
+
+    func windowDidExitFullScreen(_ notification: Notification) {
+        if model.cinema { model.cinema = false }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {

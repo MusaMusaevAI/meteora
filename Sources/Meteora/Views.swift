@@ -3,59 +3,6 @@ import WebKit
 import UniformTypeIdentifiers
 import MeteoraCore
 
-// MARK: - Root
-
-struct ContentView: View {
-    @ObservedObject var model: MeetingModel
-    @ObservedObject var journal = MeetingJournal.shared
-    @State private var dropTargeted = false
-
-    var body: some View {
-        ZStack {
-            if model.loadState == .ready {
-                Theme.background.ignoresSafeArea()
-            } else {
-                NebulaBackground().ignoresSafeArea()
-            }
-            switch model.loadState {
-            case .empty:
-                if journal.entries.isEmpty {
-                    EmptyStateView(model: model, dropTargeted: dropTargeted)
-                } else {
-                    HomeView(model: model, dropTargeted: dropTargeted)
-                }
-            case .loading(let p):
-                LoadingView(title: model.title, progress: p)
-            case .failed(let message):
-                FailureView(message: message, model: model)
-            case .ready:
-                if let player = model.player {
-                    MainView(model: model, player: player)
-                }
-            }
-        }
-        .frame(minWidth: 940, minHeight: 620)
-        .onDrop(of: [UTType.fileURL], isTargeted: $dropTargeted) { providers in
-            guard !providers.isEmpty else { return false }
-            let group = DispatchGroup()
-            var urls: [URL] = []
-            let lock = NSLock()
-            for p in providers {
-                group.enter()
-                _ = p.loadObject(ofClass: URL.self) { url, _ in
-                    if let url, url.isFileURL { lock.lock(); urls.append(url); lock.unlock() }
-                    group.leave()
-                }
-            }
-            group.notify(queue: .main) { model.openMany(urls) }
-            return true
-        }
-        .overlay(alignment: .bottom) {
-            if model.loadState != .ready { ToastView(model: model) }
-        }
-    }
-}
-
 // MARK: - Empty / loading / failure
 
 struct EmptyStateView: View {
@@ -177,75 +124,6 @@ struct FailureView: View {
 
 // MARK: - Main layout
 
-struct MainView: View {
-    @ObservedObject var model: MeetingModel
-    @ObservedObject var player: PlayerController
-    /// Height of the frames/transcript panel; the player takes the rest.
-    @AppStorage("layout.bottomHeight") private var bottomHeight: Double = 220
-    @AppStorage("layout.sidebarWidth") private var sidebarWidth: Double = 304
-    @AppStorage("layout.bottomCollapsed") private var bottomCollapsed = false
-    @State private var dragStartHeight: Double?
-    @State private var dragStartWidth: Double?
-
-    static let minStage: Double = 220
-    static let minBottom: Double = 120
-
-    var body: some View {
-        HStack(spacing: 0) {
-            GeometryReader { g in
-                let hasPanel = model.showsFramesTab || model.showsTranscriptTab || model.showsSummaryTab
-                let available = g.size.height - 4 - 18
-                let maxBottom = max(Self.minBottom, available - Self.minStage - 14)
-                let height = min(max(Self.minBottom, bottomHeight), maxBottom)
-                VStack(spacing: 0) {
-                    Stage(model: model, player: player)
-                    if hasPanel {
-                        SplitHandle(axis: .vertical, collapsed: bottomCollapsed,
-                                    help: bottomCollapsed ? "Показать панель (двойной щелчок)" : "Потяните, чтобы изменить размер; двойной щелчок — скрыть панель") { delta in
-                            if bottomCollapsed { bottomCollapsed = false; bottomHeight = Self.minBottom }
-                            let start = dragStartHeight ?? height
-                            if dragStartHeight == nil { dragStartHeight = height }
-                            bottomHeight = min(max(Self.minBottom, start - delta), maxBottom)
-                        } onEnd: {
-                            dragStartHeight = nil
-                        } onDoubleClick: {
-                            withAnimation(.easeOut(duration: 0.22)) { bottomCollapsed.toggle() }
-                        }
-                        if !bottomCollapsed {
-                            BottomPanel(model: model, player: player, height: height)
-                                .transition(.move(edge: .bottom).combined(with: .opacity))
-                        }
-                    }
-                }
-                .padding(.horizontal, 18)
-                .padding(.bottom, 18)
-                .padding(.top, 4)
-            }
-            .overlay(alignment: .bottom) { ToastView(model: model).padding(.bottom, 8) }
-            SplitHandle(axis: .horizontal, collapsed: false, help: "Потяните, чтобы изменить ширину панели") { delta in
-                let start = dragStartWidth ?? sidebarWidth
-                if dragStartWidth == nil { dragStartWidth = sidebarWidth }
-                sidebarWidth = min(max(270, start - delta), 440)
-            } onEnd: {
-                dragStartWidth = nil
-            } onDoubleClick: {
-                withAnimation(.easeOut(duration: 0.2)) { sidebarWidth = 304 }
-            }
-            Sidebar(model: model, player: player)
-                .frame(width: sidebarWidth)
-                .background(Theme.inspector.ignoresSafeArea())
-        }
-        .background(NebulaBackground(intensity: 0.55).ignoresSafeArea())
-        .animation(.easeOut(duration: 0.2), value: model.frames.count)
-        .sheet(isPresented: $model.exportSheetShown) {
-            ExportSheet(model: model) { model.exportSheetShown = false }
-        }
-        .sheet(isPresented: $model.summarySettingsShown) {
-            SummarySettingsSheet { model.summarySettingsShown = false }
-        }
-    }
-}
-
 /// A thin draggable divider. Vertical axis = between player and panel,
 /// horizontal = between the work area and the inspector.
 struct SplitHandle: View {
@@ -269,7 +147,11 @@ struct SplitHandle: View {
                     .shadow(color: Theme.accent.opacity(active ? 0.45 : 0), radius: 6)
             } else {
                 Rectangle().fill(active ? Theme.accent.opacity(0.55) : Theme.hairline).frame(width: active ? 2 : 1)
-                Color.clear.frame(width: 8)
+                // A grip in the middle says «this edge moves».
+                Capsule().fill(active ? Theme.accent.opacity(0.75) : Theme.tertiary.opacity(0.4))
+                    .frame(width: 4, height: active ? 48 : 36)
+                    .shadow(color: Theme.accent.opacity(active ? 0.45 : 0), radius: 6)
+                Color.clear.frame(width: 10)
             }
         }
         .frame(maxWidth: axis == .vertical ? .infinity : nil, maxHeight: axis == .horizontal ? .infinity : nil)
@@ -298,21 +180,22 @@ struct Stage: View {
     @ObservedObject var player: PlayerController
 
     var body: some View {
+        let r: CGFloat = model.cinema ? 0 : Theme.radius
         VStack(spacing: 0) {
             PlayerArea(model: model, player: player)
-                .clipShape(RoundedRectangle(cornerRadius: Theme.radius - 5, style: .continuous))
-                .padding([.horizontal, .top], 6)
+                .clipShape(RoundedRectangle(cornerRadius: model.cinema ? 0 : Theme.radius - 5, style: .continuous))
+                .padding([.horizontal, .top], model.cinema ? 0 : 6)
             TransportBar(model: model, player: player)
         }
         .background(Theme.stage)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
+        .clipShape(RoundedRectangle(cornerRadius: r, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: r, style: .continuous)
             .strokeBorder(Color.white.opacity(0.06)))
         // While playing, the slab's rim picks up a faint mother-of-pearl
         // light — like a meteor's glow on metal.
-        .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
+        .overlay(RoundedRectangle(cornerRadius: r, style: .continuous)
             .strokeBorder(Nacre.gradient(), lineWidth: 1)
-            .opacity(player.isPlaying ? 0.55 : 0))
+            .opacity(player.isPlaying && !model.cinema ? 0.55 : 0))
         .shadow(color: .black.opacity(0.10), radius: 10, y: 4)
         .shadow(color: Theme.accent.opacity(player.isPlaying ? 0.30 : 0.08), radius: player.isPlaying ? 26 : 16)
         .animation(.easeInOut(duration: 0.6), value: player.isPlaying)
@@ -445,11 +328,15 @@ struct TransportBar: View {
             .fixedSize()
             .help("Скорость воспроизведения")
 
-            Button { player.setVolume(player.volume > 0 ? 0 : 1) } label: {
-                Image(systemName: player.volume > 0 ? "speaker.wave.2.fill" : "speaker.slash.fill")
+            VolumeControl(player: player)
+
+            if model.hasVideo {
+                Button { model.toggleCinema() } label: {
+                    Image(systemName: model.cinema ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                }
+                .buttonStyle(IconButtonStyle(onStage: true))
+                .help(model.cinema ? "Выйти из полноэкранного режима (Esc)" : "На весь экран (⌃⌘F)")
             }
-            .buttonStyle(IconButtonStyle(onStage: true))
-            .help(player.volume > 0 ? "Выключить звук" : "Включить звук")
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 7)
@@ -669,31 +556,51 @@ struct Sidebar: View {
                     if model.hasVideo { Hairline(); FramesSection(model: model) }
                 }
             }
-            Hairline()
-            StorageButton(model: model)
-                .padding(.horizontal, 18)
-                .padding(.vertical, 12)
+            .padding(.top, 30)
         }
     }
 }
 
 struct RecordingSection: View {
     @ObservedObject var model: MeetingModel
+    @State private var editing = false
+    @State private var draft = ""
+    @FocusState private var focused: Bool
+
+    private func startEditing() {
+        draft = model.title
+        editing = true
+        DispatchQueue.main.async { focused = true }
+    }
+
+    private func commit() {
+        model.rename(draft)
+        editing = false
+    }
+
     var body: some View {
         InspectorSection {
-            Button { model.requestClose() } label: {
-                HStack(spacing: 5) {
-                    Image(systemName: "chevron.left").font(.system(size: 11, weight: .semibold))
-                    Text("Все записи")
+            HStack(alignment: .top, spacing: 4) {
+                if editing {
+                    TextField("Название", text: $draft)
+                        .textFieldStyle(.plain)
+                        .font(Theme.display(18))
+                        .focused($focused)
+                        .onSubmit { commit() }
+                        .onExitCommand { editing = false }
+                        .padding(.horizontal, 6).padding(.vertical, 3)
+                        .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(Theme.surface))
+                        .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(Theme.accent.opacity(0.5)))
+                } else {
+                    Text(model.title).titleStyle(18).foregroundStyle(Theme.text).lineLimit(3)
+                        .textSelection(.enabled)
+                        .onTapGesture(count: 2) { startEditing() }
                 }
-            }
-            .buttonStyle(BackPillStyle())
-            .help("Вернуться ко всем записям (⌘W)")
-            .padding(.bottom, 4)
-            HStack(alignment: .top, spacing: 8) {
-                Text(model.title).titleStyle(17).foregroundStyle(Theme.text).lineLimit(3)
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                Spacer(minLength: 4)
+                Button { editing ? commit() : startEditing() } label: { Image(systemName: editing ? "checkmark" : "pencil") }
+                    .buttonStyle(IconButtonStyle())
+                    .help(editing ? "Сохранить название" : "Переименовать запись")
+                    .padding(.top, -6)
                 Button { model.revealInFinder() } label: { Image(systemName: "folder") }
                     .buttonStyle(IconButtonStyle())
                     .help("Показать в Finder")
@@ -848,5 +755,33 @@ struct ToastView: View {
             }
         }
         .animation(.spring(duration: 0.3, bounce: 0), value: model.toast)
+    }
+}
+
+
+/// Mute button with a slider that appears on hover.
+struct VolumeControl: View {
+    @ObservedObject var player: PlayerController
+    @State private var hover = false
+    @State private var lastVolume: Double = 1
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Button {
+                if player.volume > 0 { lastVolume = player.volume; player.setVolume(0) } else { player.setVolume(max(0.2, lastVolume)) }
+            } label: {
+                Image(systemName: player.volume == 0 ? "speaker.slash.fill" : player.volume < 0.5 ? "speaker.wave.1.fill" : "speaker.wave.2.fill")
+            }
+            .buttonStyle(IconButtonStyle(onStage: true))
+            .help(player.volume > 0 ? "Выключить звук" : "Включить звук")
+            if hover {
+                Slider(value: Binding(get: { player.volume }, set: { player.setVolume($0) }), in: 0...1)
+                    .controlSize(.mini)
+                    .tint(Theme.stageAccent)
+                    .frame(width: 70)
+                    .transition(.opacity.combined(with: .move(edge: .leading)))
+            }
+        }
+        .onHover { h in withAnimation(.easeOut(duration: 0.15)) { hover = h } }
     }
 }

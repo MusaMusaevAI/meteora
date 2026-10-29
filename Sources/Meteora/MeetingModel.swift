@@ -121,6 +121,8 @@ final class MeetingModel: ObservableObject {
     var summaryToken: CancelToken?
     /// A name chosen for the meeting (from its summary); the file keeps its own.
     @Published var customTitle: String?
+    /// Full-screen viewing: only the player is shown.
+    @Published var cinema = false
     @Published var bottomTab: BottomTab = .frames
     @Published private(set) var transcript: Transcript?
     @Published private(set) var liveSegments: [TranscriptSegment] = []
@@ -268,6 +270,22 @@ final class MeetingModel: ObservableObject {
         action?()
     }
 
+    /// Renames the meeting in Meteora (list, window, exports). The file
+    /// itself is not renamed: the sandbox only lets us read it.
+    func rename(_ name: String) {
+        let t = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url, !t.isEmpty else { return }
+        customTitle = t
+        MeetingJournal.shared.setTitle(t, for: url)
+    }
+
+    func toggleCinema() {
+        cinema.toggle()
+        guard let w = NSApp.windows.first(where: { $0.contentView is NSHostingView<ContentView> }) else { return }
+        let isFull = w.styleMask.contains(.fullScreen)
+        if cinema != isFull { w.toggleFullScreen(nil) }
+    }
+
     func revealInFinder() {
         guard let url else { return }
         NSWorkspace.shared.activateFileViewerSelecting([url])
@@ -376,6 +394,7 @@ final class MeetingModel: ObservableObject {
     }
 
     func close() {
+        if cinema { toggleCinema() }
         loadToken?.cancel(); exportToken?.cancel(); sceneToken?.cancel(); audioToken?.cancel(); transcribeToken?.cancel(); diarizeToken?.cancel()
         diarizeProgress = nil
         diarizeError = nil
