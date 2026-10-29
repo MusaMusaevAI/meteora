@@ -153,12 +153,13 @@ public final class SummaryModelStore: @unchecked Sendable {
         if try adoptExistingFile() { progress(1); return }
         try checkDiskSpace()
         var lastError: Error = ModelError.network("нет доступа к серверам")
+        let total = spec.fileSize
         for url in spec.urls {
             if isCancelled() { throw ModelError.cancelled }
             do {
-                let tmp = try await Downloader.download(url, expectedSize: spec.fileSize,
+                let tmp = try await Downloader.download(url, expectedSize: total,
                                                         isCancelled: isCancelled) { got in
-                    progress(min(0.99, Double(got) / Double(spec.fileSize)))
+                    progress(min(0.99, Double(got) / Double(total)))
                 }
                 if try verifyAndPlace(tmp) {
                     progress(1)
