@@ -146,12 +146,17 @@ xcodebuild -create-xcframework \
 cp "$LSRC/LICENSE" "$OUT/LICENSE-llama.cpp"
 
 # ------------------------------------------------------------ checks
+# (nm output goes to a variable first: `nm | grep -q` under pipefail fails
+# when grep stops reading early.)
 for lib in "$OUT"/sherpa-onnx.xcframework/*/libsherpa-onnx.a; do
-  nm -g "$lib" 2>/dev/null | grep -q " T _SherpaOnnxCreateOfflineRecognizer$" || { echo "$lib lacks the C API"; exit 1; }
+  SYMS=$(nm -g "$lib" 2>/dev/null || true)
+  grep -Eq " T _SherpaOnnxCreateOfflineRecognizer\$" <<<"$SYMS" || { echo "$lib lacks the C API"; exit 1; }
 done
 for lib in "$OUT"/meteora-llama.xcframework/*/libmeteora-llama.a; do
-  nm -g "$lib" 2>/dev/null | grep -q " T _llama_decode$" || { echo "$lib lacks llama_decode"; exit 1; }
-  if nm -u "$lib" 2>/dev/null | grep -qE '_(curl_|SSL_|NSURLSession)'; then echo "$lib references networking"; exit 1; fi
+  SYMS=$(nm -g "$lib" 2>/dev/null || true)
+  grep -Eq " T _llama_decode\$" <<<"$SYMS" || { echo "$lib lacks llama_decode"; exit 1; }
+  UNDEF=$(nm -u "$lib" 2>/dev/null || true)
+  if grep -Eq '_(curl_|SSL_|NSURLSession)' <<<"$UNDEF"; then echo "$lib references networking"; exit 1; fi
 done
 
 echo "$STAMP" > "$OUT/STAMP"
