@@ -163,4 +163,64 @@ final class SpeakerAssignmentTests: XCTestCase {
         // Zero / non-finite embeddings never join anything automatically.
         XCTAssertEqual(Set(SpeakerLinking.cluster([item(0, [0, 0]), item(1, [.nan, 0]), item(2, [1, 0])])).count, 3)
     }
+
+    // MARK: Clean-up (over-splitting)
+
+    func sp(_ e: [Float]?, _ seconds: Double) -> SpeakerCleanup.Speaker {
+        SpeakerCleanup.Speaker(embedding: e, seconds: seconds)
+    }
+
+    func cleanup(_ s: [SpeakerCleanup.Speaker], _ recording: Double = 120,
+                 _ rules: SpeakerCleanup.Rules = SpeakerCleanup.Rules()) -> [Int] {
+        SpeakerCleanup.plan(s, recordingSeconds: recording, rules: rules)
+    }
+
+    func testCleanupMergesSameVoiceKeepsDifferentOnes() {
+        XCTAssertEqual(cleanup([sp([1, 0], 20), sp([0.8, 0.6], 15)]), [0, 0])      // cos 0.8
+        XCTAssertEqual(cleanup([sp([1, 0], 20), sp([0, 1], 20)]), [0, 1])          // cos 0
+        XCTAssertEqual(cleanup([sp([1, 0], 20), sp([0.5, 0.866], 20)]), [0, 1])    // cos 0.5
+        XCTAssertEqual(cleanup([]), [])
+        XCTAssertEqual(cleanup([sp([1, 0], 5)]), [0])
+    }
+
+    func testShortRecordingNeedsStrongerEvidence() {
+        let pair = [sp([1, 0], 15), sp([0.58, 0.8146], 15)]                         // cos 0.58
+        XCTAssertEqual(cleanup(pair, 30), [0, 0])
+        XCTAssertEqual(cleanup(pair, 120), [0, 1])
+    }
+
+    func testTinySpeakersJoinUnlessClearlyDifferent() {
+        // C (3 s) sounds like A → joins; D (3 s) is unlike anyone → stays.
+        XCTAssertEqual(cleanup([sp([1, 0], 60), sp([0, 1], 60), sp([0.9, 0.436], 3), sp([-1, 0], 3)]), [0, 1, 0, 2])
+        // E has 2.4 % of the speech and is moderately similar to A → joins.
+        XCTAssertEqual(cleanup([sp([1, 0], 100), sp([0, 1], 100), sp([0.5, -0.866], 5)], 300), [0, 1, 0])
+        // Under 1.5 s an embedding is not trusted: joins the nearest/largest.
+        XCTAssertEqual(cleanup([sp([1, 0], 60), sp([-1, 0], 50), sp([0, 1], 1)]), [0, 1, 0])
+        // No embedding at all → joins the largest speaker.
+        XCTAssertEqual(cleanup([sp([1, 0], 30), sp(nil, 10)]), [0, 0])
+    }
+
+    func testCleanupExactCountAndCap() {
+        let three = [sp([1, 0, 0], 20), sp([0, 1, 0], 20), sp([0, 0, 1], 20)]
+        XCTAssertEqual(Set(cleanup(three, 120, SpeakerCleanup.Rules(numSpeakers: 2))).count, 2)
+        XCTAssertEqual(Set(cleanup(three, 120, SpeakerCleanup.Rules(numSpeakers: 5))).count, 3)
+        // With a known count, similar voices are not merged automatically.
+        let similar = [sp([1, 0], 20), sp([0.99, 0.14], 20), sp([0, 1], 20)]
+        XCTAssertEqual(cleanup(similar, 120, SpeakerCleanup.Rules(numSpeakers: 3)), [0, 1, 2])
+        XCTAssertEqual(cleanup(similar), [0, 0, 1])
+        // A speaker without embedding is the first to go when counting down.
+        XCTAssertEqual(cleanup([sp([1, 0], 20), sp([0, 1], 20), sp(nil, 20)], 120, SpeakerCleanup.Rules(numSpeakers: 2)), [0, 1, 0])
+        // Never more than maxSpeakers.
+        let twelve = (0 ..< 12).map { i -> SpeakerCleanup.Speaker in
+            var e = [Float](repeating: 0, count: 12)
+            e[i] = 1
+            return sp(e, 20)
+        }
+        XCTAssertEqual(Set(cleanup(twelve)).count, 10)
+        XCTAssertEqual(Set(cleanup(twelve, 240, SpeakerCleanup.Rules(maxSpeakers: 4))).count, 4)
+    }
+
+    func testCleanupNumbersByFirstMember() {
+        XCTAssertEqual(cleanup([sp([0, 1], 20), sp([1, 0], 20), sp([0.95, 0.31], 20)]), [0, 1, 1])
+    }
 }
