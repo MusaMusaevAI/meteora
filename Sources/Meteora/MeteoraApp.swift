@@ -16,6 +16,8 @@ struct MeteoraApp: App {
                 CommandGroup(replacing: .appSettings) {
                     Button("Хранилище…") { StorageWindow.show(model: delegate.model) }
                         .keyboardShortcut(",")
+                    Button("Словарь…") { DictionaryWindow.show() }
+                        .keyboardShortcut("d", modifiers: [.command, .shift])
                 }
                 AppCommands(model: delegate.model)
                 CommandGroup(replacing: .help) {
@@ -127,6 +129,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         showMainWindow()
+        TermDictionaryStore.shared.onChange = { [weak self] in self?.model.reapplyDictionary() }
         NSApp.activate(ignoringOtherApps: true)
         NSApp.servicesProvider = self
         NSUpdateDynamicServices()

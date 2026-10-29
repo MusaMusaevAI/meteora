@@ -251,7 +251,7 @@ final class MeetingModel: ObservableObject {
 
     private func finishOpening(_ url: URL, then action: (() -> Void)?) {
         loadState = .ready
-        transcript = TranscriptStore.load(for: url)
+        transcript = TermDictionaryStore.shared.correct(TranscriptStore.load(for: url))
         if transcript != nil { bottomTab = .transcript }
         if let info { MeetingJournal.shared.record(url: url, info: info, transcript: transcript) }
         startAudioAnalysis()
@@ -261,6 +261,12 @@ final class MeetingModel: ObservableObject {
     func revealInFinder() {
         guard let url else { return }
         NSWorkspace.shared.activateFileViewerSelecting([url])
+    }
+
+    /// Re-reads the saved transcript through the (changed) dictionary.
+    func reapplyDictionary() {
+        guard let url, transcribeProgress == nil, let saved = TranscriptStore.load(for: url) else { return }
+        transcript = TermDictionaryStore.shared.correct(saved)
     }
 
     var isWorking: Bool { transcribeProgress != nil || sceneProgress != nil || exportProgress != nil }
@@ -471,8 +477,9 @@ final class MeetingModel: ObservableObject {
         transcribeToken = nil
         switch result {
         case .success(let segments):
-            let tr = Transcript(sourceName: url.lastPathComponent, duration: duration,
-                                engine: SpeechRecognizer.engineName, segments: segments)
+            let tr = TermDictionaryStore.shared.corrector.correct(
+                Transcript(sourceName: url.lastPathComponent, duration: duration,
+                           engine: SpeechRecognizer.engineName, segments: segments))
             transcript = tr
             liveSegments = []
             TranscriptStore.save(tr, for: url)

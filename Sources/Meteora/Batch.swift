@@ -168,7 +168,7 @@ final class BatchQueue: ObservableObject {
             MeetingJournal.shared.record(url: url, info: media.info, transcript: TranscriptStore.load(for: url))
             guard let origin = media.origin else { throw MediaError.unplayable }
 
-            var transcript = reuseTranscripts ? TranscriptStore.load(for: url) : nil
+            var transcript = reuseTranscripts ? TermDictionaryStore.shared.correct(TranscriptStore.load(for: url)) : nil
             let reused = transcript != nil
             if transcript == nil {
                 set(id, .transcribing(0))
@@ -181,8 +181,9 @@ final class BatchQueue: ObservableObject {
                     }, onSegment: { _ in })
                 }.value
                 if token.isCancelled { set(id, .cancelled); return }
-                let tr = Transcript(sourceName: url.lastPathComponent, duration: media.info.duration,
-                                    engine: SpeechRecognizer.engineName, segments: segments)
+                let tr = TermDictionaryStore.shared.corrector.correct(
+                    Transcript(sourceName: url.lastPathComponent, duration: media.info.duration,
+                               engine: SpeechRecognizer.engineName, segments: segments))
                 TranscriptStore.save(tr, for: url)
                 MeetingJournal.shared.updateTranscript(for: url, transcript: tr)
                 transcript = tr

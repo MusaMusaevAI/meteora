@@ -274,8 +274,13 @@ struct TranscriptCard: View {
                 .buttonStyle(PrimaryButtonStyle())
                 .help("Word, PDF, Markdown, субтитры и другие форматы (⌘E)")
         }
-        Button("Расшифровать заново") { Task { await model.transcribe() } }
-            .buttonStyle(LinkButtonStyle())
+        HStack(spacing: 14) {
+            Button("Расшифровать заново") { Task { await model.transcribe() } }
+                .buttonStyle(LinkButtonStyle())
+            Button("Словарь…") { DictionaryWindow.show() }
+                .buttonStyle(LinkButtonStyle())
+                .help("Как писать термины и аббревиатуры (⌘⇧D)")
+        }
     }
 }
 
