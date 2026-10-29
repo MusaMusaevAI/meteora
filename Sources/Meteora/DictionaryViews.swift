@@ -2,6 +2,7 @@ import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
 import MeteoraCore
+import MeteoraASR
 
 /// The user's terms, stored in the app's container. Applied to every
 /// transcript as it is made and when it is shown, so edits take effect on
@@ -106,6 +107,9 @@ enum DictionaryWindow {
 
 struct DictionaryView: View {
     @ObservedObject var store = TermDictionaryStore.shared
+    @AppStorage("asr.hints") private var asrHints = true
+    @State private var hintsMissing = false
+    @State private var hintsLoading = false
     @State private var query = ""
     @State private var selection: Set<Term.ID> = []
     @State private var message: String?
@@ -125,6 +129,31 @@ struct DictionaryView: View {
                     .font(Theme.ui(12)).foregroundStyle(Theme.secondary).fixedSize(horizontal: false, vertical: true)
             }
             .padding(.top, 34)
+
+            Toggle(isOn: $asrHints) {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Подсказывать термины распознавателю").font(Theme.ui(12.5, weight: .medium)).foregroundStyle(Theme.text)
+                    Text("Модель речи заранее знает слова из словаря и чаще пишет их верно. Расшифровка идёт чуть дольше.")
+                        .font(Theme.ui(11)).foregroundStyle(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .toggleStyle(.switch).controlSize(.small).tint(Theme.accent)
+            .padding(.top, 14)
+            .onAppear { hintsMissing = !ModelStore.shared.missingExtras.isEmpty }
+            if asrHints, hintsMissing, SpeechModelController.shared.isInstalled {
+                Button(hintsLoading ? "Загружаю…" : "Скачать файл подсказок (255 КБ)") {
+                    hintsLoading = true
+                    Task {
+                        try? await ModelStore.shared.installExtras(isCancelled: { false })
+                        hintsMissing = !ModelStore.shared.missingExtras.isEmpty
+                        hintsLoading = false
+                    }
+                }
+                .buttonStyle(LinkButtonStyle())
+                .disabled(hintsLoading)
+                .padding(.top, 4)
+            }
 
             HStack(spacing: 10) {
                 HStack(spacing: 8) {
