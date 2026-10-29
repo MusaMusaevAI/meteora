@@ -18,8 +18,12 @@ let llamaLib = Context.packageDirectory + "/Vendor/llama/lib"
 let package = Package(
     name: "Meteora",
     defaultLocalization: "ru",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v14), .iOS(.v17)],
     products: [
+        // Shared with the iPhone app (iOS/project.yml links these).
+        .library(name: "MeteoraCore", targets: ["MeteoraCore"]),
+        .library(name: "MeteoraASR", targets: ["MeteoraASR"]),
+        .library(name: "MeteoraLLM", targets: ["MeteoraLLM"]),
         .executable(name: "Meteora", targets: ["Meteora"]),
         // Isolated converter for rare formats, bundled as
         // Meteora.app/Contents/XPCServices/com.musamusaev.meteora.converter.xpc
@@ -36,8 +40,10 @@ let package = Package(
             name: "CSherpaOnnx",
             path: "Sources/CSherpaOnnx",
             exclude: ["README.md"],
-            linkerSettings: [.unsafeFlags(["-L", sherpaLib])]
-                + sherpaLibs.map { .linkedLibrary($0) }
+            // macOS: static universal2 libraries from Vendor. iOS: the app
+            // project links Vendor/ios/*.xcframework instead.
+            linkerSettings: [.unsafeFlags(["-L", sherpaLib], .when(platforms: [.macOS]))]
+                + sherpaLibs.map { .linkedLibrary($0, .when(platforms: [.macOS])) }
                 + [.linkedLibrary("c++"), .linkedFramework("Foundation")]
         ),
         // On-device transcription with GigaAM-v3 + model download/verification.
@@ -51,7 +57,8 @@ let package = Package(
             name: "CLlama",
             path: "Sources/CLlama",
             exclude: ["README.md"],
-            linkerSettings: [.unsafeFlags(["-L", llamaLib]), .linkedLibrary("meteora-llama"),
+            linkerSettings: [.unsafeFlags(["-L", llamaLib], .when(platforms: [.macOS])),
+                             .linkedLibrary("meteora-llama", .when(platforms: [.macOS])),
                              .linkedLibrary("c++"), .linkedFramework("Accelerate"),
                              .linkedFramework("Metal"), .linkedFramework("MetalKit"),
                              .linkedFramework("Foundation")]

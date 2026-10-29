@@ -29,7 +29,12 @@ public struct LLMOptions: Sendable {
     /// cache is small (only 1 layer in 4 keeps a KV cache), so 16k costs
     /// about 0.5 GB on top of the 2.7 GB of weights.
     public static var recommendedContextTokens: Int {
-        ProcessInfo.processInfo.physicalMemory >= 15 * (1 << 30) ? 32_768 : 16_384
+        #if os(iOS)
+        // iPhone: the app gets only part of the RAM; long meetings go map-reduce.
+        return 8_192
+        #else
+        return ProcessInfo.processInfo.physicalMemory >= 15 * (1 << 30) ? 32_768 : 16_384
+        #endif
     }
 
     /// Performance cores (Apple silicon) or half the logical CPUs, 1…8.

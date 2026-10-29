@@ -1,5 +1,9 @@
 import Foundation
+#if canImport(AppKit)
 import AppKit
+#else
+import UIKit
+#endif
 import CoreGraphics
 import CoreText
 import ImageIO
@@ -225,15 +229,21 @@ public enum ReportExporter {
     }
 
     private static func serif(_ size: CGFloat) -> CTFont {
-        let base = NSFont.systemFont(ofSize: size, weight: .regular)
+        let base = PlatformFont.systemFont(ofSize: size, weight: .regular)
+        #if canImport(AppKit)
         if let d = base.fontDescriptor.withDesign(.serif), let f = NSFont(descriptor: d, size: size) {
             return f as CTFont
         }
+        #else
+        if let d = base.fontDescriptor.withDesign(.serif) {
+            return UIFont(descriptor: d, size: size) as CTFont
+        }
+        #endif
         return base as CTFont
     }
 
     private static func sans(_ size: CGFloat, bold: Bool = false) -> CTFont {
-        NSFont.systemFont(ofSize: size, weight: bold ? .semibold : .regular) as CTFont
+        PlatformFont.systemFont(ofSize: size, weight: bold ? .semibold : .regular) as CTFont
     }
 
     private static func drawText(_ ctx: CGContext, _ text: String, font: CTFont, color: CGColor, in rect: CGRect, alignRight: Bool = false) {

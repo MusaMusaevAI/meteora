@@ -1,5 +1,9 @@
 import Foundation
+#if canImport(AppKit)
 import AppKit
+#else
+import UIKit
+#endif
 import CoreGraphics
 import CoreText
 import ImageIO
@@ -18,7 +22,11 @@ enum RichExport {
             b = CGFloat(hex & 0xFF) / 255
         }
         var cgColor: CGColor { CGColor(srgbRed: r, green: g, blue: b, alpha: 1) }
+        #if canImport(AppKit)
         var nsColor: NSColor { NSColor(srgbRed: r, green: g, blue: b, alpha: 1) }
+        #else
+        var nsColor: UIColor { UIColor(red: r, green: g, blue: b, alpha: 1) }
+        #endif
     }
 
     static let ink = RGB(0x16181B)
@@ -56,12 +64,12 @@ enum RichExport {
 
     // MARK: RTF
 
-    static func rtfFont(_ size: CGFloat, bold: Bool = false) -> NSFont {
+    static func rtfFont(_ size: CGFloat, bold: Bool = false) -> PlatformFont {
         let names = bold ? ["HelveticaNeue-Medium", "Helvetica-Bold"] : ["HelveticaNeue", "Helvetica"]
         for name in names {
-            if let f = NSFont(name: name, size: size) { return f }
+            if let f = PlatformFont(name: name, size: size) { return f }
         }
-        return NSFont.systemFont(ofSize: size, weight: bold ? .semibold : .regular)
+        return PlatformFont.systemFont(ofSize: size, weight: bold ? .semibold : .regular)
     }
 
     static func rtfData(_ doc: ExportDocument) throws -> Data {
@@ -75,7 +83,7 @@ enum RichExport {
             return p
         }
 
-        func append(_ text: String, font: NSFont, color: NSColor, style: NSParagraphStyle) {
+        func append(_ text: String, font: PlatformFont, color: PlatformColor, style: NSParagraphStyle) {
             let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color, .paragraphStyle: style]
             out.append(NSAttributedString(string: text, attributes: attrs))
         }
@@ -120,7 +128,7 @@ enum RichExport {
     // MARK: PDF
 
     static func ctFont(_ size: CGFloat, bold: Bool = false) -> CTFont {
-        NSFont.systemFont(ofSize: size, weight: bold ? .semibold : .regular) as CTFont
+        PlatformFont.systemFont(ofSize: size, weight: bold ? .semibold : .regular) as CTFont
     }
 
     static func lineHeightStyle(_ multiple: CGFloat) -> CTParagraphStyle {

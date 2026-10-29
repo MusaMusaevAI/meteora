@@ -1,0 +1,133 @@
+# Xcode project for the iPhone app, generated with XcodeGen:
+#   cd iOS && xcodegen generate
+# CI generates it on every build and ships it, with the native libraries, in
+# Meteora-iOS.zip — open Meteora.xcodeproj, choose your Apple ID team, Run.
+name: Meteora
+options:
+  bundleIdPrefix: com.musamusaev
+  deploymentTarget:
+    iOS: "17.0"
+  developmentLanguage: ru
+  createIntermediateGroups: true
+settings:
+  base:
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    DEAD_CODE_STRIPPING: YES
+    # The native libraries' simulator slices are arm64 (Apple silicon Macs).
+    EXCLUDED_ARCHS[sdk=iphonesimulator*]: x86_64
+packages:
+  MeteoraKit:
+    path: ..
+targets:
+  Meteora:
+    type: application
+    platform: iOS
+    sources:
+      - path: Meteora
+      - path: Shared
+      - path: Resources
+        buildPhase: resources
+      - path: ../Resources/Fonts/Onest-Variable.ttf
+        buildPhase: resources
+      - path: ../Resources/Fonts/Unbounded-Variable.ttf
+        buildPhase: resources
+      - path: ../Vendor/models/silero_vad.onnx
+        buildPhase: resources
+    dependencies:
+      - package: MeteoraKit
+        product: MeteoraCore
+      - package: MeteoraKit
+        product: MeteoraASR
+      - package: MeteoraKit
+        product: MeteoraLLM
+      - framework: ../Vendor/ios/sherpa-onnx.xcframework
+        embed: false
+      - framework: ../Vendor/ios/onnxruntime.xcframework
+        embed: false
+      - framework: ../Vendor/ios/meteora-llama.xcframework
+        embed: false
+      - target: MeteoraLiveActivity
+        embed: true
+      - sdk: Accelerate.framework
+      - sdk: Metal.framework
+      - sdk: MetalKit.framework
+      - sdk: CoreML.framework
+      - sdk: ActivityKit.framework
+    info:
+      path: Meteora/Info.plist
+      properties:
+        CFBundleDisplayName: Meteora
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSRequiresIPhoneOS: true
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIApplicationSupportsIndirectInputEvents: true
+        UIBackgroundModes: [audio]
+        NSMicrophoneUsageDescription: Meteora записывает встречу с микрофона. Запись остаётся на iPhone.
+        NSSupportsLiveActivities: true
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UIAppFonts: [Onest-Variable.ttf, Unbounded-Variable.ttf]
+        ITSAppUsesNonExemptEncryption: false
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Audio
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [public.audio]
+          - CFBundleTypeName: Video
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [public.movie]
+          - CFBundleTypeName: WebM
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [org.webmproject.webm]
+        UTImportedTypeDeclarations:
+          - UTTypeIdentifier: org.webmproject.webm
+            UTTypeDescription: WebM
+            UTTypeConformsTo: [public.movie]
+            UTTypeTagSpecification:
+              public.filename-extension: [webm]
+              public.mime-type: [video/webm, audio/webm]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.musamusaev.meteora.ios
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        OTHER_LDFLAGS: ["-lc++"]
+  MeteoraLiveActivity:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: LiveActivity
+      - path: Shared
+    dependencies:
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+      - sdk: ActivityKit.framework
+    info:
+      path: LiveActivity/Info.plist
+      properties:
+        CFBundleDisplayName: Meteora
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.musamusaev.meteora.ios.liveactivity
+schemes:
+  Meteora:
+    build:
+      targets:
+        Meteora: all
+    run:
+      config: Debug

@@ -132,8 +132,81 @@ jobs:
           done
           exit 1
 
+  # iPhone app: native libraries for iOS, the Xcode project, simulator and
+  # device builds, the self-test in a simulator and Meteora-iOS.zip.
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 120
+    outputs:
+      status: ${{ steps.summary.outputs.status }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Toolchain
+        run: |
+          mkdir -p logs
+          XC=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1 || true)
+          [ -n "$XC" ] && sudo xcode-select -s "$XC" || true
+          { sw_vers; xcodebuild -version; xcrun simctl list runtimes; } 2>&1 | tee logs/ios-toolchain.txt
+      - name: Vendor libraries (hash-pinned)
+        run: scripts/fetch_vendor.sh 2>&1 | tee logs/vendor.txt
+      - name: Restore iOS libraries
+        id: ios-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: Vendor/ios
+          key: ios-vendor-${{ runner.os }}-${{ hashFiles('scripts/build_ios_vendor.sh', 'scripts/build_llama.sh') }}
+      - name: sherpa-onnx, onnxruntime, llama.cpp for iOS (pinned, verified)
+        run: scripts/build_ios_vendor.sh 2>&1 | tee logs/ios-vendor.txt
+      - name: Save iOS libraries
+        if: steps.ios-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: Vendor/ios
+          key: ios-vendor-${{ runner.os }}-${{ hashFiles('scripts/build_ios_vendor.sh', 'scripts/build_llama.sh') }}
+      - name: Russian speech sample for the self-test
+        run: |
+          R=https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16/resolve/main
+          curl -fsSL --retry 3 -o /tmp/ru-example.wav "$R/test_wavs/example.wav" || echo "no sample"
+      - name: Build (simulator + device) and package
+        id: build
+        run: scripts/ios_build.sh 2>&1 | tee logs/ios-build.txt
+      - name: Self-test in the simulator
+        id: selftest
+        continue-on-error: true
+        timeout-minutes: 45
+        run: scripts/ios_selftest.sh 2>&1 | tee logs/ios-selftest.txt
+      - name: Collect output
+        id: summary
+        if: always()
+        run: |
+          rm -rf out-ios && mkdir -p out-ios/selftest
+          cp -R logs out-ios/ 2>/dev/null || true
+          cp build/ios-sim.log build/ios-dev.log out-ios/logs/ 2>/dev/null || true
+          if [ -f build/Meteora-iOS.zip ]; then
+            size=$(stat -f %z build/Meteora-iOS.zip)
+            # The build-output branch takes files under 100 MB.
+            if [ "$size" -lt 95000000 ]; then cp build/Meteora-iOS.zip out-ios/; shasum -a 256 build/Meteora-iOS.zip > out-ios/Meteora-iOS.zip.sha256; fi
+            echo "$size" > out-ios/Meteora-iOS.zip.size
+          fi
+          [ -d ios-selftest-out ] && (cd ios-selftest-out && find . -type f \( -name '*.json' -o -name '*.png' -o -name '*.txt' \) -size -8M -print0 | xargs -0 -I{} rsync -R {} ../out-ios/selftest/) || true
+          echo "build=${{ steps.build.outcome }} selftest=${{ steps.selftest.outcome }}" > out-ios/STATUS
+          echo "status=build=${{ steps.build.outcome }} selftest=${{ steps.selftest.outcome }}" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: ios-output
+          path: out-ios
+          retention-days: 14
+      - name: Fail if the self-test failed
+        if: steps.selftest.outcome != 'success'
+        run: |
+          python3 -c "import json; d=json.load(open('out-ios/selftest/report.json')); [print('::error title=ios-selftest::'+str(e)[:300]) for e in d.get('errors',[])]" || true
+          exit 1
+
   publish:
-    needs: macos
+    needs: [macos, ios]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -143,6 +216,11 @@ jobs:
         with:
           name: build-output
           path: out
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        continue-on-error: true
+        with:
+          name: ios-output
+          path: out/ios
       - name: Push to build-output branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
