@@ -346,6 +346,9 @@ final class SelfTest {
         try? await Task.sleep(nanoseconds: 900_000_000)
         snapshotWindow(titled: "Пакетная обработка", as: "07-batch")
         NSApp.windows.first { $0.title == "Пакетная обработка" }?.close()
+        let pii = PIIGuard.runSelfTest()
+        report["pii"] = pii
+        if pii["ok"] as? Bool == false { errors.append("pii: \(pii["errors"] ?? pii)") }
         report["recorder"] = await MeetingRecorder.runSelfTest(output: output)
         if let r = report["recorder"] as? [String: Any], r["ok"] as? Bool == false {
             errors.append("recorder: \(r["errors"] ?? r)")
