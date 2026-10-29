@@ -718,7 +718,7 @@ struct FramesSection: View {
                             .help("Папка: PNG-кадры и кадры.md")
                     }
                     Button("Скопировать текст кадров") { model.copyFramesText() }.buttonStyle(SecondaryButtonStyle())
-                        .help("Время и текст каждого кадра — удобно вставить в Claude рядом с расшифровкой")
+                        .help("Время и текст каждого кадра — удобно вставить в ИИ-ассистент рядом с расшифровкой")
                     Button("Искать заново") { Task { await model.analyzeScenes() } }
                         .buttonStyle(LinkButtonStyle())
                 }
