@@ -3,9 +3,31 @@ import CryptoKit
 
 /// One file of the speech model with its pinned SHA-256.
 public struct ModelFile: Sendable {
+    /// File name on disk (inside the model's directory).
     public var name: String
     public var size: Int64
     public var sha256: String
+    /// Path on the download host ("owner/repo/resolve/main/file"). nil = the
+    /// GigaAM repository with `name`.
+    public var source: String? = nil
+}
+
+/// Everything ModelStore needs to know about one downloadable model.
+public struct ModelSpec: Sendable {
+    public var id: String
+    public var displayName: String
+    public var files: [ModelFile]
+    /// Download hosts tried in order. Integrity comes from the hashes.
+    public var hosts: [String]
+    /// Repository used for files without an explicit `source`.
+    public var repo: String
+
+    public var totalSize: Int64 { files.reduce(0) { $0 + $1.size } }
+
+    func urls(for file: ModelFile) -> [URL] {
+        let path = file.source ?? "\(repo)/resolve/main/\(file.name)"
+        return hosts.compactMap { URL(string: "\($0)/\(path)") }
+    }
 }
 
 /// GigaAM-v3 end-to-end RNN-T (Sber, MIT license), exported to ONNX by the
@@ -33,9 +55,9 @@ public enum SpeechModel {
 
     public static var totalSize: Int64 { files.reduce(0) { $0 + $1.size } }
 
-    static func urls(for file: ModelFile) -> [URL] {
-        hosts.compactMap { URL(string: "\($0)/\(repo)/resolve/main/\(file.name)") }
-    }
+    static func urls(for file: ModelFile) -> [URL] { spec.urls(for: file) }
+
+    public static let spec = ModelSpec(id: id, displayName: displayName, files: files, hosts: hosts, repo: repo)
 }
 
 public enum ModelError: Error, LocalizedError {
@@ -57,18 +79,24 @@ public enum ModelError: Error, LocalizedError {
 }
 
 /// Where the model lives and how it gets there.
+/// One instance per model: `ModelStore.shared` is GigaAM, `ModelStore.speakers`
+/// the speaker-separation pair (see SpeakerModelStore.swift).
 public final class ModelStore: @unchecked Sendable {
     public static let shared = ModelStore()
 
+    public let spec: ModelSpec
     public let directory: URL
     private let fm = FileManager.default
 
-    public init(directory: URL? = nil) {
+    /// - Parameter directory: parent folder for models (default
+    ///   Application Support/Meteora/Models); the model gets its own subfolder.
+    public init(directory: URL? = nil, spec: ModelSpec = SpeechModel.spec) {
         let base = directory ?? (try? FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask,
                                                                appropriateFor: nil, create: true))!
             .appendingPathComponent("Meteora", isDirectory: true)
             .appendingPathComponent("Models", isDirectory: true)
-        self.directory = base.appendingPathComponent(SpeechModel.id, isDirectory: true)
+        self.spec = spec
+        self.directory = base.appendingPathComponent(spec.id, isDirectory: true)
     }
 
     private var marker: URL { directory.appendingPathComponent(".verified") }
@@ -78,15 +106,15 @@ public final class ModelStore: @unchecked Sendable {
     /// Installed = every file present with the expected size and the
     /// verification marker written after the full hash check.
     public var isInstalled: Bool {
-        guard let m = try? String(contentsOf: marker, encoding: .utf8), m == Self.markerContents else { return false }
-        for f in SpeechModel.files {
+        guard let m = try? String(contentsOf: marker, encoding: .utf8), m == markerContents else { return false }
+        for f in spec.files {
             let size = (try? fm.attributesOfItem(atPath: path(f.name).path)[.size] as? NSNumber)?.int64Value
             if size != f.size { return false }
         }
         return true
     }
 
-    static var markerContents: String { SpeechModel.files.map(\.sha256).joined(separator: "\n") }
+    var markerContents: String { spec.files.map(\.sha256).joined(separator: "\n") }
 
     public var installedBytes: Int64 { Self.directorySize(directory) }
 
@@ -100,9 +128,9 @@ public final class ModelStore: @unchecked Sendable {
                         isCancelled: @escaping @Sendable () -> Bool) async throws {
         try fm.createDirectory(at: directory, withIntermediateDirectories: true)
         try? fm.removeItem(at: marker)
-        let total = Double(SpeechModel.totalSize)
+        let total = Double(spec.totalSize)
         var done: Int64 = 0
-        for file in SpeechModel.files {
+        for file in spec.files {
             let dest = path(file.name)
             if (try? Self.sha256(of: dest)) == file.sha256 {
                 done += file.size
@@ -112,7 +140,7 @@ public final class ModelStore: @unchecked Sendable {
             try? fm.removeItem(at: dest)
             var lastError: Error = ModelError.network("нет доступа к серверам")
             var ok = false
-            for url in SpeechModel.urls(for: file) {
+            for url in spec.urls(for: file) {
                 if isCancelled() { throw ModelError.cancelled }
                 do {
                     let base = done
@@ -138,7 +166,7 @@ public final class ModelStore: @unchecked Sendable {
             progress(Double(done) / total)
         }
         do {
-            try Self.markerContents.write(to: marker, atomically: true, encoding: .utf8)
+            try markerContents.write(to: marker, atomically: true, encoding: .utf8)
         } catch {
             throw ModelError.io(error.localizedDescription)
         }
