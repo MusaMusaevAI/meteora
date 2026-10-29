@@ -252,6 +252,10 @@ final class SelfTest {
         try? await Task.sleep(nanoseconds: 900_000_000)
         snapshotWindow(titled: "Пакетная обработка", as: "07-batch")
         NSApp.windows.first { $0.title == "Пакетная обработка" }?.close()
+        DictionaryWindow.show()
+        try? await Task.sleep(nanoseconds: 700_000_000)
+        snapshotWindow(titled: "Словарь", as: "08-dictionary")
+        NSApp.windows.first { $0.title == "Словарь" }?.close()
         NSApp.windows.first { $0.contentView is NSHostingView<ContentView> }?.makeKeyAndOrderFront(nil)
 
         model.toast = Toast(message: "Звук сохранён: пример уведомления", revealURL: output)
