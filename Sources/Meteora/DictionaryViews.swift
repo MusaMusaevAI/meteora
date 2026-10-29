@@ -102,7 +102,7 @@ enum DictionaryWindow {
         // stretching it past the screen.
         host.sizingOptions = []
         w.contentView = host
-        w.setContentSize(NSSize(width: 600, 560))
+        w.setContentSize(NSSize(width: 600, height: 560))
         w.setFrameAutosaveName("MeteoraDictionary2")
         if !w.setFrameUsingName("MeteoraDictionary2") { w.center() }
         window = w

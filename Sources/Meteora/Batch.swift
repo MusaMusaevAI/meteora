@@ -248,7 +248,7 @@ enum BatchWindow {
         // stretching it past the screen.
         host.sizingOptions = []
         w.contentView = host
-        w.setContentSize(NSSize(width: 640, 600))
+        w.setContentSize(NSSize(width: 640, height: 600))
         w.setFrameAutosaveName("MeteoraBatch2")
         if !w.setFrameUsingName("MeteoraBatch2") { w.center() }
         window = w
