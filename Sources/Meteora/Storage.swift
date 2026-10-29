@@ -100,6 +100,12 @@ final class StorageModel: ObservableObject {
                                    detail: ModelStore.shared.isInstalled ? "Установлена и проверена" : "Загружена не полностью",
                                    bytes: ModelStore.directorySize(modelDir), urls: [modelDir]))
         }
+        let speakerDir = ModelStore.speakers.directory
+        if fm.fileExists(atPath: speakerDir.path) {
+            out.append(StorageItem(id: "model-speakers", section: .model, title: "\(SpeakerModel.displayName) — разделение по спикерам",
+                                   detail: ModelStore.speakers.isInstalled ? "Установлена и проверена" : "Загружена не полностью",
+                                   bytes: ModelStore.directorySize(speakerDir), urls: [speakerDir]))
+        }
 
         // 2. Cached transcripts
         let dec = JSONDecoder()
