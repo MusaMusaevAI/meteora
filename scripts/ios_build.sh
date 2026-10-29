@@ -31,12 +31,15 @@ echo "== simulator build"
 xcodebuild "${COMMON[@]}" -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' ARCHS=arm64 \
   -derivedDataPath build/ios-sim build > build/ios-sim.log 2>&1 || true
 grep -E "error:|BUILD (SUCCEEDED|FAILED)" build/ios-sim.log | sort -u | head -40 || true
+# Errors as annotations: readable through the API before the run ends.
+grep -E "^/.*error:" build/ios-sim.log | sort -u | head -30 | while read -r l; do echo "::error title=ios-sim::${l#$ROOT/}"; done || true
 grep -q "BUILD SUCCEEDED" build/ios-sim.log || { echo "simulator build failed"; exit 1; }
 
 echo "== device build (unsigned)"
 xcodebuild "${COMMON[@]}" -sdk iphoneos -destination 'generic/platform=iOS' \
   -derivedDataPath build/ios-dev build > build/ios-dev.log 2>&1 || true
 grep -E "error:|BUILD (SUCCEEDED|FAILED)" build/ios-dev.log | sort -u | head -40 || true
+grep -E "^/.*error:" build/ios-dev.log | sort -u | head -30 | while read -r l; do echo "::error title=ios-dev::${l#$ROOT/}"; done || true
 grep -q "BUILD SUCCEEDED" build/ios-dev.log || { echo "device build failed"; exit 1; }
 du -sh build/ios-dev/Build/Products/Debug-iphoneos/Meteora.app
 

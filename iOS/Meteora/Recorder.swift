@@ -35,7 +35,7 @@ final class Recorder: NSObject, ObservableObject {
         super.init()
         let nc = NotificationCenter.default
         observers.append(nc.addObserver(forName: RecordingControl.stop, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { Task { await self?.stop() } }
+            Task { @MainActor in await self?.stop() }
         })
         observers.append(nc.addObserver(forName: RecordingControl.togglePause, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.togglePause() }
