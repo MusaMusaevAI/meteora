@@ -295,15 +295,7 @@ struct TranscriptCard: View {
                 ProgressStatus(text: "Разделение по голосам · \(Int(p * 100)) %", action: "Остановить") { model.cancelSpeakers() }
             }
         } else if tr.speakers.isEmpty {
-            Button { Task { await model.separateSpeakers() } } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "person.2.wave.2")
-                    Text("Разделить по говорящим")
-                }
-            }
-            .buttonStyle(SecondaryButtonStyle())
-            .help(speakers.isInstalled ? "Определить, кто говорит, на этом Mac"
-                                       : "Один раз скачается модель голосов (\(speakers.sizeText))")
+            SpeakerControls(model: model)
         }
         if let e = model.diarizeError ?? (model.diarizeProgress == nil ? nil : speakers.error) {
             Text(e).font(Theme.ui(11.5)).foregroundStyle(Theme.danger).fixedSize(horizontal: false, vertical: true)
@@ -364,6 +356,11 @@ struct SpeakersSection: View {
             }
             Text("Нажмите на имя, чтобы переименовать — везде в расшифровке и в экспорте.")
                 .font(Theme.ui(11)).foregroundStyle(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+            if model.diarizeProgress == nil {
+                SpeakerControls(model: model, again: true).padding(.top, 4)
+            } else if let p = model.diarizeProgress {
+                ThinProgress(value: p)
+            }
         }
     }
 }
@@ -397,5 +394,64 @@ private struct SpeakerRow: View {
         .onAppear { text = name }
         .onChange(of: name) { _, n in text = n }
         .onChange(of: focused) { _, f in if !f, text != name { rename(text) } }
+    }
+}
+
+
+// MARK: - Speaker separation controls
+
+/// «Разделить по говорящим» with the number of participants and the voice
+/// model. Knowing the count helps most: with it the split is exact.
+struct SpeakerControls: View {
+    @ObservedObject var model: MeetingModel
+    @ObservedObject var speakers = SpeakerModelController.shared
+    /// 0 = automatic.
+    @AppStorage("speakers.count") private var count = 0
+    var again = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button { Task { await model.separateSpeakers(count: count == 0 ? nil : count) } } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "person.2.wave.2")
+                    Text(again ? "Разделить заново" : "Разделить по говорящим")
+                }
+            }
+            .buttonStyle(SecondaryButtonStyle())
+            .help(speakers.isInstalled ? "Определить, кто говорит, на этом Mac"
+                                       : "Один раз скачается модель голосов (\(speakers.sizeText))")
+            HStack(spacing: 6) {
+                Text("Участников").font(Theme.ui(11.5)).foregroundStyle(Theme.secondary)
+                Menu {
+                    Button("Определить автоматически") { count = 0 }
+                    Divider()
+                    ForEach(2...SpeakerModelController.maxSpeakers, id: \.self) { n in
+                        Button("\(n)") { count = n }
+                    }
+                } label: {
+                    Text(count == 0 ? "авто" : "\(count)").font(Theme.ui(11.5, weight: .semibold)).foregroundStyle(Theme.accent)
+                }
+                .menuStyle(.borderlessButton).menuIndicator(.visible).fixedSize()
+                .help("Если знаете, сколько человек говорило, укажите — так разделение точнее")
+                Spacer(minLength: 8)
+                Text("Модель").font(Theme.ui(11.5)).foregroundStyle(Theme.secondary)
+                Menu {
+                    ForEach(SpeakerModelTier.allCases, id: \.self) { t in
+                        Button {
+                            speakers.tier = t
+                        } label: {
+                            Text("\(t.title) · \(t.embeddingName) · \(speakers.downloadSizeText(t))\(speakers.isReady(t) ? " ✓" : "")")
+                        }
+                    }
+                } label: {
+                    Text(speakers.tier.title).font(Theme.ui(11.5, weight: .semibold)).foregroundStyle(Theme.accent)
+                }
+                .menuStyle(.borderlessButton).menuIndicator(.visible).fixedSize()
+                .help(speakers.tier.detail)
+            }
+            if let p = speakers.progress, let t = speakers.downloading {
+                ProgressStatus(text: "Загрузка модели голосов «\(t.title)» · \(Int(p * 100)) %", action: "Отменить") { speakers.cancel() }
+            }
+        }
     }
 }
