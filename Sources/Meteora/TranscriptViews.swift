@@ -73,6 +73,8 @@ struct BottomPanel: View {
             Button(action: action) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(title)
+                        .lineLimit(1)
+                        .fixedSize()
                         .font(Theme.ui(13, weight: selected ? .semibold : .regular))
                         .foregroundStyle(selected ? Theme.text : hover ? Theme.text.opacity(0.75) : Theme.secondary)
                     if count > 0 {

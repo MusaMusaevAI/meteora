@@ -27,10 +27,27 @@ struct ContentView: View {
     private var showInspector: Bool { ready && inspectorVisible && !model.cinema }
 
     var body: some View {
+        GeometryReader { g in
+            layout(width: g.size.width)
+        }
+        .background(NebulaBackground(intensity: ready ? 0.6 : 1, animated: !ready).ignoresSafeArea())
+        .frame(minWidth: 760, minHeight: 600)
+    }
+
+    /// Fits the panes into the window: the centre keeps at least 440 pt,
+    /// the parameters give way first, then the list steps aside.
+    @ViewBuilder private func layout(width W: CGFloat) -> some View {
+        let centerMin: CGFloat = 440, handles: CGFloat = 22
+        let wantLib = showLibrary ? CGFloat(libraryWidth) : 0
+        let wantInsp = showInspector ? CGFloat(inspectorWidth) : 0
+        let fitsBoth = W - wantLib - wantInsp - handles >= centerMin
+        let insp: CGFloat = showInspector ? max(CGFloat(Self.inspectorRange.lowerBound), min(wantInsp, W - wantLib - handles - centerMin)) : 0
+        let libVisible = showLibrary && (fitsBoth || W - insp - wantLib - handles >= centerMin)
+        let lib: CGFloat = libVisible ? wantLib : 0
         HStack(spacing: 0) {
-            if showLibrary {
+            if libVisible {
                 LibrarySidebar(model: model, hide: { withAnimation(.easeOut(duration: 0.2)) { libraryVisible = false } })
-                    .frame(width: libraryWidth)
+                    .frame(width: lib)
                     .background(PaneBackground().ignoresSafeArea())
                     .transition(.move(edge: .leading).combined(with: .opacity))
                 SplitHandle(axis: .horizontal, collapsed: false, help: "Потяните, чтобы изменить ширину списка") { delta in
@@ -45,7 +62,7 @@ struct ContentView: View {
             }
 
             VStack(spacing: 0) {
-                if !model.cinema { paneBar }
+                if !model.cinema { paneBar(libraryShown: libVisible) }
                 center
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .overlay(alignment: .bottom) { if model.loadState != .ready { ToastView(model: model) } }
@@ -63,13 +80,11 @@ struct ContentView: View {
                     withAnimation(.easeOut(duration: 0.2)) { inspectorVisible = false }
                 }
                 Sidebar(model: model, player: player)
-                    .frame(width: inspectorWidth)
+                    .frame(width: insp)
                     .background(PaneBackground().ignoresSafeArea())
                     .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
-        .background(NebulaBackground(intensity: ready ? 0.6 : 1, animated: !ready).ignoresSafeArea())
-        .frame(minWidth: 760, minHeight: 600)
         .animation(.easeOut(duration: 0.22), value: showLibrary)
         .animation(.easeOut(duration: 0.22), value: showInspector)
         .onDrop(of: [UTType.fileURL], isTargeted: $dropTargeted) { providers in
@@ -109,10 +124,15 @@ struct ContentView: View {
     }
 
     /// The strip under the title bar: toggles for the side panes.
-    private var paneBar: some View {
+    private func paneBar(libraryShown: Bool) -> some View {
         HStack(spacing: 4) {
-            if !showLibrary {
-                Button { withAnimation(.easeOut(duration: 0.2)) { libraryVisible = true } } label: {
+            if !libraryShown {
+                Button {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        // Hidden for lack of room: make room by folding the parameters.
+                        if libraryVisible { inspectorVisible = false } else { libraryVisible = true }
+                    }
+                } label: {
                     Image(systemName: "sidebar.left")
                 }
                 .buttonStyle(IconButtonStyle())
