@@ -29,6 +29,7 @@ extension SummaryProgress {
     var text: String {
         switch stage {
         case .loadingModel: return "Загрузка модели…"
+        case .protectingData: return "Скрытие персональных данных…"
         case .readingPart(let i, let n): return "Чтение части \(i) из \(n)…"
         case .combining: return "Сведение заметок…"
         case .writing: return "Составление итогов…"
@@ -316,6 +317,15 @@ struct SummarySettingsSheet: View {
                 Text(r).font(Theme.ui(11.5)).foregroundStyle(checkOK ? Theme.accent : Theme.danger)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            Toggle(isOn: $llm.guardrailsEnabled) {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Защита персональных данных (Cloud.ru Guardrails)").font(Theme.ui(12.5)).foregroundStyle(Theme.text)
+                    Text("ФИО, телефоны, e-mail, паспорт, СНИЛС, ИНН, карты и счета заменяются метками ещё на этом Mac; в итогах подставляются обратно.")
+                        .font(Theme.ui(11)).foregroundStyle(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .toggleStyle(.switch).controlSize(.mini).tint(Theme.accent)
+            .help("Правила Cloud.ru Guardrails работают на этом Mac, без сети и ключа. Это правила, а не гарантия: необычные записи могут не распознаться.")
             Text("Ключ хранится в связке ключей этого Mac. Звук и записи никуда не уходят — только текст расшифровки и только когда вы нажимаете «Подвести итоги».")
                 .font(Theme.ui(11)).foregroundStyle(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
         }

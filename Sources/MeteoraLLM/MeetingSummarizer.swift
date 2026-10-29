@@ -5,6 +5,8 @@ import MeteoraCore
 public struct SummaryProgress: Sendable, Equatable {
     public enum Stage: Sendable, Equatable {
         case loadingModel
+        /// Hiding personal data before a transcript goes to a cloud model.
+        case protectingData
         /// Reading part `index` (1-based) of `count` of a long meeting.
         case readingPart(index: Int, count: Int)
         case combining

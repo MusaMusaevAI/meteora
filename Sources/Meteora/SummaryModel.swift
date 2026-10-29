@@ -69,11 +69,18 @@ final class SummaryModelController: ObservableObject {
     @Published private(set) var progress: Double?
     @Published private(set) var error: String?
     @Published private(set) var keyed: Set<CloudProvider> = []
+    /// «Защита персональных данных (Cloud.ru Guardrails)»: before a cloud
+    /// summary, ФИО, phones, documents, cards and accounts are replaced with
+    /// placeholders on this Mac. On by default; local models don't need it.
+    @Published var guardrailsEnabled: Bool {
+        didSet { UserDefaults.standard.set(guardrailsEnabled, forKey: "summary.guardrails") }
+    }
     private var token: CancelToken?
     private var summarizers: [SummaryModelTier: MeetingSummarizer] = [:]
 
     init() {
         engine = UserDefaults.standard.string(forKey: "summary.engine").flatMap(SummaryEngine.init(raw:)) ?? .local(.medium)
+        guardrailsEnabled = UserDefaults.standard.object(forKey: "summary.guardrails") as? Bool ?? true
         refresh()
     }
 
@@ -136,7 +143,8 @@ final class SummaryModelController: ObservableObject {
     func cloudConfig(_ p: CloudProvider) -> CloudConfig? {
         guard let key = APIKeychain.key(for: p), !key.isEmpty else { return nil }
         return CloudConfig(provider: p, model: model(for: p), apiKey: key,
-                           baseURL: p == .compatible ? baseURL : nil)
+                           baseURL: p == .compatible ? baseURL : nil,
+                           protectPersonalData: guardrailsEnabled)
     }
 
     /// Sends a tiny request to check the key and model; nil = OK.
