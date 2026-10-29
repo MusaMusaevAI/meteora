@@ -207,6 +207,7 @@ func transcriptRowCount(_ segments: [TranscriptSegment]) -> Int {
 struct TranscriptCard: View {
     @ObservedObject var model: MeetingModel
     @ObservedObject var speech = SpeechModelController.shared
+    @ObservedObject var speakers = SpeakerModelController.shared
 
     var body: some View {
         InspectorSection("Расшифровка") {
@@ -279,6 +280,25 @@ struct TranscriptCard: View {
     @ViewBuilder private func done(_ tr: Transcript) -> some View {
         Text("Готово: \(ru(tr.segments.count, "фраза", "фразы", "фраз")), \(ru(tr.wordCount, "слово", "слова", "слов"))")
             .font(Theme.ui(12.5).monospacedDigit()).foregroundStyle(Theme.text)
+        if let p = model.diarizeProgress {
+            VStack(alignment: .leading, spacing: 6) {
+                ThinProgress(value: p)
+                ProgressStatus(text: "Разделение по голосам · \(Int(p * 100)) %", action: "Остановить") { model.cancelSpeakers() }
+            }
+        } else if tr.speakers.isEmpty {
+            Button { Task { await model.separateSpeakers() } } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "person.2.wave.2")
+                    Text("Разделить по говорящим")
+                }
+            }
+            .buttonStyle(SecondaryButtonStyle())
+            .help(speakers.isInstalled ? "Определить, кто говорит, на этом Mac"
+                                       : "Один раз скачается модель голосов (\(speakers.sizeText))")
+        }
+        if let e = model.diarizeError ?? (model.diarizeProgress == nil ? nil : speakers.error) {
+            Text(e).font(Theme.ui(11.5)).foregroundStyle(Theme.danger).fixedSize(horizontal: false, vertical: true)
+        }
         HStack(spacing: 8) {
             Button("Скопировать") { model.copyTranscript() }.buttonStyle(SecondaryButtonStyle())
             Button("Экспорт…") { model.exportSheetShown = true }

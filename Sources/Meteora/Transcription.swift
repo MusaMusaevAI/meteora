@@ -48,6 +48,44 @@ final class SpeechModelController: ObservableObject {
     static var vadModelURL: URL? { Bundle.main.url(forResource: "silero_vad", withExtension: "onnx") }
 }
 
+/// The speaker-separation models (pyannote + CAM++), downloaded on demand.
+@MainActor
+final class SpeakerModelController: ObservableObject {
+    static let shared = SpeakerModelController()
+
+    @Published private(set) var isInstalled = ModelStore.speakers.isInstalled
+    @Published private(set) var progress: Double?
+    @Published private(set) var error: String?
+    private var token: CancelToken?
+
+    var sizeText: String { FileSizeText.string(ModelStore.speakers.spec.totalSize) }
+
+    func refresh() { isInstalled = ModelStore.speakers.isInstalled }
+
+    @discardableResult
+    func download() async -> Bool {
+        guard progress == nil else { return false }
+        let t = CancelToken()
+        token = t
+        error = nil
+        progress = 0
+        defer { progress = nil; token = nil; refresh() }
+        do {
+            try await ModelStore.speakers.install(progress: { p in
+                Task { @MainActor in if SpeakerModelController.shared.progress != nil { SpeakerModelController.shared.progress = p } }
+            }, isCancelled: { t.isCancelled })
+            return true
+        } catch ModelError.cancelled {
+            return false
+        } catch {
+            self.error = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            return false
+        }
+    }
+
+    func cancel() { token?.cancel() }
+}
+
 /// Saved transcripts, so reopening a recording shows its text instantly.
 /// Stored inside the app's sandbox container (Application Support).
 enum TranscriptStore {

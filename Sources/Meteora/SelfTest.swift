@@ -177,6 +177,20 @@ final class SelfTest {
             report["asr"] = asr
         }
 
+        // 3c. Speaker separation (downloads its models on CI)
+        if ProcessInfo.processInfo.environment["METEORA_SELFTEST_ASR"] == "1", let wav = asrWav {
+            var sp = await SpeakerDiarizer.runSelfTest(wav: wav, output: output)
+            if model.transcript != nil {
+                let t = Date()
+                await model.separateSpeakers()
+                sp["recordingSeconds"] = Date().timeIntervalSince(t)
+                sp["recordingSpeakers"] = model.speakers
+                if let e = model.diarizeError { errors.append("speakers: \(e)") }
+            }
+            if sp["ok"] as? Bool == false { errors.append("speakers self-test: \(sp["errors"] ?? "")") }
+            report["speakers"] = sp
+        }
+
         mark("scenes")
         // 4. Key frames + OCR + reports
         if model.hasVideo, let player = model.player, player.isReady {

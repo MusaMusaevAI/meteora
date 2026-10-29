@@ -263,6 +263,57 @@ final class MeetingModel: ObservableObject {
         NSWorkspace.shared.activateFileViewerSelecting([url])
     }
 
+    /// Progress of speaker separation, nil when idle.
+    @Published var diarizeProgress: Double?
+    @Published var diarizeError: String?
+    private var diarizeToken: CancelToken?
+
+    /// Finds who spoke when and labels the transcript («Спикер 1, 2…»).
+    func separateSpeakers() async {
+        guard let origin = audioOrigin, let url, let tr = transcript, diarizeProgress == nil else { return }
+        let controller = SpeakerModelController.shared
+        if !controller.isInstalled {
+            guard await controller.download() else { diarizeError = controller.error; return }
+        }
+        let token = CancelToken()
+        diarizeToken = token
+        diarizeError = nil
+        diarizeProgress = 0
+        let duration = info?.duration
+        let result: Result<[SpeakerTurn], Error> = await Task.detached(priority: .userInitiated) { [weak self] in
+            do {
+                let d = try SpeakerDiarizer()
+                let decoder = try await origin.make()
+                let turns = try d.diarize(decoder: decoder, expectedDuration: duration,
+                                          isCancelled: { token.isCancelled }, progress: { p in
+                    Task { @MainActor in if self?.diarizeProgress != nil { self?.diarizeProgress = p } }
+                })
+                return .success(turns)
+            } catch {
+                return .failure(error)
+            }
+        }.value
+        diarizeProgress = nil
+        diarizeToken = nil
+        switch result {
+        case .success(let turns):
+            guard !token.isCancelled else { return }
+            let labelled = tr.assigningSpeakers(turns)
+            transcript = labelled
+            if let saved = TranscriptStore.load(for: url) {
+                TranscriptStore.save(saved.assigningSpeakers(turns), for: url)
+            } else {
+                TranscriptStore.save(labelled, for: url)
+            }
+            let n = labelled.speakers.count
+            toast = Toast(message: n <= 1 ? "Слышен один голос" : "Говорящих: \(n)")
+        case .failure(let e):
+            if !token.isCancelled { diarizeError = (e as? LocalizedError)?.errorDescription ?? e.localizedDescription }
+        }
+    }
+
+    func cancelSpeakers() { diarizeToken?.cancel() }
+
     /// Speakers in order of first appearance.
     var speakers: [String] {
         var seen: [String] = []
@@ -299,7 +350,7 @@ final class MeetingModel: ObservableObject {
         transcript = TermDictionaryStore.shared.correct(saved)
     }
 
-    var isWorking: Bool { transcribeProgress != nil || sceneProgress != nil || exportProgress != nil }
+    var isWorking: Bool { transcribeProgress != nil || sceneProgress != nil || exportProgress != nil || diarizeProgress != nil }
 
     /// Back to the list of meetings. Asks first if work would be lost.
     func requestClose() {
@@ -315,7 +366,9 @@ final class MeetingModel: ObservableObject {
     }
 
     func close() {
-        loadToken?.cancel(); exportToken?.cancel(); sceneToken?.cancel(); audioToken?.cancel(); transcribeToken?.cancel()
+        loadToken?.cancel(); exportToken?.cancel(); sceneToken?.cancel(); audioToken?.cancel(); transcribeToken?.cancel(); diarizeToken?.cancel()
+        diarizeProgress = nil
+        diarizeError = nil
         transcript = nil
         liveSegments = []
         transcribeProgress = nil
