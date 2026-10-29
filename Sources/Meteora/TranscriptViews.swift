@@ -59,7 +59,7 @@ struct BottomPanel: View {
         .padding(.top, 12)
         .padding(.bottom, 10)
         .frame(height: height)
-        .background(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).fill(Theme.surface))
+        .background(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).fill(Theme.surface.opacity(0.8)))
         .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline))
     }
 

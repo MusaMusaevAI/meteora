@@ -594,7 +594,6 @@ struct GlowHalo: View {
 struct MeteorShower: View {
     var light = false
     @State private var meteors: [Meteor] = []
-    @State private var task: Task<Void, Never>?
 
     struct Meteor: Identifiable {
         let id = UUID()
@@ -615,33 +614,29 @@ struct MeteorShower: View {
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
-        .onAppear {
-            task?.cancel()
-            task = Task { @MainActor in
-                var rng = SplitMix(seed: UInt64(Date().timeIntervalSince1970 * 1000))
-                try? await Task.sleep(nanoseconds: UInt64((6 + rng.unit() * 10) * 1e9))
-                while !Task.isCancelled {
-                    let count = rng.unit() < 0.18 ? (rng.unit() < 0.3 ? 3 : 2) : 1
-                    for k in 0..<count {
-                        let leftToRight = rng.unit() < 0.5
-                        let m = Meteor(start: CGPoint(x: 0.15 + rng.unit() * 0.7, y: 0.04 + rng.unit() * 0.3),
-                                       angle: (leftToRight ? 0.32 : .pi - 0.32) + (rng.unit() - 0.5) * 0.25,
-                                       length: 90 + CGFloat(rng.unit()) * 110,
-                                       travel: 260 + CGFloat(rng.unit()) * 220,
-                                       duration: 0.9 + rng.unit() * 0.5)
-                        meteors.append(m)
-                        let id = m.id
-                        Task { @MainActor in
-                            try? await Task.sleep(nanoseconds: UInt64((m.duration + 0.3) * 1e9))
-                            meteors.removeAll { $0.id == id }
-                        }
-                        if k < count - 1 { try? await Task.sleep(nanoseconds: UInt64((0.25 + rng.unit() * 0.6) * 1e9)) }
-                    }
-                    try? await Task.sleep(nanoseconds: UInt64((15 + rng.unit() * 25) * 1e9))
+        // .task lives exactly as long as the view and restarts with it, so
+        // the shower never quietly stops.
+        .task {
+            var rng = SplitMix(seed: UInt64(Date().timeIntervalSince1970 * 1000) & 0xFFFF_FFFF)
+            try? await Task.sleep(nanoseconds: UInt64((5 + rng.unit() * 7) * 1e9))
+            while !Task.isCancelled {
+                let count = rng.unit() < 0.2 ? (rng.unit() < 0.3 ? 3 : 2) : 1
+                for k in 0..<count {
+                    let leftToRight = rng.unit() < 0.5
+                    let m = Meteor(start: CGPoint(x: 0.12 + rng.unit() * 0.76, y: 0.05 + rng.unit() * 0.45),
+                                   angle: (leftToRight ? 0.34 : .pi - 0.34) + (rng.unit() - 0.5) * 0.3,
+                                   length: 110 + CGFloat(rng.unit()) * 120,
+                                   travel: 300 + CGFloat(rng.unit()) * 260,
+                                   duration: 1.0 + rng.unit() * 0.5)
+                    meteors.append(m)
+                    if k < count - 1 { try? await Task.sleep(nanoseconds: UInt64((0.25 + rng.unit() * 0.6) * 1e9)) }
                 }
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                meteors.removeAll()
+                // Next one in 30–40 seconds.
+                try? await Task.sleep(nanoseconds: UInt64((28 + rng.unit() * 10) * 1e9))
             }
         }
-        .onDisappear { task?.cancel(); task = nil }
     }
 }
 
@@ -677,10 +672,10 @@ private struct MeteorStreak: View {
                 .blur(radius: 2)
             Path { $0.move(to: tail); $0.addLine(to: head) }
                 .stroke(LinearGradient(colors: [core.opacity(0), core.opacity(0.95)], startPoint: from, endPoint: to),
-                        style: StrokeStyle(lineWidth: 1.1, lineCap: .round))
+                        style: StrokeStyle(lineWidth: 1.4, lineCap: .round))
             Circle().fill(core).frame(width: 2.4, height: 2.4).position(head)
                 .shadow(color: glow, radius: 4)
         }
-        .opacity(alpha * (light ? 0.75 : 0.9))
+        .opacity(alpha * (light ? 0.85 : 1.0))
     }
 }

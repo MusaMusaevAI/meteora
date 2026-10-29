@@ -123,33 +123,48 @@ struct ContentView: View {
         }
     }
 
-    /// The strip under the title bar: toggles for the side panes.
+    /// The strip at the top of the work area: pane toggles at its edges and
+    /// the recording's name in the middle, with a close button — like a tab.
+    /// The window's own title is hidden, so a long name never runs over the
+    /// list of recordings.
     private func paneBar(libraryShown: Bool) -> some View {
-        HStack(spacing: 4) {
-            if !libraryShown {
-                Button {
-                    withAnimation(.easeOut(duration: 0.2)) {
+        HStack(spacing: 6) {
+            Button {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    if libraryShown {
+                        libraryVisible = false
+                    } else if libraryVisible {
                         // Hidden for lack of room: make room by folding the parameters.
-                        if libraryVisible { inspectorVisible = false } else { libraryVisible = true }
+                        inspectorVisible = false
+                    } else {
+                        libraryVisible = true
                     }
-                } label: {
-                    Image(systemName: "sidebar.left")
                 }
-                .buttonStyle(IconButtonStyle())
-                .help("Показать все записи (⌥⌘L)")
-                .padding(.leading, 70) // clear of the window buttons
+            } label: {
+                Image(systemName: "sidebar.left")
             }
-            Spacer()
-            if ready {
-                Button { withAnimation(.easeOut(duration: 0.2)) { inspectorVisible.toggle() } } label: {
-                    Image(systemName: "sidebar.right")
-                }
-                .buttonStyle(IconButtonStyle())
-                .help(inspectorVisible ? "Скрыть параметры (⌥⌘I)" : "Показать параметры (⌥⌘I)")
+            .buttonStyle(IconButtonStyle())
+            .help(libraryShown ? "Скрыть список записей (⌥⌘L)" : "Показать список записей (⌥⌘L)")
+            .padding(.leading, libraryShown ? 0 : 70) // clear of the window buttons
+
+            Spacer(minLength: 8)
+            if model.loadState != .empty {
+                TitleTab(model: model)
             }
+            Spacer(minLength: 8)
+
+            Button {
+                withAnimation(.easeOut(duration: 0.2)) { inspectorVisible.toggle() }
+            } label: {
+                Image(systemName: "sidebar.right")
+            }
+            .buttonStyle(IconButtonStyle())
+            .help(inspectorVisible ? "Скрыть параметры (⌥⌘I)" : "Показать параметры (⌥⌘I)")
+            .opacity(ready ? 1 : 0)
+            .disabled(!ready)
         }
         .padding(.horizontal, 10)
-        .frame(height: 38)
+        .frame(height: 40)
     }
 
     @ViewBuilder private var center: some View {
@@ -172,11 +187,11 @@ struct ContentView: View {
     }
 }
 
-/// Side panes: a quiet solid layer. (A live blur over the animated sky
-/// looked nice but kept the GPU busy all the time.)
+/// Side panes: tinted glass. Translucent enough for a passing meteor to
+/// show through, without a live blur (that kept the GPU busy).
 struct PaneBackground: View {
     var body: some View {
-        Theme.inspector.opacity(0.94)
+        Theme.inspector.opacity(0.74)
     }
 }
 
@@ -282,14 +297,8 @@ struct LibrarySidebar: View {
     var body: some View {
         let results = journal.search(query)
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 8) {
-                Spacer()
-                Button(action: hide) { Image(systemName: "sidebar.left") }
-                    .buttonStyle(IconButtonStyle())
-                    .help("Скрыть список (⌥⌘L)")
-            }
-            .frame(height: 38)
-            .padding(.horizontal, 8)
+            // Room for the window buttons.
+            Color.clear.frame(height: 40)
 
             HStack(spacing: 9) {
                 LogoMark().frame(width: 26, height: 26)
@@ -330,9 +339,26 @@ struct LibrarySidebar: View {
             .padding(.horizontal, 14)
             .padding(.top, 12)
 
-            Text(query.isEmpty ? "Записи" : "Найдено: \(results.count)")
-                .font(Theme.ui(11.5, weight: .semibold)).foregroundStyle(Theme.tertiary)
-                .padding(.horizontal, 18).padding(.top, 14).padding(.bottom, 4)
+            HStack(spacing: 6) {
+                Text(query.isEmpty ? "Записи" : "Найдено: \(results.count)")
+                    .font(Theme.ui(11.5, weight: .semibold)).foregroundStyle(Theme.tertiary)
+                Spacer()
+                Menu {
+                    Picker("Порядок", selection: $journal.order) {
+                        ForEach(MeetingJournal.Order.allCases) { Text($0.title).tag($0) }
+                    }
+                    .pickerStyle(.inline)
+                } label: {
+                    HStack(spacing: 3) {
+                        Text(journal.order == .meetingDate ? "по дате встречи" : "по добавлению")
+                        Image(systemName: "chevron.down").font(.system(size: 8, weight: .bold))
+                    }
+                    .font(Theme.ui(11)).foregroundStyle(Theme.tertiary)
+                }
+                .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+                .help("Порядок списка. Закреплённые записи всегда сверху.")
+            }
+            .padding(.horizontal, 18).padding(.top, 14).padding(.bottom, 4)
 
             ScrollView(.vertical) {
                 LazyVStack(spacing: 2) {
@@ -350,6 +376,7 @@ struct LibrarySidebar: View {
                                    highlighted: highlighted == entry.id,
                                    open: { open(entry) },
                                    rename: { newName = entry.customTitle ?? entry.title; renaming = entry },
+                                   togglePin: { withAnimation(.easeOut(duration: 0.2)) { journal.setPinned(!entry.isPinned, entry) } },
                                    remove: { pendingRemoval = entry })
                     }
                 }
@@ -439,6 +466,7 @@ struct LibraryRow: View {
     var highlighted: Bool
     var open: () -> Void
     var rename: () -> Void
+    var togglePin: () -> Void
     var remove: () -> Void
     @State private var hover = false
 
@@ -451,10 +479,16 @@ struct LibraryRow: View {
                 .frame(width: 18, height: 18)
                 .padding(.top, 1)
             VStack(alignment: .leading, spacing: 2) {
-                Text(entry.customTitle ?? entry.title)
-                    .font(Theme.ui(13, weight: selected ? .semibold : .medium))
-                    .foregroundStyle(missing ? Theme.tertiary : Theme.text)
-                    .lineLimit(2)
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    if entry.isPinned {
+                        Image(systemName: "pin.fill").font(.system(size: 9)).foregroundStyle(Theme.accent)
+                            .accessibilityLabel("Закреплена")
+                    }
+                    Text(entry.customTitle ?? entry.title)
+                        .font(Theme.ui(13, weight: selected ? .semibold : .medium))
+                        .foregroundStyle(missing ? Theme.tertiary : Theme.text)
+                        .lineLimit(2)
+                }
                 Text(subtitle)
                     .font(Theme.ui(11).monospacedDigit())
                     .foregroundStyle(missing ? Theme.danger : Theme.tertiary)
@@ -466,6 +500,7 @@ struct LibraryRow: View {
             Spacer(minLength: 0)
             if hover && !missing {
                 Menu {
+                    Button(entry.isPinned ? "Открепить" : "Закрепить вверху", action: togglePin)
                     Button("Переименовать…", action: rename)
                     Button("Показать в Finder") { reveal() }
                     Divider()
@@ -491,6 +526,7 @@ struct LibraryRow: View {
         .onTapGesture { if !missing { open() } }
         .contextMenu {
             Button("Открыть", action: open).disabled(missing)
+            Button(entry.isPinned ? "Открепить" : "Закрепить вверху", action: togglePin)
             Button("Переименовать…", action: rename).disabled(missing)
             Button("Показать в Finder") { reveal() }.disabled(missing)
             Divider()
@@ -540,5 +576,44 @@ struct LibraryRow: View {
         if h > 0 { return m > 0 ? "\(h) ч \(m) мин" : "\(h) ч" }
         if m > 0 { return "\(m) мин" }
         return "\(total) с"
+    }
+}
+
+
+/// The open recording's name with a close button, centred in the top strip.
+struct TitleTab: View {
+    @ObservedObject var model: MeetingModel
+    @State private var hover = false
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: model.hasVideo ? "play.rectangle" : "waveform")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Theme.tertiary)
+            Text(model.title)
+                .font(Theme.ui(12.5, weight: .semibold))
+                .foregroundStyle(Theme.text)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .help(model.title)
+            Button { model.requestClose() } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 9, weight: .bold))
+                    .frame(width: 18, height: 18)
+                    .background(Circle().fill(Theme.text.opacity(hover ? 0.10 : 0.0)))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(Theme.secondary)
+            .onHover { hover = $0 }
+            .help("Закрыть запись (⌘W)")
+            .accessibilityLabel("Закрыть запись")
+        }
+        .padding(.leading, 12)
+        .padding(.trailing, 6)
+        .frame(height: 28)
+        .background(Capsule().fill(Theme.surface.opacity(0.75)))
+        .overlay(Capsule().strokeBorder(Theme.hairline))
+        .frame(maxWidth: 520)
+        .fixedSize(horizontal: false, vertical: true)
     }
 }

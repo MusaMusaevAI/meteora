@@ -13,6 +13,13 @@ struct JournalEntry: Codable, Identifiable, Equatable {
     var title: String
     /// A name the user chose (from the summary); nil = the file name.
     var customTitle: String?
+    /// Kept at the top of the list.
+    var pinned: Bool?
+    /// When the meeting first appeared in Meteora (never changes).
+    var addedAt: Date?
+
+    var isPinned: Bool { pinned ?? false }
+    var added: Date { addedAt ?? openedAt }
     /// When the meeting happened: from a Telemost-style name
     /// («… 28.10.26 14-05-31»), else the file's creation date.
     var date: Date
@@ -63,6 +70,7 @@ final class MeetingJournal: ObservableObject {
             duration: info.duration, hasVideo: info.video != nil, hasTranscript: false, excerpt: "", searchText: "")
         entry.bookmark = bookmark
         entry.openedAt = Date()
+        if entry.addedAt == nil { entry.addedAt = Date() }
         entry.duration = info.duration
         entry.hasVideo = info.video != nil
         if let transcript { Self.apply(transcript, to: &entry) }
@@ -90,12 +98,47 @@ final class MeetingJournal: ObservableObject {
         entry.searchText = String(text.lowercased().prefix(searchCap))
     }
 
+    /// Updates in place: opening a meeting never moves it in the list.
     private func upsert(_ entry: JournalEntry) {
-        entries.removeAll { $0.id == entry.id || $0.path == entry.path }
-        entries.insert(entry, at: 0)
-        entries.sort { $0.openedAt > $1.openedAt }
-        if entries.count > Self.maxEntries { entries.removeLast(entries.count - Self.maxEntries) }
+        if let i = entries.firstIndex(where: { $0.id == entry.id || $0.path == entry.path }) {
+            entries[i] = entry
+        } else {
+            entries.insert(entry, at: 0)
+        }
+        if entries.count > Self.maxEntries {
+            // Drop the oldest unpinned ones.
+            let keep = entries.sorted { ($0.isPinned ? 1 : 0, $0.added) > ($1.isPinned ? 1 : 0, $1.added) }.prefix(Self.maxEntries)
+            let ids = Set(keep.map(\.id))
+            entries.removeAll { !ids.contains($0.id) }
+        }
         save()
+    }
+
+    func setPinned(_ pinned: Bool, _ entry: JournalEntry) {
+        guard var e = entries.first(where: { $0.id == entry.id }) else { return }
+        e.pinned = pinned
+        upsert(e)
+    }
+
+    /// How the list is ordered. Pinned meetings always come first.
+    enum Order: String, CaseIterable, Identifiable {
+        case meetingDate, added
+        var id: String { rawValue }
+        var title: String { self == .meetingDate ? "По дате встречи" : "По времени добавления" }
+    }
+
+    @Published var order: Order = Order(rawValue: UserDefaults.standard.string(forKey: "library.order") ?? "") ?? .meetingDate {
+        didSet { UserDefaults.standard.set(order.rawValue, forKey: "library.order") }
+    }
+
+    func ordered(_ list: [JournalEntry]) -> [JournalEntry] {
+        list.sorted { a, b in
+            if a.isPinned != b.isPinned { return a.isPinned }
+            switch order {
+            case .meetingDate: return a.date != b.date ? a.date > b.date : a.added > b.added
+            case .added: return a.added > b.added
+            }
+        }
     }
 
     // MARK: Using
@@ -146,8 +189,8 @@ final class MeetingJournal: ObservableObject {
 
     func search(_ query: String) -> [JournalEntry] {
         let words = query.lowercased().split(whereSeparator: \.isWhitespace).map(String.init)
-        guard !words.isEmpty else { return entries }
-        return entries.filter { e in
+        guard !words.isEmpty else { return ordered(entries) }
+        return ordered(entries).filter { e in
             let hay = (e.title + " " + (e.customTitle ?? "") + " " + e.fileName).lowercased() + " " + e.searchText
             return words.allSatisfy { hay.contains($0) }
         }

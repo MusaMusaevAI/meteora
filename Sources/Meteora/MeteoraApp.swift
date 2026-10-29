@@ -103,7 +103,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                          backing: .buffered, defer: false)
         w.title = "Meteora"
         w.titlebarAppearsTransparent = true
-        w.titleVisibility = .visible
+        // The title lives in the work area's top strip (TitleTab), so a long
+        // name never runs over the list of recordings.
+        w.titleVisibility = .hidden
         w.isReleasedWhenClosed = false
         w.minSize = NSSize(width: 820, height: 620)
         w.collectionBehavior.insert(.fullScreenPrimary)
