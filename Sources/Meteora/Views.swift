@@ -115,6 +115,9 @@ struct DropZone: View {
                 .frame(width: 190)
                 .keyboardShortcut("o", modifiers: .command)
                 .padding(.top, 8)
+            Button("или записать встречу") { RecordingWindow.show() }
+                .buttonStyle(LinkButtonStyle())
+                .help("Микрофон и звук Mac (⌘⇧R)")
         }
         .padding(.vertical, 34)
         .frame(maxWidth: .infinity)

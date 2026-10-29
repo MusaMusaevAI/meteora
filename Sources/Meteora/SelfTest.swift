@@ -266,6 +266,14 @@ final class SelfTest {
         try? await Task.sleep(nanoseconds: 900_000_000)
         snapshotWindow(titled: "Пакетная обработка", as: "07-batch")
         NSApp.windows.first { $0.title == "Пакетная обработка" }?.close()
+        report["recorder"] = await MeetingRecorder.runSelfTest(output: output)
+        if let r = report["recorder"] as? [String: Any], r["ok"] as? Bool == false {
+            errors.append("recorder: \(r["errors"] ?? r)")
+        }
+        RecordingWindow.show()
+        try? await Task.sleep(nanoseconds: 700_000_000)
+        snapshotWindow(titled: "Запись встречи", as: "09-recorder")
+        NSApp.windows.first { $0.title == "Запись встречи" }?.close()
         DictionaryWindow.show()
         try? await Task.sleep(nanoseconds: 700_000_000)
         snapshotWindow(titled: "Словарь", as: "08-dictionary")

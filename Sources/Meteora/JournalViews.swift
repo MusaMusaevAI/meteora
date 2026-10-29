@@ -104,6 +104,15 @@ struct HomeView: View {
                     .font(Theme.ui(12)).foregroundStyle(Theme.secondary)
             }
             Spacer()
+            Button { RecordingWindow.show() } label: {
+                HStack(spacing: 6) {
+                    Circle().fill(Theme.danger).frame(width: 8, height: 8)
+                    Text("Записать")
+                }
+            }
+            .buttonStyle(SecondaryButtonStyle())
+            .frame(width: 120)
+            .help("Записать встречу: микрофон и звук Mac (⌘⇧R)")
             Button("Открыть запись…") { model.presentOpenPanel() }
                 .buttonStyle(PrimaryButtonStyle())
                 .frame(width: 170)

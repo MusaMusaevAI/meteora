@@ -34,6 +34,8 @@ struct AppCommands: Commands {
         CommandGroup(replacing: .newItem) {
             Button("Открыть запись…") { model.presentOpenPanel() }
                 .keyboardShortcut("o")
+            Button("Записать встречу…") { RecordingWindow.show() }
+                .keyboardShortcut("r", modifiers: [.command, .shift])
             Button("Пакетная обработка…") { BatchWindow.show() }
                 .keyboardShortcut("b", modifiers: [.command, .shift])
             Button("Все записи") { model.requestClose() }
@@ -130,6 +132,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         showMainWindow()
         TermDictionaryStore.shared.onChange = { [weak self] in self?.model.reapplyDictionary() }
+        // A finished recording opens right away and is transcribed.
+        MeetingRecorder.shared.onFinished = { [weak self] url in
+            guard let self else { return }
+            self.showMainWindow()
+            self.model.open(url) { [weak self] in
+                guard let model = self?.model, SpeechModelController.shared.isInstalled else { return }
+                Task { await model.transcribe() }
+            }
+        }
         NSApp.activate(ignoringOtherApps: true)
         NSApp.servicesProvider = self
         NSUpdateDynamicServices()
