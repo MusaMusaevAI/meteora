@@ -7,7 +7,7 @@ extension MeetingSummarizer {
     /// download 2.7 GB. Only consulted under METEORA_SELFTEST=1, and the file
     /// still goes through the full SHA-256 check.
     static var ciModelFile: URL {
-        var home = FileManager.default.homeDirectoryForCurrentUser
+        var home = URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
         if let pw = getpwuid(getuid()), let dir = pw.pointee.pw_dir {
             home = URL(fileURLWithPath: String(cString: dir), isDirectory: true)
         }

@@ -11,8 +11,12 @@ BUNDLE=com.musamusaev.meteora.ios
 
 TYPE=$(xcrun simctl list devicetypes -j | python3 -c "
 import json,sys
-names=[d['identifier'] for d in json.load(sys.stdin)['devicetypes'] if 'iPhone' in d['name'] and 'Pro' in d['name'] and 'Max' not in d['name']]
-print(names[-1] if names else '')")
+import re
+def gen(d):
+    m=re.search(r'iPhone (\d+)', d['name']); return int(m.group(1)) if m else 0
+c=[d for d in json.load(sys.stdin)['devicetypes'] if re.fullmatch(r'iPhone \d+ Pro', d['name'])]
+c.sort(key=gen)
+print(c[-1]['identifier'] if c else '')")
 RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "
 import json,sys
 r=[x['identifier'] for x in json.load(sys.stdin)['runtimes'] if x.get('isAvailable') and 'iOS' in x['name']]

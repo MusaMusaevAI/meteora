@@ -27,14 +27,17 @@ COMMON=(-project iOS/Meteora.xcodeproj -scheme Meteora -configuration Debug
         CODE_SIGNING_ALLOWED=NO CURRENT_PROJECT_VERSION="$BUILD" -skipPackagePluginValidation)
 
 echo "== simulator build"
-xcodebuild "${COMMON[@]}" -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
-  -derivedDataPath build/ios-sim build 2>&1 | tee build/ios-sim.log | grep -E "error:|warning: unable|BUILD (SUCCEEDED|FAILED)" || true
-[ -d build/ios-sim/Build/Products/Debug-iphonesimulator/Meteora.app ] || { echo "simulator build failed"; exit 1; }
+# arm64 only: the libraries' simulator slices are for Apple silicon.
+xcodebuild "${COMMON[@]}" -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' ARCHS=arm64 \
+  -derivedDataPath build/ios-sim build > build/ios-sim.log 2>&1 || true
+grep -E "error:|BUILD (SUCCEEDED|FAILED)" build/ios-sim.log | sort -u | head -40 || true
+grep -q "BUILD SUCCEEDED" build/ios-sim.log || { echo "simulator build failed"; exit 1; }
 
 echo "== device build (unsigned)"
 xcodebuild "${COMMON[@]}" -sdk iphoneos -destination 'generic/platform=iOS' \
-  -derivedDataPath build/ios-dev build 2>&1 | tee build/ios-dev.log | grep -E "error:|BUILD (SUCCEEDED|FAILED)" || true
-[ -d build/ios-dev/Build/Products/Debug-iphoneos/Meteora.app ] || { echo "device build failed"; exit 1; }
+  -derivedDataPath build/ios-dev build > build/ios-dev.log 2>&1 || true
+grep -E "error:|BUILD (SUCCEEDED|FAILED)" build/ios-dev.log | sort -u | head -40 || true
+grep -q "BUILD SUCCEEDED" build/ios-dev.log || { echo "device build failed"; exit 1; }
 du -sh build/ios-dev/Build/Products/Debug-iphoneos/Meteora.app
 
 echo "== Meteora-iOS.zip"

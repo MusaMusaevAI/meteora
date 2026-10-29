@@ -118,10 +118,12 @@ enum RichExport {
         }
 
         let range = NSRange(location: 0, length: out.length)
-        let attributes: [NSAttributedString.DocumentAttributeKey: Any] = [
+        var attributes: [NSAttributedString.DocumentAttributeKey: Any] = [
             .documentType: NSAttributedString.DocumentType.rtf,
-            .title: doc.title,
         ]
+        #if canImport(AppKit)
+        attributes[.title] = doc.title
+        #endif
         return try out.data(from: range, documentAttributes: attributes)
     }
 
