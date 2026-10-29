@@ -198,11 +198,18 @@ final class SelfTest {
             let r = await MeetingSummarizer.runSelfTest(transcriptText: text, output: output)
             report["llm"] = r
             if r["ok"] as? Bool != true { errors.append("LLM: \(r["errors"] ?? "?")") }
+            SummaryModelController.shared.engine = .local(MeetingSummarizer.selfTestTierPublic)
+            SummaryModelController.shared.refresh()
             if model.transcript != nil {
                 await model.summarize()
                 report["llmRecording"] = model.summary.map { $0.markdown() } ?? (model.summaryError ?? "none")
                 model.bottomTab = .summary
             }
+            model.summarySettingsShown = true
+            try? await Task.sleep(nanoseconds: 900_000_000)
+            snapshotSheet("10-summary-settings")
+            model.summarySettingsShown = false
+            try? await Task.sleep(nanoseconds: 400_000_000)
         }
         mark("scenes")
         // 4. Key frames + OCR + reports

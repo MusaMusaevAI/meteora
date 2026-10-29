@@ -79,7 +79,7 @@ final class StorageModel: ObservableObject {
             }
         }.value
         SpeechModelController.shared.refresh()
-        if doomed.contains(where: { $0.section == .summaryModel }) { SummaryModelController.shared.summarizer.unload() }
+        if doomed.contains(where: { $0.section == .summaryModel }) { SummaryModelController.shared.unloadAll() }
         SummaryModelController.shared.refresh()
         selected = []
         deleting = false
@@ -112,13 +112,14 @@ final class StorageModel: ObservableObject {
                                    bytes: ModelStore.directorySize(speakerDir), urls: [speakerDir]))
         }
 
-        // 1b. Summary model
-        let summaryDir = SummaryModelStore.shared.directory
-        if fm.fileExists(atPath: summaryDir.path) {
-            out.append(StorageItem(id: "summary-model", section: .summaryModel,
-                                   title: "\(SummaryModel.displayName) — резюме встреч",
-                                   detail: SummaryModelStore.shared.isInstalled ? "Установлена и проверена" : "Загружена не полностью",
-                                   bytes: ModelStore.directorySize(summaryDir), urls: [summaryDir]))
+        // 1b. Summary models (three sizes)
+        for tier in SummaryModelTier.allCases {
+            let store = SummaryModelStore.store(for: tier)
+            guard fm.fileExists(atPath: store.directory.path) else { continue }
+            out.append(StorageItem(id: "summary-model-\(tier.rawValue)", section: .summaryModel,
+                                   title: "\(tier.spec.displayName) — итоги встреч, \(tier.title.lowercased())",
+                                   detail: store.isInstalled ? "Установлена и проверена" : "Загружена не полностью",
+                                   bytes: ModelStore.directorySize(store.directory), urls: [store.directory]))
         }
 
         // 2. Cached transcripts

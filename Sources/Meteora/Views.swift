@@ -240,6 +240,9 @@ struct MainView: View {
         .sheet(isPresented: $model.exportSheetShown) {
             ExportSheet(model: model) { model.exportSheetShown = false }
         }
+        .sheet(isPresented: $model.summarySettingsShown) {
+            SummarySettingsSheet { model.summarySettingsShown = false }
+        }
     }
 }
 

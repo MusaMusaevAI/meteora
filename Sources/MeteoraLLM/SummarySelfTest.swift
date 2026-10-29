@@ -12,7 +12,14 @@ extension MeetingSummarizer {
             home = URL(fileURLWithPath: String(cString: dir), isDirectory: true)
         }
         return home.appendingPathComponent("Downloads/Meteora-CI-models", isDirectory: true)
-            .appendingPathComponent(SummaryModel.fileName)
+            .appendingPathComponent(selfTestTier.spec.fileName)
+    }
+
+    public static var selfTestTierPublic: SummaryModelTier { selfTestTier }
+
+    /// CI tests the light tier (small download, same family and template).
+    static var selfTestTier: SummaryModelTier {
+        SummaryModelTier(rawValue: ProcessInfo.processInfo.environment["METEORA_LLM_TIER"] ?? "") ?? .light
     }
 
     /// Self-test for CI: installs the model (CI cache or download), summarizes
@@ -22,13 +29,13 @@ extension MeetingSummarizer {
     /// with a title was produced.
     public static func runSelfTest(transcriptText: String, output: URL) async -> [String: Any] {
         var report: [String: Any] = [
-            "model": SummaryModel.displayName, "file": SummaryModel.fileName,
-            "revision": SummaryModel.revision, "sha256": SummaryModel.sha256,
+            "model": selfTestTier.spec.displayName, "file": selfTestTier.spec.fileName,
+            "revision": selfTestTier.spec.revision, "sha256": selfTestTier.spec.sha256,
             "gpuDevices": LlamaEngine.gpuDevices,
             "forceCPU": ProcessInfo.processInfo.environment["METEORA_LLM_FORCE_CPU"] == "1",
         ]
         var errors: [String] = []
-        let store = SummaryModelStore.shared
+        let store = SummaryModelStore.store(for: selfTestTier)
         let noCancel: @Sendable () -> Bool = { false }
 
         // 1. Model

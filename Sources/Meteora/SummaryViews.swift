@@ -41,8 +41,22 @@ extension MeetingModel {
     func summarize() async {
         guard let url, let tr = transcript, summaryProgress == nil else { return }
         let controller = SummaryModelController.shared
-        if !controller.isInstalled {
-            guard await controller.download() else { summaryError = controller.error; return }
+        switch controller.engine {
+        case .local(let tier):
+            if !controller.installed.contains(tier) {
+                guard await controller.download(tier) else { summaryError = controller.error; return }
+            }
+        case .cloud(let p):
+            guard controller.isReady else { summarySettingsShown = true; return }
+            if !controller.hasConsent(p) {
+                let alert = NSAlert()
+                alert.messageText = "Отправить расшифровку в \(p.title)?"
+                alert.informativeText = "Для итогов текст встречи уйдёт на серверы провайдера по вашему ключу. Записи и звук остаются на этом Mac. Спрашиваем один раз для каждого провайдера."
+                alert.addButton(withTitle: "Отправить")
+                alert.addButton(withTitle: "Отмена")
+                guard alert.runModal() == .alertFirstButtonReturn else { return }
+                controller.giveConsent(p)
+            }
         }
         let token = CancelToken()
         summaryToken = token
@@ -51,7 +65,7 @@ extension MeetingModel {
         bottomTab = .summary
         let date = MeetingJournal.meetingDate(for: url)
         do {
-            let s = try await SummaryModelController.shared.summarizer.summarize(tr, meetingDate: date, progress: { p in
+            let s = try await controller.summarize(tr, meetingDate: date, progress: { p in
                 Task { @MainActor [weak self] in if self?.summaryProgress != nil { self?.summaryProgress = p } }
             }, isCancelled: { token.isCancelled })
             summary = s
@@ -108,16 +122,21 @@ struct SummarySection: View {
     @ObservedObject var llm = SummaryModelController.shared
 
     var body: some View {
-        InspectorSection("Итоги встречи") {
+        InspectorSection("Итоги встречи", trailing: AnyView(
+            Button { model.summarySettingsShown = true } label: { Image(systemName: "slider.horizontal.3") }
+                .buttonStyle(IconButtonStyle())
+                .help("Чем подводить итоги: модель на Mac или по ключу API")
+                .padding(.vertical, -8))) {
             if let p = model.summaryProgress {
                 VStack(alignment: .leading, spacing: 6) {
                     ThinProgress(value: p.fraction)
                     ProgressStatus(text: p.text, action: "Остановить") { model.cancelSummary() }
                 }
-            } else if let p = llm.progress {
+            } else if let p = llm.progress, let tier = llm.downloading {
                 VStack(alignment: .leading, spacing: 6) {
                     ThinProgress(value: p)
-                    ProgressStatus(text: "Загрузка модели · \(Int(p * 100)) % из \(llm.sizeText)", action: "Отменить") { llm.cancel() }
+                    ProgressStatus(text: "Загрузка модели · \(Int(p * 100)) % из \(FileSizeText.string(tier.spec.fileSize))",
+                                   action: "Отменить") { llm.cancel() }
                 }
             } else if model.summary != nil {
                 HStack(spacing: 8) {
@@ -133,15 +152,199 @@ struct SummarySection: View {
                     }
                 }
                 .buttonStyle(SecondaryButtonStyle())
-                Text(llm.isInstalled
-                     ? "Краткое содержание, решения и задачи — локальной моделью, без интернета."
-                     : "Краткое содержание, решения и задачи. Один раз скачается языковая модель · \(llm.sizeText); дальше всё работает без интернета.")
+                Text(note)
                     .font(Theme.ui(11)).foregroundStyle(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
             }
             if let e = model.summaryError ?? llm.error {
                 Text(e).font(Theme.ui(11.5)).foregroundStyle(Theme.danger).fixedSize(horizontal: false, vertical: true)
             }
         }
+    }
+
+    private var note: String {
+        switch llm.engine {
+        case .local(let t):
+            return llm.installed.contains(t)
+                ? "\(t.title) модель · \(t.spec.displayName), на этом Mac, без интернета."
+                : "\(t.title) модель · один раз скачается \(FileSizeText.string(t.spec.fileSize)); дальше без интернета."
+        case .cloud(let p):
+            return llm.isReady ? "Через \(p.title) по вашему ключу: текст встречи уйдёт провайдеру."
+                               : "Выбран \(p.title), но ключ не указан — откройте настройки итогов."
+        }
+    }
+}
+
+// MARK: - Settings
+
+/// Where summaries are made: three local models or a cloud model with the
+/// user's key.
+struct SummarySettingsSheet: View {
+    @ObservedObject var llm = SummaryModelController.shared
+    var dismiss: () -> Void
+    @State private var provider: CloudProvider = .anthropic
+    @State private var key = ""
+    @State private var modelName = ""
+    @State private var baseURL = ""
+    @State private var checking = false
+    @State private var checkResult: String?
+    @State private var checkOK = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Итоги встречи").titleStyle(20).foregroundStyle(Theme.text)
+            Text("Чем составлять краткое содержание, решения и задачи.")
+                .font(Theme.ui(12)).foregroundStyle(Theme.secondary).padding(.top, 3)
+
+            Text("На этом Mac — без интернета").font(Theme.ui(12, weight: .semibold)).foregroundStyle(Theme.secondary)
+                .padding(.top, 18).padding(.bottom, 8)
+            VStack(spacing: 8) {
+                ForEach(SummaryModelTier.allCases) { tier in tierRow(tier) }
+            }
+
+            Text("По ключу API — текст встречи уходит провайдеру").font(Theme.ui(12, weight: .semibold)).foregroundStyle(Theme.secondary)
+                .padding(.top, 18).padding(.bottom, 8)
+            cloudBlock
+
+            HStack {
+                if let e = llm.error { Text(e).font(Theme.ui(11.5)).foregroundStyle(Theme.danger).lineLimit(2) }
+                Spacer()
+                Button("Готово", action: dismiss)
+                    .buttonStyle(PrimaryButtonStyle()).frame(width: 120)
+                    .keyboardShortcut(.defaultAction)
+            }
+            .padding(.top, 20)
+        }
+        .padding(24)
+        .frame(width: 560)
+        .background(Theme.background)
+        .onAppear {
+            if case .cloud(let p) = llm.engine { provider = p }
+            loadProvider()
+        }
+        .onChange(of: provider) { _, _ in loadProvider() }
+    }
+
+    private func loadProvider() {
+        key = APIKeychain.key(for: provider) ?? ""
+        modelName = llm.model(for: provider)
+        baseURL = llm.baseURL.isEmpty ? provider.defaultBaseURL : llm.baseURL
+        checkResult = nil
+    }
+
+    // MARK: Local
+
+    private func tierRow(_ tier: SummaryModelTier) -> some View {
+        let selected = llm.engine == .local(tier)
+        let shape = RoundedRectangle(cornerRadius: 9, style: .continuous)
+        return HStack(spacing: 12) {
+            Image(systemName: selected ? "largecircle.fill.circle" : "circle")
+                .font(.system(size: 15)).foregroundStyle(selected ? Theme.accent : Theme.tertiary)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(tier.title).font(Theme.ui(13, weight: .semibold)).foregroundStyle(Theme.text)
+                    Text("\(tier.spec.displayName) · \(FileSizeText.string(tier.spec.fileSize))")
+                        .font(Theme.ui(11.5).monospacedDigit()).foregroundStyle(Theme.secondary)
+                }
+                Text(tier.detail).font(Theme.ui(11.5)).foregroundStyle(Theme.secondary)
+            }
+            Spacer(minLength: 8)
+            if llm.downloading == tier, let p = llm.progress {
+                ThinProgress(value: p).frame(width: 70)
+                Button { llm.cancel() } label: { Image(systemName: "xmark") }.buttonStyle(IconButtonStyle())
+            } else if llm.installed.contains(tier) {
+                Text("загружена").font(Theme.ui(11)).foregroundStyle(Theme.tertiary)
+                Button { llm.remove(tier) } label: { Image(systemName: "trash") }
+                    .buttonStyle(IconButtonStyle()).help("Удалить модель с диска")
+            } else {
+                Button("Загрузить") { Task { await llm.download(tier) } }
+                    .buttonStyle(SecondaryButtonStyle(fill: false))
+                    .disabled(llm.progress != nil)
+            }
+        }
+        .padding(.horizontal, 12).padding(.vertical, 9)
+        .background(shape.fill(selected ? Theme.accentSoft : Theme.surface))
+        .overlay(shape.strokeBorder(selected ? Theme.accent.opacity(0.35) : Theme.hairline))
+        .contentShape(shape)
+        .onTapGesture { llm.engine = .local(tier) }
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+
+    // MARK: Cloud
+
+    private var cloudBlock: some View {
+        let selected = llm.engine == .cloud(provider)
+        let shape = RoundedRectangle(cornerRadius: 9, style: .continuous)
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                Image(systemName: selected ? "largecircle.fill.circle" : "circle")
+                    .font(.system(size: 15)).foregroundStyle(selected ? Theme.accent : Theme.tertiary)
+                    .onTapGesture { if llm.keyed.contains(provider) { llm.engine = .cloud(provider) } }
+                Picker("", selection: $provider) {
+                    ForEach(CloudProvider.allCases) { Text($0.title).tag($0) }
+                }
+                .labelsHidden()
+                .frame(maxWidth: 260)
+                Spacer()
+                if llm.keyed.contains(provider) {
+                    Label("ключ сохранён", systemImage: "key.fill").font(Theme.ui(11)).foregroundStyle(Theme.tertiary)
+                }
+            }
+            field("Ключ", SecureField(provider.keyHint, text: $key))
+            field("Модель", TextField(provider.defaultModel.isEmpty ? "например, deepseek-chat" : provider.defaultModel, text: $modelName))
+            if provider == .compatible {
+                field("Адрес", TextField("https://…/v1", text: $baseURL))
+            }
+            HStack(spacing: 12) {
+                Button("Сохранить и выбрать") { save() }
+                    .buttonStyle(SecondaryButtonStyle(fill: false))
+                    .disabled(key.trimmingCharacters(in: .whitespaces).isEmpty)
+                Button(checking ? "Проверяю…" : "Проверить") { Task { await check() } }
+                    .buttonStyle(LinkButtonStyle())
+                    .disabled(checking || !llm.keyed.contains(provider))
+                if llm.keyed.contains(provider) {
+                    Button("Удалить ключ") {
+                        llm.removeKey(for: provider)
+                        key = ""
+                        if llm.engine == .cloud(provider) { llm.engine = .local(.medium) }
+                    }
+                    .buttonStyle(LinkButtonStyle())
+                }
+                Spacer()
+            }
+            if let r = checkResult {
+                Text(r).font(Theme.ui(11.5)).foregroundStyle(checkOK ? Theme.accent : Theme.danger)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Text("Ключ хранится в связке ключей этого Mac. Звук и записи никуда не уходят — только текст расшифровки и только когда вы нажимаете «Подвести итоги».")
+                .font(Theme.ui(11)).foregroundStyle(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(12)
+        .background(shape.fill(selected ? Theme.accentSoft : Theme.surface))
+        .overlay(shape.strokeBorder(selected ? Theme.accent.opacity(0.35) : Theme.hairline))
+    }
+
+    private func field<F: View>(_ label: String, _ control: F) -> some View {
+        HStack(spacing: 10) {
+            Text(label).font(Theme.ui(12)).foregroundStyle(Theme.secondary).frame(width: 56, alignment: .leading)
+            control.textFieldStyle(.roundedBorder).font(Theme.ui(12.5))
+        }
+    }
+
+    private func save() {
+        llm.saveKey(key, for: provider)
+        llm.setModel(modelName, for: provider)
+        if provider == .compatible { llm.baseURL = baseURL }
+        llm.engine = .cloud(provider)
+        checkResult = nil
+    }
+
+    private func check() async {
+        save()
+        checking = true
+        let err = await llm.check(provider)
+        checking = false
+        checkOK = err == nil
+        checkResult = err ?? "Ключ работает, модель отвечает."
     }
 }
 

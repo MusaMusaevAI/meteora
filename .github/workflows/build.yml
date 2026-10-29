@@ -83,7 +83,7 @@ jobs:
       - name: Build app
         id: app
         run: scripts/build_app.sh 2>&1 | tee logs/build.txt
-      # Summary model for the LLM self-test (~2.7 GB): restored from the cache
+      # Summary model for the LLM self-test (the light tier, ~0.6 GB): restored from the cache
       # keyed by its pinned SHA-256, downloaded and verified only on a miss.
       # The app verifies it again before use.
       - name: Restore summary model
@@ -91,17 +91,17 @@ jobs:
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/Downloads/Meteora-CI-models
-          key: llm-qwen3.5-4b-q4km-00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4
+          key: llm-qwen3.5-0.8b-q6k-8408c5c222111cec253682b49eece2a02ed641ded68490001ec4ee160e71098e
       - name: Summary model (hash-pinned)
         id: llm-model
         continue-on-error: true
-        run: scripts/fetch_summary_model.sh 2>&1 | tee logs/llm-model.txt
+        run: scripts/fetch_summary_model.sh light 2>&1 | tee logs/llm-model.txt
       - name: Save summary model
         if: steps.llm-cache.outputs.cache-hit != 'true' && steps.llm-model.outcome == 'success'
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/Downloads/Meteora-CI-models
-          key: llm-qwen3.5-4b-q4km-00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4
+          key: llm-qwen3.5-0.8b-q6k-8408c5c222111cec253682b49eece2a02ed641ded68490001ec4ee160e71098e
       - name: Self-test (sandboxed app, real WebKit)
         id: selftest
         continue-on-error: true

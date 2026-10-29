@@ -117,6 +117,7 @@ final class MeetingModel: ObservableObject {
     @Published var summary: MeetingSummary?
     @Published var summaryProgress: SummaryProgress?
     @Published var summaryError: String?
+    @Published var summarySettingsShown = false
     var summaryToken: CancelToken?
     /// A name chosen for the meeting (from its summary); the file keeps its own.
     @Published var customTitle: String?

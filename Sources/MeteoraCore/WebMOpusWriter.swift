@@ -248,7 +248,7 @@ public final class WebMOpusWriter {
     /// for "unknown", so a length holds at most 2^(7·n) − 2.
     static func sizeVint(_ value: UInt64) -> Data {
         var n = 1
-        while n < 8, value > (UInt64(1) << (7 * UInt64(n))) - 2 { n += 1 }
+        while n < 8 && value > (UInt64(1) << (7 * UInt64(n))) - 2 { n += 1 }
         let marked = value | (UInt64(1) << (7 * UInt64(n)))
         return bigEndian(marked, bytes: n)
     }
@@ -264,7 +264,7 @@ public final class WebMOpusWriter {
 
     static func uint(_ id: UInt32, _ value: UInt64) -> Data {
         var n = 1
-        while n < 8, value >> (8 * UInt64(n)) != 0 { n += 1 }
+        while n < 8 && value >> (8 * UInt64(n)) != 0 { n += 1 }
         return element(id, bigEndian(value, bytes: n))
     }
 
