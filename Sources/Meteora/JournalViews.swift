@@ -181,7 +181,7 @@ struct JournalRow: View {
             .frame(width: 32, height: 32)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(entry.title)
+                Text(entry.customTitle ?? entry.title)
                     .font(Theme.ui(13.5, weight: .medium))
                     .foregroundStyle(missing ? Theme.tertiary : Theme.text)
                     .lineLimit(1)

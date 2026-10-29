@@ -11,6 +11,8 @@ struct JournalEntry: Codable, Identifiable, Equatable {
     var path: String
     var fileName: String
     var title: String
+    /// A name the user chose (from the summary); nil = the file name.
+    var customTitle: String?
     /// When the meeting happened: from a Telemost-style name
     /// («… 28.10.26 14-05-31»), else the file's creation date.
     var date: Date
@@ -66,6 +68,14 @@ final class MeetingJournal: ObservableObject {
         if let transcript { Self.apply(transcript, to: &entry) }
         upsert(entry)
     }
+
+    func setTitle(_ title: String, for url: URL) {
+        guard var entry = entries.first(where: { $0.path == url.path }) else { return }
+        entry.customTitle = title
+        upsert(entry)
+    }
+
+    func customTitle(for url: URL) -> String? { entries.first { $0.path == url.path }?.customTitle }
 
     func updateTranscript(for url: URL, transcript: Transcript) {
         guard var entry = entries.first(where: { $0.path == url.path }) else { return }
@@ -138,7 +148,7 @@ final class MeetingJournal: ObservableObject {
         let words = query.lowercased().split(whereSeparator: \.isWhitespace).map(String.init)
         guard !words.isEmpty else { return entries }
         return entries.filter { e in
-            let hay = (e.title + " " + e.fileName).lowercased() + " " + e.searchText
+            let hay = (e.title + " " + (e.customTitle ?? "") + " " + e.fileName).lowercased() + " " + e.searchText
             return words.allSatisfy { hay.contains($0) }
         }
     }

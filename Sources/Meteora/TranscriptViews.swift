@@ -10,6 +10,7 @@ struct BottomPanel: View {
     var height: Double = 220
 
     private var tab: MeetingModel.BottomTab {
+        if model.bottomTab == .summary, model.showsSummaryTab { return .summary }
         if model.bottomTab == .transcript, model.showsTranscriptTab { return .transcript }
         if model.showsFramesTab { return .frames }
         return .transcript
@@ -28,6 +29,11 @@ struct BottomPanel: View {
                         model.bottomTab = .transcript
                     }
                 }
+                if model.showsSummaryTab {
+                    TabTitle(title: "Итоги", count: 0, selected: tab == .summary) {
+                        model.bottomTab = .summary
+                    }
+                }
                 Spacer()
                 if tab == .transcript, !model.displayedSegments.isEmpty {
                     TranscriptLayoutPicker()
@@ -44,6 +50,7 @@ struct BottomPanel: View {
                 case .frames: FramesStrip(model: model, player: player,
                                           thumbHeight: min(300, max(70, height - 92 - (model.sceneError == nil ? 0 : 22))))
                 case .transcript: TranscriptList(model: model, player: player)
+                case .summary: SummaryPanel(model: model)
                 }
             }
             .frame(maxHeight: .infinity, alignment: .top)

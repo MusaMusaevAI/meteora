@@ -193,7 +193,7 @@ struct MainView: View {
     var body: some View {
         HStack(spacing: 0) {
             GeometryReader { g in
-                let hasPanel = model.showsFramesTab || model.showsTranscriptTab
+                let hasPanel = model.showsFramesTab || model.showsTranscriptTab || model.showsSummaryTab
                 let available = g.size.height - 4 - 18
                 let maxBottom = max(Self.minBottom, available - Self.minStage - 14)
                 let height = min(max(Self.minBottom, bottomHeight), maxBottom)
@@ -660,6 +660,7 @@ struct Sidebar: View {
                     RecordingSection(model: model)
                     if model.audioOrigin != nil { Hairline(); TranscriptCard(model: model) }
                     if !model.speakers.isEmpty { Hairline(); SpeakersSection(model: model) }
+                    if model.transcript != nil { Hairline(); SummarySection(model: model) }
                     Hairline()
                     AudioSection(model: model)
                     if model.hasVideo { Hairline(); FramesSection(model: model) }

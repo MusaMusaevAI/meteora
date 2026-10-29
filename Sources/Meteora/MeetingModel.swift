@@ -3,6 +3,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 import MeteoraCore
 import MeteoraASR
+import MeteoraLLM
 
 /// Thread-safe cancellation flag shared with background work.
 final class CancelToken: @unchecked Sendable {
@@ -112,7 +113,13 @@ final class MeetingModel: ObservableObject {
     @Published var toast: Toast?
 
     // Transcription (GigaAM-v3 on this Mac)
-    enum BottomTab: Hashable { case frames, transcript }
+    enum BottomTab: Hashable { case frames, transcript, summary }
+    @Published var summary: MeetingSummary?
+    @Published var summaryProgress: SummaryProgress?
+    @Published var summaryError: String?
+    var summaryToken: CancelToken?
+    /// A name chosen for the meeting (from its summary); the file keeps its own.
+    @Published var customTitle: String?
     @Published var bottomTab: BottomTab = .frames
     @Published private(set) var transcript: Transcript?
     @Published private(set) var liveSegments: [TranscriptSegment] = []
@@ -131,7 +138,7 @@ final class MeetingModel: ObservableObject {
         return "≈ \(minutes) мин"
     }
 
-    var title: String { url.map { sanitizedBaseName($0) } ?? "Meteora" }
+    var title: String { customTitle ?? url.map { sanitizedBaseName($0) } ?? "Meteora" }
     var hasVideo: Bool { info?.video != nil }
     var canExportAudio: Bool { audioOrigin != nil && exportProgress == nil }
     var isBusy: Bool { exportProgress != nil || sceneProgress != nil }
@@ -253,6 +260,8 @@ final class MeetingModel: ObservableObject {
         loadState = .ready
         transcript = TermDictionaryStore.shared.correct(TranscriptStore.load(for: url))
         if transcript != nil { bottomTab = .transcript }
+        summary = SummaryStore.load(for: url)
+        customTitle = MeetingJournal.shared.customTitle(for: url)
         if let info { MeetingJournal.shared.record(url: url, info: info, transcript: transcript) }
         startAudioAnalysis()
         action?()
@@ -350,7 +359,7 @@ final class MeetingModel: ObservableObject {
         transcript = TermDictionaryStore.shared.correct(saved)
     }
 
-    var isWorking: Bool { transcribeProgress != nil || sceneProgress != nil || exportProgress != nil || diarizeProgress != nil }
+    var isWorking: Bool { transcribeProgress != nil || sceneProgress != nil || exportProgress != nil || diarizeProgress != nil || summaryProgress != nil }
 
     /// Back to the list of meetings. Asks first if work would be lost.
     func requestClose() {
@@ -369,6 +378,11 @@ final class MeetingModel: ObservableObject {
         loadToken?.cancel(); exportToken?.cancel(); sceneToken?.cancel(); audioToken?.cancel(); transcribeToken?.cancel(); diarizeToken?.cancel()
         diarizeProgress = nil
         diarizeError = nil
+        summaryToken?.cancel()
+        summary = nil
+        summaryProgress = nil
+        summaryError = nil
+        customTitle = nil
         transcript = nil
         liveSegments = []
         transcribeProgress = nil
@@ -800,4 +814,5 @@ final class MeetingModel: ObservableObject {
 extension MeetingModel {
     var showsFramesTab: Bool { hasVideo && (!frames.isEmpty || sceneProgress != nil || scenesDone) }
     var showsTranscriptTab: Bool { transcript != nil || transcribeProgress != nil || !liveSegments.isEmpty }
+    var showsSummaryTab: Bool { summary != nil || summaryProgress != nil }
 }
