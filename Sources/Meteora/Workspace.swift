@@ -68,7 +68,7 @@ struct ContentView: View {
                     .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
-        .background(NebulaBackground(intensity: ready ? 0.6 : 1).ignoresSafeArea())
+        .background(NebulaBackground(intensity: ready ? 0.6 : 1, animated: !ready).ignoresSafeArea())
         .frame(minWidth: 760, minHeight: 600)
         .animation(.easeOut(duration: 0.22), value: showLibrary)
         .animation(.easeOut(duration: 0.22), value: showInspector)
@@ -152,13 +152,11 @@ struct ContentView: View {
     }
 }
 
-/// Side panes: frosted glass over the night sky, tinted with the pane colour.
+/// Side panes: a quiet solid layer. (A live blur over the animated sky
+/// looked nice but kept the GPU busy all the time.)
 struct PaneBackground: View {
     var body: some View {
-        ZStack {
-            Rectangle().fill(.ultraThinMaterial)
-            Theme.inspector.opacity(0.72)
-        }
+        Theme.inspector.opacity(0.94)
     }
 }
 

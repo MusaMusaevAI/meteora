@@ -439,6 +439,9 @@ struct NebulaBackground: View {
     /// 0…1: how present the glow is (start screen 1, working view less).
     var intensity: Double = 1
     var stars = true
+    /// The slow drift. Off behind the working view: the background is
+    /// mostly covered there, and every redraw costs GPU and battery.
+    var animated = true
     @Environment(\.colorScheme) private var scheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -452,15 +455,16 @@ struct NebulaBackground: View {
                 LinearGradient(colors: [Color(nsColor: NSColor(hex: 0xDDE3EC)).opacity(0.9 * intensity), .clear],
                                startPoint: .top, endPoint: .center)
             }
-            if reduceMotion {
+            if reduceMotion || !animated {
                 glows(t: 0)
             } else {
-                TimelineView(.animation(minimumInterval: 1 / 15)) { ctx in
+                // Drift cycles take about a minute: 6 frames a second is smooth.
+                TimelineView(.animation(minimumInterval: 1 / 6)) { ctx in
                     glows(t: ctx.date.timeIntervalSinceReferenceDate)
                 }
             }
             if stars {
-                Starfield(animated: !reduceMotion, light: scheme == .light).opacity(intensity)
+                Starfield(animated: !reduceMotion && animated, light: scheme == .light).opacity(intensity)
                 if !reduceMotion { MeteorShower(light: scheme == .light).opacity(min(1, intensity * 1.4)) }
             }
         }
@@ -513,7 +517,7 @@ struct Starfield: View {
 
     var body: some View {
         if animated {
-            TimelineView(.animation(minimumInterval: 1 / 10)) { ctx in canvas(t: ctx.date.timeIntervalSinceReferenceDate) }
+            TimelineView(.animation(minimumInterval: 1 / 4)) { ctx in canvas(t: ctx.date.timeIntervalSinceReferenceDate) }
         } else {
             canvas(t: 0)
         }
@@ -568,7 +572,7 @@ struct GlowHalo: View {
     var size: CGFloat
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 20, paused: reduceMotion)) { ctx in
+        TimelineView(.animation(minimumInterval: 1 / 12, paused: reduceMotion)) { ctx in
             let t = ctx.date.timeIntervalSinceReferenceDate
             let angle = Angle.degrees(reduceMotion ? 0 : (t * 9).truncatingRemainder(dividingBy: 360))
             Circle()
