@@ -201,7 +201,7 @@ struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         HoverReader { hover in
             let shape = RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
-            configuration.label
+            return configuration.label
                 .font(Theme.ui(13, weight: .semibold))
                 .foregroundStyle(Theme.onAccent)
                 .padding(.horizontal, 16)
