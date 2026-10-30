@@ -207,8 +207,9 @@ jobs:
 
   publish:
     needs: [macos, ios]
-    # Only a green Mac build replaces what users download.
-    if: ${{ !cancelled() && needs.macos.result == 'success' }}
+    # Only a green Mac build replaces what users download; a failed one
+    # publishes just its logs (branch build-logs) for diagnosis.
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -222,7 +223,24 @@ jobs:
         with:
           name: ios-output
           path: out/ios
+      - name: Push logs of a failed build to build-logs branch
+        if: ${{ needs.macos.result != 'success' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JOB_STATUS: ${{ needs.macos.outputs.status }}
+        run: |
+          mkdir -p failed && cd failed
+          cp -R ../out/logs ../out/selftest . 2>/dev/null || true
+          mkdir -p ios && cp -R ../out/ios/logs ../out/ios/selftest ../out/ios/STATUS ios/ 2>/dev/null || true
+          echo "$GITHUB_SHA" > SOURCE_SHA
+          echo "$JOB_STATUS" > STATUS
+          echo "$GITHUB_RUN_NUMBER" > BUILD
+          git init -q -b build-logs
+          git -c user.name="meteora-ci" -c user.email="meteora-ci@users.noreply.github.com" add -A
+          git -c user.name="meteora-ci" -c user.email="meteora-ci@users.noreply.github.com" commit -qm "failed build $GITHUB_SHA"
+          git push -qf "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" build-logs
       - name: Push to build-output branch
+        if: ${{ needs.macos.result == 'success' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JOB_STATUS: ${{ needs.macos.outputs.status }}
