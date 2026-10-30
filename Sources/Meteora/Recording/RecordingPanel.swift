@@ -104,7 +104,12 @@ struct RecordingPanel: View {
         switch recorder.source {
         case .microphone: return "Ваш голос и всё, что слышит микрофон."
         case .system: return "Всё, что звучит на Mac: встреча в браузере, Zoom, Телемост. Микрофон не используется."
-        case .both: return "Микрофон и звук Mac сводятся в одну дорожку — слышны все участники."
+        case .both:
+            let mic = catalog.device(recorder.deviceID ?? catalog.defaultDeviceID)
+            if mic?.kind == .bluetooth {
+                return "Микрофон и звук Mac сводятся в одну дорожку. С микрофоном Bluetooth-наушников macOS переводит их в режим гарнитуры, и голоса собеседников звучат глуше — для лучшего качества выберите встроенный микрофон Mac, а наушники оставьте для звука."
+            }
+            return "Микрофон и звук Mac сводятся в одну дорожку — слышны все участники."
         }
     }
 

@@ -764,7 +764,7 @@ final class AutoFolderStore: ObservableObject {
                              formats: f.orderedFormats, options: f.exportOptions ?? ExportSettings.shared.options,
                              reuseTranscript: true, separateSpeakers: f.separateSpeakers, summarize: f.summarize,
                              addToJournal: isShared)
-        let processor = self.processor ?? MeetingProcessor()
+        let processor = self.processor ?? MeetingProcessor(background: true)
         self.processor = processor
         do {
             let outcome = try await processor.process(job, token: token) { [weak self] stage in

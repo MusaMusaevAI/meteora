@@ -102,6 +102,80 @@ extension MeetingModel {
         toast = Toast(message: "Итоги скопированы")
     }
 
+    // MARK: Mail
+
+    /// The summary as an e-mail; the transcript goes along as Word.
+    func meetingMail() -> MeetingMail? {
+        guard let s = summary else { return nil }
+        var attachments: [MeetingMail.Attachment] = []
+        if let tr = transcript,
+           let r = try? TranscriptExporter.export(tr, frames: [], meta: ReportExporter.Meta(title: title, sourceName: url?.lastPathComponent ?? "", duration: info?.duration ?? 0), format: .docx) {
+            attachments.append(MeetingMail.Attachment(fileName: "\(title) — расшифровка.docx",
+                                                      mimeType: MeetingMail.mimeType(forExtension: "docx"), data: r.primary))
+        }
+        return MeetingMail(summary: s, attachments: attachments,
+                           footer: attachments.isEmpty ? "Итоги составлены в Meteora." : "Полная расшифровка — во вложении. Итоги составлены в Meteora.")
+    }
+
+    /// A new message in the default mail app. With an attachment through the
+    /// system's «Compose e-mail» service when the mail app supports it,
+    /// otherwise a plain mailto link (text only).
+    func mailSummary() {
+        guard let mail = meetingMail() else { return }
+        var items: [Any] = [mail.plainText]
+        var files: [URL] = []
+        for a in mail.attachments {
+            let u = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+                .appendingPathComponent(a.fileName)
+            try? FileManager.default.createDirectory(at: u.deletingLastPathComponent(), withIntermediateDirectories: true)
+            if (try? a.data.write(to: u)) != nil { files.append(u) }
+        }
+        items.append(contentsOf: files)
+        if let service = NSSharingService(named: .composeEmail), service.canPerform(withItems: items) {
+            service.subject = mail.subject
+            service.perform(withItems: items)
+        } else {
+            NSWorkspace.shared.open(mail.mailtoURL)
+        }
+    }
+
+    /// A complete draft (.eml) opened in the app that handles .eml (Outlook,
+    /// Thunderbird, МойОфис…), or saved where the user picks.
+    func openMailDraft(save: Bool) {
+        guard let mail = meetingMail() else { return }
+        let data = mail.eml()
+        if save {
+            let panel = NSSavePanel()
+            panel.allowedContentTypes = [.init(filenameExtension: "eml") ?? .data]
+            panel.nameFieldStringValue = "\(title) — итоги.eml"
+            guard panel.runModal() == .OK, let dest = panel.url else { return }
+            do {
+                try data.write(to: dest, options: .atomic)
+                toast = Toast(message: "Письмо сохранено — откройте его в почтовой программе", revealURL: dest)
+            } catch {
+                toast = Toast(message: "Не удалось сохранить: \(error.localizedDescription)", isError: true)
+            }
+            return
+        }
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let u = dir.appendingPathComponent("\(title) — итоги.eml")
+        guard (try? data.write(to: u)) != nil else { return }
+        if !NSWorkspace.shared.open(u) {
+            toast = Toast(message: "Нет программы для писем .eml — сохраните письмо и откройте его в почте", isError: true)
+        }
+    }
+
+    /// For web mail: formatted text in the clipboard, ready to paste.
+    func copySummaryForMail() {
+        guard let mail = meetingMail() else { return }
+        let pb = NSPasteboard.general
+        pb.clearContents()
+        pb.setString(mail.html, forType: .html)
+        pb.setString(mail.plainText, forType: .string)
+        toast = Toast(message: "Итоги скопированы — вставьте в письмо")
+    }
+
     func saveSummary() {
         guard let s = summary else { return }
         let panel = NSSavePanel()
@@ -381,6 +455,7 @@ struct SummaryPanel: View {
                             Button("Назвать так встречу") { model.useSummaryTitle() }.buttonStyle(LinkButtonStyle())
                         }
                         Button("Сохранить .md…") { model.saveSummary() }.buttonStyle(LinkButtonStyle())
+                        MailMenu(model: model)
                     }
                     if !s.summary.isEmpty {
                         Text(s.summary).font(Theme.ui(13)).foregroundStyle(Theme.text).lineSpacing(3).textSelection(.enabled)
@@ -416,5 +491,27 @@ struct SummaryPanel: View {
                 }
             }
         }
+    }
+}
+
+/// «Отправить ▾»: every way a summary can reach any mail client.
+struct MailMenu: View {
+    @ObservedObject var model: MeetingModel
+    var body: some View {
+        Menu {
+            Button("Новое письмо в почтовой программе") { model.mailSummary() }
+            Button("Письмо с расшифровкой (.eml) — Outlook, Thunderbird, МойОфис") { model.openMailDraft(save: false) }
+            Button("Сохранить письмо .eml…") { model.openMailDraft(save: true) }
+            Divider()
+            Button("Скопировать для веб-почты") { model.copySummaryForMail() }
+        } label: {
+            Label("Отправить", systemImage: "envelope")
+                .font(Theme.ui(12.5, weight: .medium))
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.visible)
+        .fixedSize()
+        .tint(Theme.accent)
+        .help("Отправить итоги по почте")
     }
 }

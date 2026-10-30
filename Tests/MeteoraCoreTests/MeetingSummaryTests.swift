@@ -125,3 +125,47 @@ final class MeetingSummaryTests: XCTestCase {
         XCTAssertEqual(MeetingTranscriptText.speakers(tr), ["Анна", "Олег"])
     }
 }
+
+final class MeetingMailTests: XCTestCase {
+    let summary = MeetingSummary(title: "Рассылка по ПДС", summary: "Обсудили старт <рассылки>.",
+                                 keyPoints: ["Старт 10 ноября"], decisions: ["Стартуем 10 ноября"],
+                                 actionItems: ["Олег: тексты писем до пятницы"])
+
+    func testMailtoCarriesSubjectAndBody() {
+        let mail = MeetingMail(summary: summary, recipients: ["team@example.com"])
+        let url = mail.mailtoURL.absoluteString
+        XCTAssertTrue(url.hasPrefix("mailto:team@example.com?subject="))
+        XCTAssertTrue(url.contains("&body="))
+        let comps = URLComponents(string: url)
+        XCTAssertEqual(comps?.queryItems?.first { $0.name == "subject" }?.value, "Итоги: Рассылка по ПДС")
+        XCTAssertTrue(comps?.queryItems?.first { $0.name == "body" }?.value?.contains("Олег: тексты писем") == true)
+    }
+
+    func testLongMailtoIsShortened() {
+        var long = summary
+        long.keyPoints = Array(repeating: "Очень длинный пункт про рассылку, сроки и ответственных", count: 80)
+        let url = MeetingMail(summary: long).mailtoURL
+        XCTAssertLessThanOrEqual(url.absoluteString.count, MeetingMail.mailtoLimit)
+        XCTAssertTrue(url.absoluteString.hasPrefix("mailto:?subject="))
+    }
+
+    func testEmlIsAnUnsentMimeMessageWithAttachment() {
+        let att = MeetingMail.Attachment(fileName: "Встреча — расшифровка.docx",
+                                         mimeType: MeetingMail.mimeType(forExtension: "docx"), data: Data([1, 2, 3]))
+        let mail = MeetingMail(summary: summary, attachments: [att], footer: "Подпись")
+        let text = String(decoding: mail.eml(date: Date(timeIntervalSince1970: 0), boundary: "B"), as: UTF8.self)
+        XCTAssertTrue(text.contains("X-Unsent: 1\r\n"))
+        XCTAssertTrue(text.contains("Subject: =?UTF-8?B?"))
+        XCTAssertTrue(text.contains("Content-Type: multipart/mixed; boundary=\"mixed-B\""))
+        XCTAssertTrue(text.contains("Content-Type: text/html; charset=utf-8"))
+        XCTAssertTrue(text.contains("filename*=UTF-8''"))
+        XCTAssertTrue(text.contains("AQID")) // base64 of 1,2,3
+        XCTAssertTrue(text.hasSuffix("--mixed-B--\r\n"))
+    }
+
+    func testHtmlEscapesModelText() {
+        let html = MeetingMail(summary: summary).html
+        XCTAssertTrue(html.contains("&lt;рассылки&gt;"))
+        XCTAssertFalse(html.contains("<рассылки>"))
+    }
+}

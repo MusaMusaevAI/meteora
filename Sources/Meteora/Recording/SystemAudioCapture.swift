@@ -46,8 +46,7 @@ final class SystemAudioCapture: CaptureSource, @unchecked Sendable {
 
         do {
             var asbd = try CoreAudioProperty.read(tap, kAudioTapPropertyFormat, initial: AudioStreamBasicDescription())
-            guard asbd.mFormatID == kAudioFormatLinearPCM, asbd.mBytesPerFrame > 0,
-                  let format = AVAudioFormat(streamDescription: &asbd) else { throw RecorderError.systemAudio(-1) }
+            guard asbd.mFormatID == kAudioFormatLinearPCM, asbd.mBytesPerFrame > 0 else { throw RecorderError.systemAudio(-1) }
 
             // 2. A private aggregate device clocked by the current output,
             //    with the tap as its input.
@@ -70,14 +69,30 @@ final class SystemAudioCapture: CaptureSource, @unchecked Sendable {
             guard err == noErr, device != kAudioObjectUnknown else { throw RecorderError.systemAudio(err) }
             aggregateID = device
 
+            // The tap reports its own format, but samples arrive at the rate
+            // of the aggregate device, i.e. of the current output. They differ
+            // with Bluetooth headphones (a headset in call mode runs at 16 or
+            // 24 kHz): taking the tap's word for it played the other side of
+            // the call too fast and garbled. Trust the device.
+            let tapRate = asbd.mSampleRate
+            if let deviceRate = try? CoreAudioProperty.read(device, kAudioDevicePropertyNominalSampleRate, initial: Float64(0)),
+               deviceRate > 0 {
+                asbd.mSampleRate = deviceRate
+            }
+            recorderLog.info("system audio: tap \(tapRate, privacy: .public) Hz, device \(asbd.mSampleRate, privacy: .public) Hz, \(asbd.mChannelsPerFrame, privacy: .public) ch")
+            guard let initialFormat = AVAudioFormat(streamDescription: &asbd) else { throw RecorderError.systemAudio(-1) }
+            activeRate = asbd.mSampleRate
+            let rate = RateProbe(format: initialFormat)
+
             // 3. IO block: copy and hand over. If the output device has input
             //    streams of its own, the tap's buffers come last in the list.
             let interleaved = (asbd.mFormatFlags & kAudioFormatFlagIsNonInterleaved) == 0
             let buffersNeeded = interleaved ? 1 : Int(asbd.mChannelsPerFrame)
             let bytesPerFrame = asbd.mBytesPerFrame
             let deliver = self.deliver
-            err = AudioDeviceCreateIOProcIDWithBlock(&procID, device, ioQueue) { _, inputData, _, _, _ in
-                if let copy = SystemAudioCapture.copy(inputData, format: format, buffers: buffersNeeded, bytesPerFrame: bytesPerFrame) {
+            err = AudioDeviceCreateIOProcIDWithBlock(&procID, device, ioQueue) { now, inputData, _, _, _ in
+                if let copy = SystemAudioCapture.copy(inputData, format: rate.format, buffers: buffersNeeded, bytesPerFrame: bytesPerFrame) {
+                    rate.observe(frames: copy.frameLength, hostTime: now.pointee.mHostTime)
                     deliver(copy)
                 }
             }
@@ -134,12 +149,22 @@ final class SystemAudioCapture: CaptureSource, @unchecked Sendable {
 
     // MARK: Output device changes
 
+    /// Also follows the sample rate of the aggregate device: headphones that
+    /// switch to call mode change it in the middle of a meeting.
+    private var rateListenerDevice = AudioObjectID(kAudioObjectUnknown)
+    private var activeRate: Double = 0
+
     private func addRouteListener() {
         guard !listening else { return }
         var addr = CoreAudioProperty.address(kAudioHardwarePropertyDefaultOutputDevice)
         let status = AudioObjectAddPropertyListener(AudioObjectID(kAudioObjectSystemObject), &addr, systemOutputChanged,
                                                     Unmanaged.passUnretained(self).toOpaque())
         listening = status == noErr
+        var rateAddr = CoreAudioProperty.address(kAudioDevicePropertyNominalSampleRate)
+        if AudioObjectAddPropertyListener(aggregateID, &rateAddr, aggregateRateChanged,
+                                          Unmanaged.passUnretained(self).toOpaque()) == noErr {
+            rateListenerDevice = aggregateID
+        }
     }
 
     private func removeRouteListener() {
@@ -147,11 +172,64 @@ final class SystemAudioCapture: CaptureSource, @unchecked Sendable {
         var addr = CoreAudioProperty.address(kAudioHardwarePropertyDefaultOutputDevice)
         _ = AudioObjectRemovePropertyListener(AudioObjectID(kAudioObjectSystemObject), &addr, systemOutputChanged,
                                               Unmanaged.passUnretained(self).toOpaque())
+        if rateListenerDevice != kAudioObjectUnknown {
+            var rateAddr = CoreAudioProperty.address(kAudioDevicePropertyNominalSampleRate)
+            _ = AudioObjectRemovePropertyListener(rateListenerDevice, &rateAddr, aggregateRateChanged,
+                                                  Unmanaged.passUnretained(self).toOpaque())
+            rateListenerDevice = AudioObjectID(kAudioObjectUnknown)
+        }
         listening = false
     }
 
     fileprivate func outputDidChange() {
         onRouteChange?()
+    }
+
+    /// Rebuilds only when the rate really moved away from the one in use
+    /// (the notification also comes when a device merely re-announces it).
+    fileprivate func rateDidChange() {
+        guard aggregateID != kAudioObjectUnknown,
+              let rate = try? CoreAudioProperty.read(aggregateID, kAudioDevicePropertyNominalSampleRate, initial: Float64(0)),
+              rate > 0, abs(rate - activeRate) > 1 else { return }
+        recorderLog.info("system audio: device rate \(self.activeRate, privacy: .public) → \(rate, privacy: .public) Hz")
+        onRouteChange?()
+    }
+}
+
+/// Safety net for the sample rate: counts the frames that really arrive
+/// against the host clock. If, after a few seconds, they disagree with the
+/// declared rate by more than 4 %, buffers are labelled with the nearest
+/// standard rate from then on (the recorder's resampler follows the format).
+/// Touched only on the capture's IO queue.
+final class RateProbe: @unchecked Sendable {
+    private(set) var format: AVAudioFormat
+    private var frames: UInt64 = 0
+    private var startNanos: UInt64 = 0
+    private var checked = false
+
+    static let standardRates: [Double] = [8_000, 11_025, 16_000, 22_050, 24_000, 32_000, 44_100, 48_000, 88_200, 96_000]
+
+    init(format: AVAudioFormat) { self.format = format }
+
+    func observe(frames n: AVAudioFrameCount, hostTime: UInt64) {
+        guard !checked, hostTime != 0 else { return }
+        let nanos = AudioConvertHostTimeToNanos(hostTime)
+        if startNanos == 0 { startNanos = nanos; return }
+        frames += UInt64(n)
+        let seconds = Double(nanos &- startNanos) / 1e9
+        guard seconds >= 3 else { return }
+        checked = true
+        let measured = Double(frames) / seconds
+        let declared = format.sampleRate
+        guard abs(measured / declared - 1) > 0.04,
+              let nearest = Self.standardRates.min(by: { abs($0 - measured) < abs($1 - measured) }),
+              abs(nearest / measured - 1) < 0.04 else { return }
+        var asbd = format.streamDescription.pointee
+        asbd.mSampleRate = nearest
+        if let corrected = AVAudioFormat(streamDescription: &asbd) {
+            recorderLog.error("system audio: declared \(declared, privacy: .public) Hz, measured \(measured, privacy: .public) Hz, using \(nearest, privacy: .public) Hz")
+            format = corrected
+        }
     }
 }
 
@@ -161,6 +239,14 @@ private let systemOutputChanged: AudioObjectPropertyListenerProc = { _, _, _, cl
     guard let clientData else { return noErr }
     if #available(macOS 14.2, *) {
         Unmanaged<SystemAudioCapture>.fromOpaque(clientData).takeUnretainedValue().outputDidChange()
+    }
+    return noErr
+}
+
+private let aggregateRateChanged: AudioObjectPropertyListenerProc = { _, _, _, clientData in
+    guard let clientData else { return noErr }
+    if #available(macOS 14.2, *) {
+        Unmanaged<SystemAudioCapture>.fromOpaque(clientData).takeUnretainedValue().rateDidChange()
     }
     return noErr
 }

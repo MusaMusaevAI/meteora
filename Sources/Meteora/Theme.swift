@@ -447,6 +447,7 @@ struct NebulaBackground: View {
     /// Settings → Оформление.
     @AppStorage(AppearanceSettings.meteorsKey) private var meteorsOn = true
     @AppStorage(AppearanceSettings.skyKey) private var skyOn = true
+    @ObservedObject private var activity = SkyActivity.shared
 
     var body: some View {
         ZStack {
@@ -455,10 +456,14 @@ struct NebulaBackground: View {
                 // Daylight sky: the pearl ground cools toward a pale steel
                 // blue at the top, so faint stars still have something to
                 // glow against.
-                LinearGradient(colors: [Color(nsColor: NSColor(hex: 0xDDE3EC)).opacity(0.9 * intensity), .clear],
+                LinearGradient(colors: [Color(nsColor: NSColor(hex: 0xCDD7E6)).opacity(min(1, 1.1 * intensity)), .clear],
                                startPoint: .top, endPoint: .center)
+                // …and warms toward champagne at the bottom, like the nacre
+                // of the icon.
+                LinearGradient(colors: [.clear, Color(nsColor: NSColor(hex: 0xF1E6D6)).opacity(0.7 * intensity)],
+                               startPoint: .center, endPoint: .bottom)
             }
-            if reduceMotion || !animated || !skyOn {
+            if reduceMotion || !animated || !skyOn || !activity.isActive {
                 glows(t: 0)
             } else {
                 // Drift cycles take about a minute: 6 frames a second is smooth.
@@ -467,7 +472,7 @@ struct NebulaBackground: View {
                 }
             }
             if stars {
-                Starfield(animated: !reduceMotion && animated && skyOn, light: scheme == .light).opacity(intensity)
+                Starfield(animated: !reduceMotion && animated && skyOn && activity.isActive, light: scheme == .light).opacity(intensity)
                 if !reduceMotion && meteorsOn { MeteorShower(light: scheme == .light).opacity(min(1, intensity * 1.4)) }
             }
         }
@@ -479,13 +484,13 @@ struct NebulaBackground: View {
         GeometryReader { g in
             let w = g.size.width, h = g.size.height
             let dark = scheme == .dark
-            let k = intensity * (dark ? 1 : 0.75)
+            let k = intensity * (dark ? 1 : 1.3)
             // (colour, base position, drift radius, period, size, opacity)
             let blobs: [(Color, CGPoint, CGFloat, Double, CGFloat, Double)] = [
-                (Theme.accent, CGPoint(x: 0.82, y: 0.12), 0.06, 61, 0.75, dark ? 0.28 : 0.16),
-                (Theme.nacre[1], CGPoint(x: 0.12, y: 0.86), 0.07, 73, 0.70, dark ? 0.16 : 0.22),
-                (Theme.nacre[2], CGPoint(x: 0.55, y: 0.98), 0.05, 89, 0.55, dark ? 0.10 : 0.14),
-                (Theme.nacre[0], CGPoint(x: 0.05, y: 0.10), 0.05, 97, 0.50, dark ? 0.12 : 0.16),
+                (Theme.accent, CGPoint(x: 0.82, y: 0.12), 0.06, 61, 0.75, dark ? 0.28 : 0.22),
+                (Theme.nacre[1], CGPoint(x: 0.12, y: 0.86), 0.07, 73, 0.70, dark ? 0.16 : 0.34),
+                (Theme.nacre[2], CGPoint(x: 0.55, y: 0.98), 0.05, 89, 0.55, dark ? 0.10 : 0.26),
+                (Theme.nacre[0], CGPoint(x: 0.05, y: 0.10), 0.05, 97, 0.50, dark ? 0.12 : 0.30),
             ]
             ZStack {
                 ForEach(0..<blobs.count, id: \.self) { i in
@@ -530,22 +535,22 @@ struct Starfield: View {
         Canvas { ctx, size in
             for (i, s) in Self.stars.enumerated() {
                 let twinkle = i % 5 == 0 ? 0.5 + 0.5 * sin(t * 0.7 + s.3 * 20) : 1
-                let r = s.2 * (light ? 1.25 : 1)
+                let r = s.2 * (light ? 1.7 : 1)
                 let x = s.0 * size.width, y = s.1 * size.height
                 let rect = CGRect(x: x - r / 2, y: y - r / 2, width: r, height: r)
                 if light {
                     // Denser near the top, where the sky is bluest.
                     let fade = max(0, 1 - Double(s.1) * 1.1)
-                    let color = i % 3 == 0 ? Color(nsColor: NSColor(hex: 0x8C7FB8)) : Color(nsColor: NSColor(hex: 0x5F7FA3))
-                    let alpha = (0.22 + 0.38 * s.3) * twinkle * (0.35 + 0.65 * fade)
+                    let color = i % 3 == 0 ? Color(nsColor: NSColor(hex: 0x6E5FA6)) : Color(nsColor: NSColor(hex: 0x3F6590))
+                    let alpha = (0.38 + 0.42 * s.3) * twinkle * (0.5 + 0.5 * fade)
                     ctx.fill(Path(ellipseIn: rect), with: .color(color.opacity(alpha)))
-                    if i % 9 == 0 {
+                    if i % 6 == 0 {
                         // A four-point glint.
-                        let g = 3.2 + 2.4 * s.3
+                        let g = 4 + 3 * s.3
                         var p = Path()
                         p.move(to: CGPoint(x: x - g, y: y)); p.addLine(to: CGPoint(x: x + g, y: y))
                         p.move(to: CGPoint(x: x, y: y - g)); p.addLine(to: CGPoint(x: x, y: y + g))
-                        ctx.stroke(p, with: .color(color.opacity(alpha * 0.8)), lineWidth: 0.6)
+                        ctx.stroke(p, with: .color(color.opacity(alpha * 0.9)), lineWidth: 0.8)
                     }
                 } else {
                     let alpha = (0.18 + 0.32 * s.3) * twinkle
@@ -574,8 +579,9 @@ struct SplitMix {
 struct GlowHalo: View {
     var size: CGFloat
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ObservedObject private var activity = SkyActivity.shared
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 12, paused: reduceMotion)) { ctx in
+        TimelineView(.animation(minimumInterval: 1 / 8, paused: reduceMotion || !activity.isActive)) { ctx in
             let t = ctx.date.timeIntervalSinceReferenceDate
             let angle = Angle.degrees(reduceMotion ? 0 : (t * 9).truncatingRemainder(dividingBy: 360))
             Circle()
@@ -623,6 +629,11 @@ struct MeteorShower: View {
             var rng = SplitMix(seed: UInt64(Date().timeIntervalSince1970 * 1000) & 0xFFFF_FFFF)
             try? await Task.sleep(nanoseconds: UInt64((5 + rng.unit() * 7) * 1e9))
             while !Task.isCancelled {
+                // Nobody sees the sky: don't spend a frame on it.
+                if !SkyActivity.shared.isActive {
+                    try? await Task.sleep(nanoseconds: 5_000_000_000)
+                    continue
+                }
                 let count = rng.unit() < 0.2 ? (rng.unit() < 0.3 ? 3 : 2) : 1
                 for k in 0..<count {
                     let leftToRight = rng.unit() < 0.5
@@ -662,8 +673,8 @@ private struct MeteorStreak: View {
                            y: meteor.start.y * size.height + dy * meteor.travel * p)
         let tailLen = meteor.length * min(1, p * 2.2)
         let tail = CGPoint(x: head.x - dx * tailLen, y: head.y - dy * tailLen)
-        let core: Color = light ? Color(nsColor: NSColor(hex: 0x4E6E93)) : .white
-        let glow: Color = light ? Color(nsColor: NSColor(hex: 0x9C8CD0)) : Theme.nacre[0]
+        let core: Color = light ? Color(nsColor: NSColor(hex: 0x33506B)) : .white
+        let glow: Color = light ? Color(nsColor: NSColor(hex: 0x8A78D0)) : Theme.nacre[0]
         // Fade in fast, burn out at the end.
         let alpha = Double(p < 0.15 ? p / 0.15 : max(0, 1 - (p - 0.55) / 0.45))
         let w = max(1, size.width), h = max(1, size.height)
@@ -679,6 +690,48 @@ private struct MeteorStreak: View {
             Circle().fill(core).frame(width: 2.4, height: 2.4).position(head)
                 .shadow(color: glow, radius: 4)
         }
-        .opacity(alpha * (light ? 0.85 : 1.0))
+        .opacity(alpha)
+    }
+}
+
+// MARK: - When to animate
+
+/// Whether the sky is worth animating right now: some window of ours is on
+/// screen and not covered, the app isn't hidden, and Low Power Mode is off.
+/// Otherwise every animation stands still (no redraws, no GPU, no heat).
+@MainActor
+final class SkyActivity: ObservableObject {
+    static let shared = SkyActivity()
+    @Published private(set) var isActive = true
+    private var observers: [NSObjectProtocol] = []
+
+    private init() {
+        let nc = NotificationCenter.default
+        for name in [NSWindow.didChangeOcclusionStateNotification, NSWindow.didMiniaturizeNotification,
+                     NSWindow.didDeminiaturizeNotification, NSWindow.willCloseNotification,
+                     NSApplication.didHideNotification, NSApplication.didUnhideNotification,
+                     NSApplication.didBecomeActiveNotification] {
+            observers.append(nc.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.schedule() }
+            })
+        }
+        observers.append(nc.addObserver(forName: .NSProcessInfoPowerStateDidChange, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.schedule() }
+        })
+    }
+
+    /// Window state settles after the notification; look a moment later.
+    private func schedule() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+            MainActor.assumeIsolated { self?.recompute() }
+        }
+    }
+
+    private func recompute() {
+        let visible = NSApp.windows.contains { w in
+            w.isVisible && !w.isMiniaturized && w.occlusionState.contains(.visible) && w.contentView != nil && !(w is NSPanel)
+        }
+        let active = visible && !NSApp.isHidden && !ProcessInfo.processInfo.isLowPowerModeEnabled
+        if active != isActive { isActive = active }
     }
 }

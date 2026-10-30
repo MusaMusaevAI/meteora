@@ -115,6 +115,12 @@ final class MeetingStageRelay: @unchecked Sendable {
 @MainActor
 final class MeetingProcessor {
     private var recognizer: SpeechRecognizer?
+    /// Auto-folders: work quietly in the background — lower priority and
+    /// half the cores, so the Mac stays cool and responsive.
+    let background: Bool
+    private var priority: TaskPriority { background ? .utility : .userInitiated }
+
+    init(background: Bool = false) { self.background = background }
 
     func process(_ job: MeetingJob, token: CancelToken,
                  stage: @escaping @MainActor (MeetingStage) -> Void) async throws -> MeetingOutcome {
@@ -146,10 +152,11 @@ final class MeetingProcessor {
             stage(.transcribing(0))
             if recognizer == nil {
                 recognizer = try SpeechRecognizer(store: .shared, vadModel: vad,
+                                                  threads: background ? 2 : max(1, min(4, ProcessInfo.processInfo.activeProcessorCount - 1)),
                                                   hotwords: TermDictionaryStore.shared.recognizerHints)
             }
             guard let rec = recognizer else { throw MeetingProcessorError.speechModelMissing }
-            let segments: [TranscriptSegment] = try await Task.detached(priority: .userInitiated) {
+            let segments: [TranscriptSegment] = try await Task.detached(priority: priority) {
                 let decoder = try await origin.make()
                 return try rec.transcribe(decoder: decoder, isCancelled: { token.isCancelled }, progress: { p in
                     relay.send(.transcribing(p))
@@ -208,7 +215,7 @@ final class MeetingProcessor {
         let dest = job.destination
         let summaryText = outcome.summary?.markdown()
         let finalTranscript = tr
-        outcome.written = try await Task.detached(priority: .userInitiated) { () -> [URL] in
+        outcome.written = try await Task.detached(priority: priority) { () -> [URL] in
             var written: [URL] = []
             for f in formats {
                 let result = try TranscriptExporter.export(finalTranscript, frames: [], meta: meta, format: f,
@@ -242,8 +249,9 @@ final class MeetingProcessor {
             outcome.warnings.append("модель голосов не загружена — говорящие не разделены")
             return nil
         }
-        let options = SpeakerDiarizer.Options(tier: tier, numSpeakers: nil, maxSpeakers: SpeakerModelController.maxSpeakers)
-        let turns: [SpeakerTurn] = try await Task.detached(priority: .userInitiated) {
+        var options = SpeakerDiarizer.Options(tier: tier, numSpeakers: nil, maxSpeakers: SpeakerModelController.maxSpeakers)
+        if background { options.threads = 2 }
+        let turns: [SpeakerTurn] = try await Task.detached(priority: priority) {
             let d = try SpeakerDiarizer(tier: tier, options: options)
             let decoder = try await origin.make()
             return try d.diarize(decoder: decoder, expectedDuration: duration,

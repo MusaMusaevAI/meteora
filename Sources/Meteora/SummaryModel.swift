@@ -206,6 +206,29 @@ final class SummaryModelController: ObservableObject {
         summarizers = [:]
     }
 
+    /// The local model (0.6–3 GB) leaves memory two minutes after the last
+    /// summary instead of staying loaded for the rest of the session.
+    private var activeSummaries = 0
+    private var idleUnload: Task<Void, Never>?
+    static let idleUnloadSeconds: UInt64 = 120
+
+    private func summaryStarted() {
+        activeSummaries += 1
+        idleUnload?.cancel()
+        idleUnload = nil
+    }
+
+    private func summaryFinished() {
+        activeSummaries = max(0, activeSummaries - 1)
+        guard activeSummaries == 0 else { return }
+        idleUnload?.cancel()
+        idleUnload = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: Self.idleUnloadSeconds * 1_000_000_000)
+            guard let self, !Task.isCancelled, self.activeSummaries == 0 else { return }
+            self.unloadAll()
+        }
+    }
+
     func summarizer(for tier: SummaryModelTier) -> MeetingSummarizer {
         if let s = summarizers[tier] { return s }
         // Only one local model in memory at a time.
@@ -223,6 +246,8 @@ final class SummaryModelController: ObservableObject {
                    isCancelled: @escaping @Sendable () -> Bool) async throws -> MeetingSummary {
         switch engine {
         case .local(let tier):
+            summaryStarted()
+            defer { summaryFinished() }
             return try await summarizer(for: tier).summarize(tr, meetingDate: meetingDate, progress: progress, isCancelled: isCancelled)
         case .cloud(let p):
             guard let cfg = cloudConfig(p) else { throw CloudError.noKey }
