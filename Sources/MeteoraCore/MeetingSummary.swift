@@ -83,13 +83,15 @@ public struct MeetingSummary: Codable, Equatable, Sendable {
         return out
     }
 
-    /// Plain text (clipboard, .txt).
+    /// Plain text (clipboard, .txt, mail). Addresses are defanged: mail
+    /// clients turn bare addresses into links on their own.
     public func plainText() -> String {
-        var out = title + "\n\n"
-        if !summary.isEmpty { out += summary + "\n\n" }
+        func safe(_ s: String) -> String { LinkDefang.defang(s) }
+        var out = safe(title) + "\n\n"
+        if !summary.isEmpty { out += safe(summary) + "\n\n" }
         for (heading, items) in sections where !items.isEmpty {
             out += heading + ":\n"
-            for i in items { out += "• \(i)\n" }
+            for i in items { out += "• \(safe(i))\n" }
             out += "\n"
         }
         return out.trimmingCharacters(in: .whitespacesAndNewlines) + "\n"

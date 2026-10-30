@@ -760,12 +760,19 @@ final class MeetingModel: ObservableObject {
 
         do {
             try await player.waitUntilReady()
-            let primary = info.videoPackets.isEmpty
-                ? AssetProbe.sampleTimes(duration: info.duration, thorough: thorough)
-                : ScenePlanner.primaryTimes(packets: info.videoPackets, duration: info.duration)
-            let spikes = ScenePlanner.spikes(packets: info.videoPackets, width: info.video!.width, height: info.video!.height)
-            var times = primary
-            if thorough, !info.videoPackets.isEmpty { times = (primary + ScenePlanner.secondaryTimes(primary: primary, spikes: spikes)).sorted() }
+            // Planning walks every packet: off the main thread, so a huge or
+            // damaged file can't freeze the window.
+            let packets = info.videoPackets
+            let duration = info.duration, vw = info.video!.width, vh = info.video!.height, thoroughMode = thorough
+            let (planned, spikes, decodeIndex) = await Task.detached(priority: .userInitiated) {
+                () -> ([Double], [Double], DecodePlan.Index) in
+                let primary = packets.isEmpty ? [] : ScenePlanner.primaryTimes(packets: packets, duration: duration)
+                let spikes = ScenePlanner.spikes(packets: packets, width: vw, height: vh)
+                var times = primary
+                if thoroughMode, !packets.isEmpty { times = (primary + ScenePlanner.secondaryTimes(primary: primary, spikes: spikes)).sorted() }
+                return (times, spikes, DecodePlan.Index(packets))
+            }.value
+            let times = packets.isEmpty ? AssetProbe.sampleTimes(duration: info.duration, thorough: thorough) : planned
             let collector = SceneCollector(threshold: sceneThreshold)
             let video = info.video!
             // Preferred: decode frames ourselves via WebCodecs (exact, full
@@ -788,7 +795,8 @@ final class MeetingModel: ObservableObject {
                 }
                 // A hair after the keyframe so we land exactly on it.
                 let thumb: FrameThumb
-                if let codec, let demuxer, let plan = DecodePlan.packets(for: t + 0.02, in: info.videoPackets) {
+                if let codec, let demuxer,
+                   let plan = await Task.detached(priority: .userInitiated, operation: { decodeIndex.packets(for: t + 0.02) }).value {
                     let chunks = try await Task.detached(priority: .userInitiated) {
                         try plan.map { (try demuxer.videoPayload($0), $0.isKey, $0.time) }
                     }.value

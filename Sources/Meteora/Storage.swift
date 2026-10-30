@@ -12,7 +12,7 @@ struct StorageItem: Identifiable, Hashable {
             switch self {
             case .model: return "Модель распознавания речи"
             case .summaryModel: return "Модель для резюме встреч"
-            case .transcripts: return "Сохранённые расшифровки"
+            case .transcripts: return "Сохранённые расшифровки и итоги"
             case .exports: return "Переданный звук — «Загрузки/Meteora»"
             case .temp: return "Временные файлы"
             }
@@ -21,7 +21,7 @@ struct StorageItem: Identifiable, Hashable {
             switch self {
             case .model: return "Без неё расшифровка не работает — придётся скачать заново."
             case .summaryModel: return "Без неё резюме встреч не составляются — придётся скачать заново."
-            case .transcripts: return "Meteora показывает их при повторном открытии записи."
+            case .transcripts: return "Meteora показывает их при повторном открытии записи. Вместе с расшифровкой удаляются её итоги и текст встречи в поиске библиотеки."
             case .exports: return "Файлы будут перемещены в Корзину."
             case .temp: return nil
             }
@@ -34,6 +34,9 @@ struct StorageItem: Identifiable, Hashable {
     var detail: String
     var bytes: Int64
     var urls: [URL]
+    /// For transcripts: the recording's file name, to clear its text in the
+    /// library search when the transcript goes.
+    var sourceName: String? = nil
 }
 
 @MainActor
@@ -49,7 +52,8 @@ final class StorageModel: ObservableObject {
     func reload() {
         loading = true
         Task {
-            let found = await Task.detached(priority: .userInitiated) { Self.scan() }.value
+            var found = await Task.detached(priority: .userInitiated) { Self.scan() }.value
+            if let journal = Self.journalTextItem() { found.append(journal) }
             items = found
             selected = selected.intersection(Set(found.map(\.id)))
             loading = false
@@ -78,6 +82,14 @@ final class StorageModel: ObservableObject {
                 }
             }
         }.value
+        // The library keeps a copy of each meeting's text for search: it goes
+        // together with the transcript.
+        if doomed.contains(where: { $0.id == Self.journalTextID }) {
+            MeetingJournal.shared.clearAllText()
+        } else {
+            let names = Set(doomed.compactMap(\.sourceName))
+            if !names.isEmpty { MeetingJournal.shared.clearText(fileNames: names) }
+        }
         SpeechModelController.shared.refresh()
         SpeakerModelController.shared.refresh()
         if doomed.contains(where: { $0.section == .summaryModel }) { SummaryModelController.shared.unloadAll() }
@@ -85,6 +97,18 @@ final class StorageModel: ObservableObject {
         selected = []
         deleting = false
         reload()
+    }
+
+    static let journalTextID = "journal-text"
+
+    /// Meeting text the library keeps for search (excerpts + search text).
+    private static func journalTextItem() -> StorageItem? {
+        let journal = MeetingJournal.shared
+        let bytes = journal.textBytes
+        guard bytes > 0 else { return nil }
+        let count = journal.entries.filter { !$0.searchText.isEmpty || !$0.excerpt.isEmpty }.count
+        return StorageItem(id: journalTextID, section: .transcripts, title: "Текст встреч для поиска в библиотеке",
+                           detail: "\(count) встреч · сами записи остаются в списке", bytes: bytes, urls: [])
     }
 
     nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
@@ -132,17 +156,37 @@ final class StorageModel: ObservableObject {
                                    bytes: ModelStore.directorySize(store.directory), urls: [store.directory]))
         }
 
-        // 2. Cached transcripts
+        // 2. Cached transcripts, each with its summary (same file name in
+        // «Summaries»), then summaries whose transcript is already gone.
         let dec = JSONDecoder()
         dec.dateDecodingStrategy = .iso8601
+        func fileSize(_ u: URL) -> Int64 { Int64((try? u.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0) }
+        var pairedSummaries: Set<String> = []
         if let files = try? fm.contentsOfDirectory(at: TranscriptStore.directory, includingPropertiesForKeys: [.fileSizeKey]) {
             for f in files where f.pathExtension == "json" {
-                let size = Int64((try? f.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0)
+                var urls = [f]
+                var size = fileSize(f)
+                let summary = SummaryStore.directory.appendingPathComponent(f.lastPathComponent)
+                if fm.fileExists(atPath: summary.path) {
+                    urls.append(summary)
+                    size += fileSize(summary)
+                    pairedSummaries.insert(f.lastPathComponent)
+                }
                 let tr = (try? Data(contentsOf: f)).flatMap { try? dec.decode(Transcript.self, from: $0) }
                 let name = tr.map { sanitizedBaseName(URL(fileURLWithPath: $0.sourceName)) } ?? f.lastPathComponent
-                let detail = tr.map { "\(ru($0.segments.count, "фраза", "фразы", "фраз")) · \(dateFormatter.string(from: $0.created))" } ?? "повреждённый файл"
+                var detail = tr.map { "\(ru($0.segments.count, "фраза", "фразы", "фраз")) · \(dateFormatter.string(from: $0.created))" } ?? "повреждённый файл"
+                if urls.count > 1 { detail += " · с итогами" }
                 out.append(StorageItem(id: "tr:" + f.lastPathComponent, section: .transcripts, title: name,
-                                       detail: detail, bytes: size, urls: [f]))
+                                       detail: detail, bytes: size, urls: urls, sourceName: tr?.sourceName))
+            }
+        }
+        if let files = try? fm.contentsOfDirectory(at: SummaryStore.directory,
+                                                   includingPropertiesForKeys: [.fileSizeKey, .contentModificationDateKey]) {
+            for f in files where f.pathExtension == "json" && !pairedSummaries.contains(f.lastPathComponent) {
+                let date = (try? f.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate)
+                out.append(StorageItem(id: "sum:" + f.lastPathComponent, section: .transcripts, title: "Итоги встречи без расшифровки",
+                                       detail: date.map { dateFormatter.string(from: $0) } ?? "",
+                                       bytes: fileSize(f), urls: [f]))
             }
         }
 
@@ -166,7 +210,10 @@ final class StorageModel: ObservableObject {
         if let files = try? fm.contentsOfDirectory(at: fm.temporaryDirectory, includingPropertiesForKeys: [.totalFileAllocatedSizeKey]) {
             for f in files where f.lastPathComponent.hasPrefix("meteora-") {
                 tempURLs.append(f)
-                tempBytes += Int64((try? f.resourceValues(forKeys: [.totalFileAllocatedSizeKey]).totalFileAllocatedSize) ?? 0)
+                // Folders (mail drafts, conversions) are summed file by file.
+                let isDir = (try? f.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
+                tempBytes += isDir ? ModelStore.directorySize(f)
+                    : Int64((try? f.resourceValues(forKeys: [.totalFileAllocatedSizeKey]).totalFileAllocatedSize) ?? 0)
             }
         }
         if let caches = fm.urls(for: .cachesDirectory, in: .userDomainMask).first {
@@ -273,7 +320,7 @@ struct StorageView: View {
             }
             Button("Отмена", role: .cancel) {}
         } message: {
-            Text("Звук из «Загрузки/Meteora» попадёт в Корзину. Модель и расшифровки удаляются сразу.")
+            Text("Звук из «Загрузки/Meteora» попадёт в Корзину. Модель, расшифровки и итоги удаляются сразу.")
         }
     }
 

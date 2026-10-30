@@ -113,22 +113,55 @@ public enum ScenePlanner {
 /// Which compressed frames must be decoded to see the picture at time `t`:
 /// the last keyframe at or before `t` and everything after it up to `t`.
 public enum DecodePlan {
-    public static func packets(for t: Double, in packets: [VideoPacket], maxBytes: Int = 12 * 1024 * 1024) -> ArraySlice<VideoPacket>? {
-        // Binary search for the last packet with time <= t.
-        var lo = 0, hi = packets.count - 1, target = -1
-        while lo <= hi {
-            let mid = (lo + hi) / 2
-            if packets[mid].time <= t { target = mid; lo = mid + 1 } else { hi = mid - 1 }
+    /// At most this many packets are decoded for one frame; a longer run
+    /// (huge or damaged GOP) falls back to the keyframe alone.
+    public static let maxPacketsPerPlan = 300
+
+    /// Prepared once per file: where the keyframes are. Every lookup is then
+    /// two binary searches, however long or broken the file is.
+    public struct Index: Sendable {
+        public let packets: [VideoPacket]
+        let keyIndices: [Int]
+
+        public init(_ packets: [VideoPacket]) {
+            self.packets = packets
+            var keys: [Int] = []
+            for (i, p) in packets.enumerated() where p.isKey { keys.append(i) }
+            keyIndices = keys
         }
-        guard target >= 0 else { return packets.first?.isKey == true ? packets[0 ... 0] : nil }
-        var start = target
-        while start > 0, !packets[start].isKey { start -= 1 }
-        guard packets[start].isKey else { return nil }
-        // Too much to decode (very long GOP): fall back to the keyframe alone.
-        var bytes = 0
-        for i in start ... target { bytes += packets[i].size }
-        if bytes > maxBytes { return packets[start ... start] }
-        return packets[start ... target]
+
+        public func packets(for t: Double, maxBytes: Int = 12 * 1024 * 1024,
+                            maxCount: Int = DecodePlan.maxPacketsPerPlan) -> ArraySlice<VideoPacket>? {
+            guard !packets.isEmpty else { return nil }
+            // Last packet with time <= t.
+            var lo = 0, hi = packets.count - 1, target = -1
+            while lo <= hi {
+                let mid = (lo + hi) / 2
+                if packets[mid].time <= t { target = mid; lo = mid + 1 } else { hi = mid - 1 }
+            }
+            guard target >= 0 else { return packets[0].isKey ? packets[0 ... 0] : nil }
+            // Last keyframe at or before the target.
+            var klo = 0, khi = keyIndices.count - 1, k = -1
+            while klo <= khi {
+                let mid = (klo + khi) / 2
+                if keyIndices[mid] <= target { k = mid; klo = mid + 1 } else { khi = mid - 1 }
+            }
+            guard k >= 0 else { return nil }
+            let start = keyIndices[k]
+            if target - start + 1 > maxCount { return packets[start ... start] }
+            // Too much to decode (very long GOP): fall back to the keyframe alone.
+            var bytes = 0
+            for i in start ... target {
+                bytes += packets[i].size
+                if bytes > maxBytes { return packets[start ... start] }
+            }
+            return packets[start ... target]
+        }
+    }
+
+    /// One-off lookup. For many lookups in the same file build an `Index`.
+    public static func packets(for t: Double, in packets: [VideoPacket], maxBytes: Int = 12 * 1024 * 1024) -> ArraySlice<VideoPacket>? {
+        Index(packets).packets(for: t, maxBytes: maxBytes)
     }
 }
 

@@ -154,9 +154,9 @@ final class FrameMixerTests: XCTestCase {
 
     func testTwoInputsAreSummedAndLimited() {
         var m = FrameMixer(inputs: [0, 1], frameSize: 2)
-        m.push(0, [0.25, 0.6])
+        m.push(0, [0.25, 0.6, 0, 0])
         XCTAssertTrue(frames(&m).isEmpty) // waits for the other input
-        m.push(1, [0.25, 0.6])
+        m.push(1, [0.25, 0.6, 0, 0]) // the drift resampler holds back two samples
         let f = frames(&m)
         XCTAssertEqual(f.count, 1)
         XCTAssertEqual(f[0][0], 0.5, accuracy: 1e-6)
@@ -164,24 +164,98 @@ final class FrameMixerTests: XCTestCase {
         XCTAssertGreaterThan(f[0][1], 0.89)
     }
 
-    func testStalledInputIsPaddedWithSilence() {
-        var m = FrameMixer(inputs: [0, 1], frameSize: 10, lagTolerance: 20)
-        m.push(0, [Float](repeating: 0.1, count: 25))
-        XCTAssertTrue(frames(&m).isEmpty) // within tolerance: wait
-        m.push(0, [Float](repeating: 0.1, count: 10)) // now 35 ≥ 10 + 20
+    func testStalledInputIsSilent() {
+        var m = FrameMixer(inputs: [0, 1], frameSize: 10, stallLimit: 20)
+        m.push(0, [Float](repeating: 0.1, count: 15))
+        XCTAssertTrue(frames(&m).isEmpty) // the other input may just be late
+        m.push(0, [Float](repeating: 0.1, count: 10)) // 25 samples without input 1: stalled
+        XCTAssertTrue(m.isStalled(1))
         let f = frames(&m)
-        XCTAssertEqual(f.count, 1) // one frame, then back within tolerance
+        XCTAssertEqual(f.count, 2)
         XCTAssertEqual(f[0], [Float](repeating: 0.1, count: 10))
-        XCTAssertEqual(m.backlog(0), 25)
+        XCTAssertEqual(m.backlog(0), 5)
     }
 
     func testOverflowDropsOldest() {
-        var m = FrameMixer(inputs: [0, 1], frameSize: 4, lagTolerance: 1_000, maxBacklog: 8)
-        m.push(1, (0 ..< 12).map { Float($0) / 100 })
-        XCTAssertEqual(m.backlog(1), 8)
+        var m = FrameMixer(inputs: [0, 1], frameSize: 4, stallLimit: 1_000, maxBacklog: 8)
+        m.push(0, (0 ..< 12).map { Float($0) / 100 })
+        XCTAssertEqual(m.backlog(0), 8)
         XCTAssertEqual(m.droppedSamples, 4)
-        m.push(0, [0, 0, 0, 0])
+        m.push(1, [0, 0, 0, 0, 0, 0])
         XCTAssertEqual(frames(&m).first?[0] ?? -1, 0.04, accuracy: 1e-6)
+    }
+
+    func testResamplerIsTransparentAtUnitStep() {
+        var r = DriftResampler()
+        let x: [Float] = (0 ..< 100).map { Float(sin(Double($0) * 0.3)) }
+        var y: [Float] = []
+        for chunk in stride(from: 0, to: 100, by: 7) {
+            let part = Array(x[chunk ..< min(chunk + 7, 100)])
+            y += part.withUnsafeBufferPointer { r.process($0, step: 1) }
+        }
+        XCTAssertEqual(y.count, 98) // two samples of latency
+        for i in 0 ..< y.count { XCTAssertEqual(y[i], x[i], accuracy: 1e-6) }
+    }
+
+    /// A meeting in "system + microphone" mode where the two clocks disagree:
+    /// the system audio (a sine) must come out continuous — no holes of
+    /// silence — and the correction must settle on the real drift.
+    private func simulate(systemRate: Double, seconds: Double, systemStall: ClosedRange<Double>? = nil,
+                          systemChunkSeconds: Double = 0.01, micChunk: Int = 1_024) -> (holes: Int, holeSamples: Int, correction: Double) {
+        var m = FrameMixer(inputs: [0, 1])
+        var out: [Float] = []
+        var buf = [Float](repeating: 0, count: m.frameSize)
+        var tMic = 0.0, tSys = 0.0, phase = 0, carry = 0.0
+        let micZeros = [Float](repeating: 0, count: micChunk)
+        while tMic < seconds || tSys < seconds {
+            if tMic <= tSys {
+                m.push(0, micZeros)
+                tMic += Double(micChunk) / 48_000
+            } else {
+                carry += systemRate * systemChunkSeconds
+                let n = Int(carry)
+                carry -= Double(n)
+                if !(systemStall?.contains(tSys) ?? false) {
+                    let x: [Float] = (0 ..< n).map { Float(0.5 * sin(2 * Double.pi * 440 * Double(phase + $0) / 48_000)) }
+                    m.push(1, x)
+                }
+                phase += n
+                tSys += systemChunkSeconds
+            }
+            while buf.withUnsafeMutableBufferPointer({ m.nextFrame(into: $0) }) { out += buf }
+        }
+        var holes = 0, holeSamples = 0, run = 0
+        for v in out.dropFirst(24_000) { // skip the first half second
+            if abs(v) < 1e-9 { run += 1 } else {
+                if run > 5 { holes += 1; holeSamples += run }
+                run = 0
+            }
+        }
+        return (holes, holeSamples, m.driftCorrection)
+    }
+
+    func testSlowSystemClockLeavesNoHoles() {
+        // The old mixer cut 7 % of this stream into holes once 300 ms had piled up.
+        let r = simulate(systemRate: 48_000 * 0.995, seconds: 30)
+        XCTAssertEqual(r.holes, 0)
+        XCTAssertEqual(r.correction, -0.005, accuracy: 0.001)
+    }
+
+    func testFastSystemClockLeavesNoHoles() {
+        let r = simulate(systemRate: 48_000 * 1.003, seconds: 30)
+        XCTAssertEqual(r.holes, 0)
+        XCTAssertEqual(r.correction, 0.003, accuracy: 0.001)
+    }
+
+    func testBurstyBluetoothDeliveryLeavesNoHoles() {
+        let r = simulate(systemRate: 48_000, seconds: 20, systemChunkSeconds: 0.1, micChunk: 4_096)
+        XCTAssertEqual(r.holes, 0)
+    }
+
+    func testSystemStallIsOneGap() {
+        let r = simulate(systemRate: 48_000, seconds: 20, systemStall: 8 ... 9)
+        XCTAssertEqual(r.holes, 1)
+        XCTAssertEqual(Double(r.holeSamples), 48_000, accuracy: 4_800)
     }
 
     func testMeterScale() {

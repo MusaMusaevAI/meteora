@@ -168,4 +168,25 @@ final class MeetingMailTests: XCTestCase {
         XCTAssertTrue(html.contains("&lt;рассылки&gt;"))
         XCTAssertFalse(html.contains("<рассылки>"))
     }
+
+    func testModelLinksAreNotClickable() {
+        let s = MeetingSummary(title: "Доступ www.evil.example", summary: "Вход по ссылке https://evil.example/login",
+                               actionItems: ["Скачать с ftp://files.example"])
+        let mail = MeetingMail(summary: s)
+        for text in [mail.html, mail.plainText, s.markdown()] {
+            XCTAssertFalse(text.lowercased().contains("https://"), text)
+            XCTAssertFalse(text.contains("ftp://"), text)
+            XCTAssertFalse(text.lowercased().contains("www.evil"), text)
+            XCTAssertTrue(text.contains("evil.example"), "the address stays readable")
+        }
+        XCTAssertTrue(mail.html.contains("hxxps://evil.example/login"))
+    }
+
+    func testDefangKeepsOrdinaryText() {
+        XCTAssertEqual(LinkDefang.defang("Встреча в 10:30, итог: ok"), "Встреча в 10:30, итог: ok")
+        XCTAssertEqual(LinkDefang.defang("HTTPS://X.ru"), "hxxPS://X.ru")
+        XCTAssertEqual(LinkDefang.defang("см. http://a.b"), "см. hxxp://a.b")
+        XCTAssertEqual(LinkDefang.defang("www.a.ru"), "www[.]a.ru")
+        XCTAssertEqual(LinkDefang.defang("ftp://a"), "ftp[:]//a")
+    }
 }

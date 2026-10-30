@@ -117,7 +117,8 @@ public enum ReportExporter {
 
     static func escapeMD(_ s: String) -> String {
         var out = ""
-        for ch in s {
+        // Untrusted text: bare addresses must not turn into links either.
+        for ch in LinkDefang.defang(s) {
             switch ch {
             case "\n", "\r": out.append(" ")
             case "#": out.append("＃")

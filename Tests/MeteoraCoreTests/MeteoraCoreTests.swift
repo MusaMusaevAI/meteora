@@ -232,6 +232,32 @@ final class SceneTests: XCTestCase {
         XCTAssertTrue(secondary.contains { $0 > 21 && $0 < 23 })
     }
 
+    func testDecodePlanFindsPrecedingKeyframe() {
+        let packets = (0 ..< 100).map { VideoPacket(time: Double($0) * 0.1, size: 1000, isKey: $0 % 25 == 0) }
+        let index = DecodePlan.Index(packets)
+        let plan = index.packets(for: 3.05)
+        XCTAssertEqual(plan?.first?.time ?? -1, 2.5, accuracy: 0.001)
+        XCTAssertEqual(plan?.last?.time ?? -1, 3.0, accuracy: 0.001)
+        XCTAssertTrue(plan?.first?.isKey == true)
+        XCTAssertNil(DecodePlan.Index([VideoPacket(time: 1, size: 1, isKey: false)]).packets(for: 2))
+        XCTAssertEqual(DecodePlan.packets(for: 3.05, in: packets)?.count, plan?.count)
+    }
+
+    func testDecodePlanStaysBoundedOnHugeDamagedGOP() {
+        // One keyframe, then a million tiny packets: every lookup must stay
+        // fast and the plan must fall back to the keyframe alone.
+        var packets = [VideoPacket(time: 0, size: 10, isKey: true)]
+        packets += (1 ..< 1_000_000).map { VideoPacket(time: Double($0) * 0.001, size: 1, isKey: false) }
+        let start = Date()
+        let index = DecodePlan.Index(packets)
+        for i in 0 ..< 5000 {
+            let plan = index.packets(for: Double(i) * 0.2)
+            XCTAssertLessThanOrEqual(plan?.count ?? 0, DecodePlan.maxPacketsPerPlan)
+        }
+        XCTAssertEqual(index.packets(for: 900)?.count, 1)
+        XCTAssertLessThan(Date().timeIntervalSince(start), 10)
+    }
+
     func testPlannerFillsLongGaps() {
         let packets = [VideoPacket(time: 0, size: 100, isKey: true)] +
             (1 ..< 1200).map { VideoPacket(time: Double($0) * 0.05, size: 100, isKey: false) }

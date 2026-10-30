@@ -165,12 +165,13 @@ final class MeetingJournal: ObservableObject {
         return url
     }
 
-    /// Forgets the meeting and its saved transcript. Never touches the
+    /// Forgets the meeting, its saved transcript and summary. Never touches the
     /// recording itself.
     func remove(_ entry: JournalEntry) {
         if let url = resolve(entry) {
             let scoped = url.startAccessingSecurityScopedResource()
             try? FileManager.default.removeItem(at: TranscriptStore.file(for: url))
+            SummaryStore.remove(for: url)
             if scoped { url.stopAccessingSecurityScopedResource() }
         }
         entries.removeAll { $0.id == entry.id }
@@ -184,6 +185,34 @@ final class MeetingJournal: ObservableObject {
 
     func removeAll() {
         entries = []
+        save()
+    }
+
+    /// Meeting text kept for the list and search (excerpts + search text).
+    var textBytes: Int64 {
+        Int64(entries.reduce(0) { $0 + $1.excerpt.utf8.count + $1.searchText.utf8.count })
+    }
+
+    /// Forgets the transcript text of these recordings (by file name); the
+    /// meetings themselves stay in the list.
+    func clearText(fileNames: Set<String>) {
+        var changed = false
+        for i in entries.indices where fileNames.contains(entries[i].fileName) {
+            entries[i].excerpt = ""
+            entries[i].searchText = ""
+            entries[i].hasTranscript = false
+            changed = true
+        }
+        if changed { save() }
+    }
+
+    /// Forgets the transcript text of every meeting in the list.
+    func clearAllText() {
+        for i in entries.indices {
+            entries[i].excerpt = ""
+            entries[i].searchText = ""
+            entries[i].hasTranscript = false
+        }
         save()
     }
 

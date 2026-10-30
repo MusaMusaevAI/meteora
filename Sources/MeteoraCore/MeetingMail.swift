@@ -50,7 +50,7 @@ public struct MeetingMail: Sendable {
 
     public var html: String {
         func esc(_ s: String) -> String {
-            s.replacingOccurrences(of: "&", with: "&amp;").replacingOccurrences(of: "<", with: "&lt;")
+            LinkDefang.defang(s).replacingOccurrences(of: "&", with: "&amp;").replacingOccurrences(of: "<", with: "&lt;")
                 .replacingOccurrences(of: ">", with: "&gt;").replacingOccurrences(of: "\"", with: "&quot;")
         }
         var body = "<h2 style=\"margin:0 0 12px;font-size:18px\">\(esc(summary.title))</h2>\n"

@@ -204,9 +204,7 @@ final class RecordingCore: @unchecked Sendable {
             while !failed, mixer.nextFinalFrame(into: frame) { emit() }
         }
         try sink.finish()
-        if mixer.droppedSamples > 0 || mixer.paddedSamples > 0 {
-            recorderLog.info("mixer: dropped \(self.mixer.droppedSamples), padded \(self.mixer.paddedSamples) samples")
-        }
+        recorderLog.info("mixer: dropped \(self.mixer.droppedSamples), padded \(self.mixer.paddedSamples) samples, clock correction \(Int(self.mixer.driftCorrection * 1e6)) ppm")
         return sink.url
     }
 
