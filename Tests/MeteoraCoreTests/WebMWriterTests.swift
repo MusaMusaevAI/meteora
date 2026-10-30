@@ -201,7 +201,8 @@ final class FrameMixerTests: XCTestCase {
     /// the system audio (a sine) must come out continuous — no holes of
     /// silence — and the correction must settle on the real drift.
     private func simulate(systemRate: Double, seconds: Double, systemStall: ClosedRange<Double>? = nil,
-                          systemChunkSeconds: Double = 0.01, micChunk: Int = 1_024) -> (holes: Int, holeSamples: Int, correction: Double) {
+                          systemChunkSeconds: Double = 0.01, micChunk: Int = 1_024,
+                          halfRateUntil: Double = 0) -> (holes: Int, holeSamples: Int, correction: Double, offset: Int) {
         var m = FrameMixer(inputs: [0, 1])
         var out: [Float] = []
         var buf = [Float](repeating: 0, count: m.frameSize)
@@ -212,7 +213,7 @@ final class FrameMixerTests: XCTestCase {
                 m.push(0, micZeros)
                 tMic += Double(micChunk) / 48_000
             } else {
-                carry += systemRate * systemChunkSeconds
+                carry += (tSys < halfRateUntil ? systemRate / 2 : systemRate) * systemChunkSeconds
                 let n = Int(carry)
                 carry -= Double(n)
                 if !(systemStall?.contains(tSys) ?? false) {
@@ -231,7 +232,7 @@ final class FrameMixerTests: XCTestCase {
                 run = 0
             }
         }
-        return (holes, holeSamples, m.driftCorrection)
+        return (holes, holeSamples, m.driftCorrection, m.backlog(0) - m.backlog(1))
     }
 
     func testSlowSystemClockLeavesNoHoles() {
@@ -250,6 +251,13 @@ final class FrameMixerTests: XCTestCase {
     func testBurstyBluetoothDeliveryLeavesNoHoles() {
         let r = simulate(systemRate: 48_000, seconds: 20, systemChunkSeconds: 0.1, micChunk: 4_096)
         XCTAssertEqual(r.holes, 0)
+    }
+
+    func testStartupRateMismatchIsRealigned() {
+        // Half-rate system audio for 3 s (before the capture notices), then normal:
+        // the two sources must end up in step, not 1.5 s apart for minutes.
+        let r = simulate(systemRate: 48_000, seconds: 30, halfRateUntil: 3)
+        XCTAssertLessThan(abs(r.offset), 4_800)
     }
 
     func testSystemStallIsOneGap() {

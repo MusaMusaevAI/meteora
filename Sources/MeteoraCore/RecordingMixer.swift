@@ -118,6 +118,8 @@ public struct FrameMixer {
     public var maxCorrection: Double = 0.01
     /// Correction per sample of backlog difference: 1 % at 100 ms.
     public var correctionGain: Double = 0.01 / 4_800
+    /// Beyond this difference (500 ms) the sources are realigned at once.
+    public var resyncLimit = 24_000
     public private(set) var droppedSamples = 0
     public private(set) var paddedSamples = 0
     /// Current correction of the system input: positive = it is consumed
@@ -166,6 +168,15 @@ public struct FrameMixer {
             let difference = Double(fifos[1].count - fifos[0].count)
             smoothedOffset += 0.01 * (difference - smoothedOffset)
             driftCorrection = min(maxCorrection, max(-maxCorrection, correctionGain * smoothedOffset))
+            // Far out of step (a source delivered at the wrong rate for a
+            // few seconds before it was corrected): line them up at once by
+            // giving the late source a moment of silence. Nothing is lost.
+            let gap = fifos[1].count - fifos[0].count
+            if abs(gap) > resyncLimit {
+                fifos[gap < 0 ? 1 : 0].append([Float](repeating: 0, count: abs(gap)))
+                paddedSamples += abs(gap)
+                smoothedOffset = 0
+            }
         }
     }
 
