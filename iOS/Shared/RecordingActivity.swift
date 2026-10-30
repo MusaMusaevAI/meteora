@@ -124,7 +124,7 @@ struct RecordingLockScreenView: View {
                 Text(state.isPaused ? "Пауза" : "Идёт запись")
                     .font(.system(size: 13, weight: .semibold)).foregroundStyle(.secondary)
                 ActivityTimer(state: state).font(.system(size: 28, weight: .semibold, design: .rounded))
-                Text(title).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(1)
+                Text(title).privacySensitive().font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer(minLength: 8)
             LevelBars(level: state.level, paused: state.isPaused)

@@ -520,10 +520,46 @@ private struct UpdatesPane: View {
                 Button("Скачать новую версию") { updates.openDownload() }.buttonStyle(PrimaryButtonStyle()).frame(width: 220)
             }
         }
+        SettingsCard(title: "Подлинность") {
+            HStack(spacing: 10) {
+                Image(systemName: provenanceIcon).font(.system(size: 18)).foregroundStyle(provenanceColor)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(provenanceTitle).font(Theme.ui(13, weight: .medium)).foregroundStyle(Theme.text)
+                    Text(provenanceDetail).font(Theme.ui(11.5)).foregroundStyle(Theme.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .task { await updates.checkProvenance() }
         SettingsCard {
             SettingsToggle(title: "Проверять автоматически",
                            detail: "Раз в день при запуске. Meteora только сообщит о новой сборке — ничего не скачает без вас.",
                            isOn: $updates.automatic)
+        }
+    }
+
+    private var provenanceIcon: String {
+        switch updates.provenance {
+        case .official: return "checkmark.seal.fill"
+        case .unofficial: return "exclamationmark.triangle.fill"
+        case .unknown: return "questionmark.circle"
+        }
+    }
+    private var provenanceColor: Color {
+        updates.provenance == .unofficial ? Theme.danger : Theme.accent
+    }
+    private var provenanceTitle: String {
+        switch updates.provenance {
+        case .official: return "Официальная сборка"
+        case .unofficial: return "Неофициальная сборка"
+        case .unknown: return "Подлинность не проверена"
+        }
+    }
+    private var provenanceDetail: String {
+        switch updates.provenance {
+        case .official: return "Эта копия Meteora собрана из репозитория автора и не изменялась после сборки."
+        case .unofficial: return "Эта копия собрана не в репозитории автора или изменена после сборки. Скачайте Meteora из официального источника."
+        case .unknown: return "Нужен интернет: Meteora сверяет себя со списком официальных сборок на GitHub."
         }
     }
 

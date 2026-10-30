@@ -174,7 +174,7 @@ final class MeetingRecorder: ObservableObject {
         elapsed = 0
         runningSince = Date()
         state = .recording
-        recorderLog.info("recording \(source.rawValue, privacy: .public) → \(url.lastPathComponent, privacy: .public), \(sink.formatName, privacy: .public)")
+        recorderLog.info("recording \(source.rawValue, privacy: .public) → \(url.lastPathComponent, privacy: .private(mask: .hash)), \(sink.formatName, privacy: .public)")
         startTimer()
         updateStatusItem()
     }
@@ -268,7 +268,7 @@ final class MeetingRecorder: ObservableObject {
                 notice = nil
             }
             pendingFailure = nil
-            recorderLog.info("recording finished: \(url.lastPathComponent, privacy: .public), \(self.elapsed) s")
+            recorderLog.info("recording finished: \(url.lastPathComponent, privacy: .private(mask: .hash)), \(self.elapsed) s")
             updateStatusItem()
             onFinished?(url)
         case .failure(let error):

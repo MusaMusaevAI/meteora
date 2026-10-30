@@ -399,6 +399,8 @@ final class ConversionJob: NSObject, ConverterServiceProtocol, @unchecked Sendab
                   + ":channel_layouts=mono|stereo",
               "-f", "mp4"]
         if fragmented { a += ["-movflags", "+frag_keyframe+empty_moov+default_base_moof"] }
+        // Hard limits against "bomb" files: at most 48 h of media, 20 GB of output.
+        a += ["-t", "172800", "-fs", "21474836480"]
         a += ["fd:"]
         return a
     }

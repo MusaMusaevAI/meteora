@@ -63,6 +63,10 @@ final class MediaConverter: @unchecked Sendable {
     static func needsConversion(_ url: URL) async -> Bool {
         let ext = url.pathExtension.lowercased()
         if ext == "webm" { return false } // own WebM path
+        // Formats only FFmpeg reads go straight to the isolated service, and so
+        // does anything that is really Matroska/WebM under another extension:
+        // the system parser never sees them.
+        if convertedExtensions.contains(ext) || isEBML(url) { return true }
         let asset = AVURLAsset(url: url)
         do {
             let playable = try await asset.load(.isPlayable)
@@ -84,6 +88,17 @@ final class MediaConverter: @unchecked Sendable {
         } catch {
             return !nativeExtensions.contains(ext)
         }
+    }
+
+    /// Matroska/WebM signature (1A 45 DF A3) at the start of the file.
+    static func isEBML(_ url: URL) -> Bool {
+        let fd = Darwin.open(url.path, O_RDONLY | O_NONBLOCK | O_CLOEXEC)
+        guard fd >= 0 else { return false }
+        defer { Darwin.close(fd) }
+        var st = stat()
+        guard fstat(fd, &st) == 0, (st.st_mode & S_IFMT) == S_IFREG else { return false }
+        var b = [UInt8](repeating: 0, count: 4)
+        return Darwin.read(fd, &b, 4) == 4 && b == [0x1A, 0x45, 0xDF, 0xA3]
     }
 
     /// Converts `url` into a new file in the app's temporary directory

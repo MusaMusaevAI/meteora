@@ -525,7 +525,7 @@ struct FrameDetailView: View {
                 .padding(12)
                 .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.surfaceSunken))
                 Button("Скопировать текст") {
-                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.prepareForNewContents(with: .currentHostOnly)
                     NSPasteboard.general.setString(item.frame.text, forType: .string)
                 }
                 .buttonStyle(SecondaryButtonStyle(fill: false))

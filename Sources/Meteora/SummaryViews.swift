@@ -53,7 +53,8 @@ extension MeetingModel {
             if !controller.hasConsent(p) {
                 let alert = NSAlert()
                 alert.messageText = "Отправить расшифровку в \(p.title)?"
-                alert.informativeText = "Для итогов текст встречи уйдёт на серверы провайдера по вашему ключу. Записи и звук остаются на этом Mac. Спрашиваем один раз для каждого провайдера."
+                let server = p == .compatible ? " (\(URL(string: controller.baseURL)?.host ?? controller.baseURL))" : ""
+                alert.informativeText = "Для итогов текст встречи уйдёт на серверы провайдера\(server) по вашему ключу. Записи и звук остаются на этом Mac. Спрашиваем один раз для каждого провайдера и адреса."
                 alert.addButton(withTitle: "Отправить")
                 alert.addButton(withTitle: "Отмена")
                 guard alert.runModal() == .alertFirstButtonReturn else { return }
@@ -104,13 +105,23 @@ extension MeetingModel {
 
     // MARK: Mail
 
+    /// The meeting title made safe for a file name (it may come from the model).
+    var mailFileBase: String { sanitizedBaseName(URL(fileURLWithPath: "/").appendingPathComponent(title + ".x")) }
+
+    /// A fresh temporary folder named so the storage cleanup finds it.
+    static func mailTempDir() -> URL {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("meteora-mail-\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
     /// The summary as an e-mail; the transcript goes along as Word.
     func meetingMail() -> MeetingMail? {
         guard let s = summary else { return nil }
         var attachments: [MeetingMail.Attachment] = []
         if let tr = transcript,
            let r = try? TranscriptExporter.export(tr, frames: [], meta: ReportExporter.Meta(title: title, sourceName: url?.lastPathComponent ?? "", duration: info?.duration ?? 0), format: .docx) {
-            attachments.append(MeetingMail.Attachment(fileName: "\(title) — расшифровка.docx",
+            attachments.append(MeetingMail.Attachment(fileName: "\(mailFileBase) — расшифровка.docx",
                                                       mimeType: MeetingMail.mimeType(forExtension: "docx"), data: r.primary))
         }
         return MeetingMail(summary: s, attachments: attachments,
@@ -125,9 +136,7 @@ extension MeetingModel {
         var items: [Any] = [mail.plainText]
         var files: [URL] = []
         for a in mail.attachments {
-            let u = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
-                .appendingPathComponent(a.fileName)
-            try? FileManager.default.createDirectory(at: u.deletingLastPathComponent(), withIntermediateDirectories: true)
+            let u = Self.mailTempDir().appendingPathComponent(a.fileName)
             if (try? a.data.write(to: u)) != nil { files.append(u) }
         }
         items.append(contentsOf: files)
@@ -147,7 +156,7 @@ extension MeetingModel {
         if save {
             let panel = NSSavePanel()
             panel.allowedContentTypes = [.init(filenameExtension: "eml") ?? .data]
-            panel.nameFieldStringValue = "\(title) — итоги.eml"
+            panel.nameFieldStringValue = "\(mailFileBase) — итоги.eml"
             guard panel.runModal() == .OK, let dest = panel.url else { return }
             do {
                 try data.write(to: dest, options: .atomic)
@@ -157,9 +166,7 @@ extension MeetingModel {
             }
             return
         }
-        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let u = dir.appendingPathComponent("\(title) — итоги.eml")
+        let u = Self.mailTempDir().appendingPathComponent("\(mailFileBase) — итоги.eml")
         guard (try? data.write(to: u)) != nil else { return }
         if !NSWorkspace.shared.open(u) {
             toast = Toast(message: "Нет программы для писем .eml — сохраните письмо и откройте его в почте", isError: true)
@@ -170,7 +177,7 @@ extension MeetingModel {
     func copySummaryForMail() {
         guard let mail = meetingMail() else { return }
         let pb = NSPasteboard.general
-        pb.clearContents()
+        pb.prepareForNewContents(with: .currentHostOnly)
         pb.setString(mail.html, forType: .html)
         pb.setString(mail.plainText, forType: .string)
         toast = Toast(message: "Итоги скопированы — вставьте в письмо")

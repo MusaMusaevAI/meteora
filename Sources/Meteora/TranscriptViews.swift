@@ -171,7 +171,7 @@ struct TranscriptList: View {
                                 Button("Исправить текст…") { beginEditing(row) }
                                 Button("Перейти к этому месту") { player.seek(to: row.start) }
                                 Button("Скопировать") {
-                                    NSPasteboard.general.clearContents()
+                                    NSPasteboard.general.prepareForNewContents(with: .currentHostOnly)
                                     NSPasteboard.general.setString(row.text, forType: .string)
                                 }
                             }

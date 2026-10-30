@@ -226,7 +226,7 @@ final class Library: ObservableObject {
     static func write<T: Encodable>(_ value: T, _ url: URL) {
         let enc = JSONEncoder()
         enc.dateEncodingStrategy = .iso8601
-        if let data = try? enc.encode(value) { try? data.write(to: url, options: .atomic) }
+        if let data = try? enc.encode(value) { try? data.write(to: url, options: [.atomic, .completeFileProtection]) }
     }
 
     static func uniqueURL(in dir: URL, name: String) -> URL {

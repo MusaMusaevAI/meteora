@@ -98,6 +98,15 @@ public enum CloudError: Error, LocalizedError, Equatable {
 /// `protectPersonalData` the transcript is masked on this Mac first and the
 /// provider only sees placeholders (fail closed: if masking fails, nothing
 /// is sent).
+/// The transcript and the key go only to the address the user set: a redirect
+/// elsewhere is refused.
+private final class NoRedirects: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
+    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
+                    newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {
+        completionHandler(nil)
+    }
+}
+
 public final class CloudSummarizer: @unchecked Sendable {
     public let config: CloudConfig
     /// Transcripts longer than this are summarized in parts (cloud contexts
@@ -116,7 +125,7 @@ public final class CloudSummarizer: @unchecked Sendable {
         c.urlCache = nil
         c.requestCachePolicy = .reloadIgnoringLocalCacheData
         c.tlsMinimumSupportedProtocolVersion = .TLSv12
-        session = URLSession(configuration: c)
+        session = URLSession(configuration: c, delegate: NoRedirects(), delegateQueue: nil)
     }
 
     /// A tiny request to check the key and the model name.

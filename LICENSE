@@ -1,0 +1,15 @@
+Meteora
+Copyright (c) 2026 Musa Musaev. All rights reserved.
+
+The source code is published for review and transparency only. No licence is
+granted to copy, modify, distribute, sublicense or sell this software or any
+part of it, or to publish builds of it, in whole or in part, under the name
+"Meteora" or any other name, without the prior written permission of the
+copyright holder.
+
+Official builds are produced only by this repository's CI and are identified
+inside the app (Settings → Обновления → «Официальная сборка»). Any other build
+is unofficial and is used at the user's own risk.
+
+Third-party components keep their own licences: see
+Resources/THIRD_PARTY_NOTICES.txt.

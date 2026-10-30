@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import CryptoKit
 
 /// Checks whether a newer build of Meteora exists. Every green CI build is
 /// published to the repository's `build-output` branch with its number in
@@ -103,6 +104,30 @@ final class UpdateChecker: ObservableObject {
 
     func openDownload() { NSWorkspace.shared.open(Self.downloadURL) }
 
+    // MARK: Provenance
+
+    enum Provenance: Equatable {
+        case unknown
+        case official
+        /// Built somewhere else, or modified after the build.
+        case unofficial
+    }
+
+    /// Whether this copy is one CI built: the SHA-256 of our own executable
+    /// is looked up in the published list of official builds.
+    @Published private(set) var provenance: Provenance = .unknown
+
+    func checkProvenance() async {
+        guard let exe = Bundle.main.executableURL else { return }
+        let hash = await Task.detached(priority: .utility) { () -> String? in
+            guard let data = try? Data(contentsOf: exe, options: .mappedIfSafe) else { return nil }
+            return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        }.value
+        guard let hash, let list = try? await Self.fetch("OFFICIAL", limit: 1 << 20) else { return }
+        let known = Set(list.split(separator: "\n").compactMap { $0.split(separator: " ").last.map(String.init) })
+        provenance = known.contains(hash) ? .official : .unofficial
+    }
+
     private func presentAvailable(_ build: Int) {
         let a = NSAlert()
         a.messageText = "Доступна новая версия Meteora"
@@ -112,12 +137,12 @@ final class UpdateChecker: ObservableObject {
         if a.runModal() == .alertFirstButtonReturn { openDownload() }
     }
 
-    private static func fetch(_ name: String) async throws -> String {
+    private static func fetch(_ name: String, limit: Int = 4096) async throws -> String {
         var request = URLRequest(url: base.appendingPathComponent(name), cachePolicy: .reloadIgnoringLocalCacheData,
                                  timeoutInterval: 15)
         request.setValue("Meteora", forHTTPHeaderField: "User-Agent")
         let (data, response) = try await URLSession.shared.data(for: request)
-        guard (response as? HTTPURLResponse)?.statusCode == 200, data.count < 4096,
+        guard (response as? HTTPURLResponse)?.statusCode == 200, data.count < limit,
               let text = String(data: data, encoding: .utf8) else { throw URLError(.badServerResponse) }
         return text
     }

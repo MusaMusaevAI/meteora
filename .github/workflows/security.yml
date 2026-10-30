@@ -1,0 +1,62 @@
+name: security
+# Strix (AI penetration-testing agents, the owner's fork, pinned) reviews the
+# whole repository: Mac and iPhone apps, scripts and CI. Manual or weekly.
+# Needs two repository secrets: STRIX_LLM (model, e.g.
+# "anthropic/claude-sonnet-5-5") and LLM_API_KEY (that provider's key). Without
+# them the job only says so and stops.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"
+permissions:
+  contents: read
+concurrency:
+  group: security
+  cancel-in-progress: false
+jobs:
+  strix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      STRIX_LLM: ${{ secrets.STRIX_LLM }}
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      STRIX_TELEMETRY: "0"
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Check secrets
+        id: keys
+        run: |
+          if [ -z "$STRIX_LLM" ] || [ -z "$LLM_API_KEY" ]; then
+            echo "::warning title=strix::Add repository secrets STRIX_LLM and LLM_API_KEY to run Strix."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Install Strix (owner's fork, pinned commit)
+        if: steps.keys.outputs.ready == 'true'
+        run: |
+          python3 -m venv /tmp/strix
+          /tmp/strix/bin/pip install --quiet "strix-agent @ git+https://github.com/MusaMusaevAI/strix@f7a32ae62d94872631bc8415073868d02a6ffdaf"
+      - name: Scan
+        if: steps.keys.outputs.ready == 'true'
+        continue-on-error: true
+        run: |
+          /tmp/strix/bin/strix --target ./ --non-interactive --scan-mode deep \
+            --instruction-file docs/security/strix-instructions.md --max-budget-usd 25 2>&1 | tee strix.log
+      - name: Collect
+        if: always() && steps.keys.outputs.ready == 'true'
+        run: |
+          mkdir -p out-security
+          cp strix.log out-security/ 2>/dev/null || true
+          [ -d strix_runs ] && find strix_runs -type f \( -name '*.md' -o -name '*.json' -o -name '*.txt' \) -size -4M -print0 \
+            | xargs -0 -I{} cp --parents {} out-security/ || true
+          # Keys never leave the runner: drop anything that might echo them.
+          grep -rlF "$LLM_API_KEY" out-security 2>/dev/null | xargs -r rm -f
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always() && steps.keys.outputs.ready == 'true'
+        with:
+          name: security-report
+          path: out-security
+          retention-days: 30

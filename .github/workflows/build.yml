@@ -207,7 +207,8 @@ jobs:
 
   publish:
     needs: [macos, ios]
-    if: always()
+    # Only a green Mac build replaces what users download.
+    if: ${{ !cancelled() && needs.macos.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -232,6 +233,12 @@ jobs:
           # Build number of this run (= CFBundleVersion of the app): the app's
           # update check compares it with its own.
           echo "$GITHUB_RUN_NUMBER" > BUILD
+          # Every official build's executable hash, newest last; the app checks
+          # itself against this list.
+          curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.raw" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/contents/OFFICIAL?ref=build-output" -o OFFICIAL.prev || true
+          cat OFFICIAL.prev OFFICIAL_ENTRY 2>/dev/null | awk 'NF==2' | sort -n -u > OFFICIAL || true
+          rm -f OFFICIAL.prev OFFICIAL_ENTRY
           git init -q -b build-output
           git -c user.name="meteora-ci" -c user.email="meteora-ci@users.noreply.github.com" add -A
           git -c user.name="meteora-ci" -c user.email="meteora-ci@users.noreply.github.com" commit -qm "build $GITHUB_SHA"

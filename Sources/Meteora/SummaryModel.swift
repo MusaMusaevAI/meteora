@@ -159,8 +159,15 @@ final class SummaryModelController: ObservableObject {
     }
 
     /// The user agreed that transcripts go to this provider.
-    func hasConsent(_ p: CloudProvider) -> Bool { UserDefaults.standard.bool(forKey: "summary.consent.\(p.rawValue)") }
-    func giveConsent(_ p: CloudProvider) { UserDefaults.standard.set(true, forKey: "summary.consent.\(p.rawValue)") }
+    /// Consent covers the provider and, for a custom server, its address:
+    /// a changed address asks again.
+    private func consentKey(_ p: CloudProvider) -> String {
+        guard p == .compatible else { return "summary.consent.\(p.rawValue)" }
+        let host = URL(string: baseURL)?.host?.lowercased() ?? baseURL.lowercased()
+        return "summary.consent.\(p.rawValue).\(host)"
+    }
+    func hasConsent(_ p: CloudProvider) -> Bool { UserDefaults.standard.bool(forKey: consentKey(p)) }
+    func giveConsent(_ p: CloudProvider) { UserDefaults.standard.set(true, forKey: consentKey(p)) }
 
     // MARK: Local models
 

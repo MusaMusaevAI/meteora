@@ -79,3 +79,8 @@ lipo -info "$APP/Contents/MacOS/Meteora"
 lipo -info "$XPC/Contents/MacOS/MeteoraConverter"
 lipo -info "$XPC/Contents/MacOS/ffmpeg"
 du -sh "$APP"
+# Provenance: the signed executable's hash, published by CI in OFFICIAL on the
+# build-output branch. The app compares itself with that list (Settings →
+# Обновления) and says whether it is an official build.
+echo "$BUILD $(shasum -a 256 "$APP/Contents/MacOS/Meteora" | cut -d' ' -f1)" > build/OFFICIAL_ENTRY
+cat build/OFFICIAL_ENTRY

@@ -1,5 +1,6 @@
 import SwiftUI
 import AVKit
+import UniformTypeIdentifiers
 import MeteoraCore
 
 /// One recording: player, transcript, speakers, summary, export.
@@ -180,7 +181,7 @@ struct MeetingView: View {
                         .contextMenu {
                             Button { editText = s.text; editing = s } label: { Label("Исправить", systemImage: "pencil") }
                                 .disabled(session.transcript == nil)
-                            Button { UIPasteboard.general.string = s.text } label: { Label("Скопировать", systemImage: "doc.on.doc") }
+                            Button { UIPasteboard.general.setItems([[UTType.plainText.identifier: s.text]], options: [.localOnly: true]) } label: { Label("Скопировать", systemImage: "doc.on.doc") }
                         }
                 }
             }
@@ -333,7 +334,7 @@ struct SummaryCard: View {
             section("Решения", summary.decisions, "checkmark.seal")
             section("Задачи", summary.actionItems, "arrow.right.circle")
             Button {
-                UIPasteboard.general.string = summary.markdown()
+                UIPasteboard.general.setItems([[UTType.plainText.identifier: summary.markdown()]], options: [.localOnly: true])
             } label: { Label("Скопировать итоги", systemImage: "doc.on.doc") }
                 .font(Theme.ui(14, weight: .medium)).foregroundStyle(Theme.accent)
         }
