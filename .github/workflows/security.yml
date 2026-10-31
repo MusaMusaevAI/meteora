@@ -1,13 +1,21 @@
 name: security
 # Strix (AI penetration-testing agents, the owner's fork, pinned) reviews the
-# whole repository: Mac and iPhone apps, scripts and CI. Manual or weekly.
+# whole repository: Mac and iPhone apps, scripts and CI. Manual runs only,
+# so the API credits are spent on purpose.
 # Needs two repository secrets: STRIX_LLM (model, e.g.
 # "anthropic/claude-sonnet-5-5") and LLM_API_KEY (that provider's key). Without
 # them the job only says so and stops.
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "17 3 * * 1"
+    inputs:
+      mode:
+        description: "quick / standard / deep"
+        default: standard
+        type: choice
+        options: [quick, standard, deep]
+      budget:
+        description: "Spending limit for this run, USD"
+        default: "8"
 permissions:
   contents: read
 concurrency:
@@ -21,6 +29,8 @@ jobs:
       STRIX_LLM: ${{ secrets.STRIX_LLM }}
       LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
       STRIX_TELEMETRY: "0"
+      SCAN_MODE: ${{ inputs.mode || 'standard' }}
+      SCAN_BUDGET: ${{ inputs.budget || '8' }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -43,8 +53,8 @@ jobs:
         if: steps.keys.outputs.ready == 'true'
         continue-on-error: true
         run: |
-          /tmp/strix/bin/strix --target ./ --non-interactive --scan-mode deep \
-            --instruction-file docs/security/strix-instructions.md --max-budget-usd 25 2>&1 | tee strix.log
+          /tmp/strix/bin/strix --target ./ --non-interactive --scan-mode "$SCAN_MODE" \
+            --instruction-file docs/security/strix-instructions.md --max-budget-usd "$SCAN_BUDGET" 2>&1 | tee strix.log
       - name: Collect
         if: always() && steps.keys.outputs.ready == 'true'
         run: |
