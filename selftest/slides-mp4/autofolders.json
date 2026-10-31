@@ -1,0 +1,46 @@
+{
+  "bookmark" : true,
+  "errors" : [
+
+  ],
+  "events" : [
+    "0.4 detected Запись 29.10.26 14-05-31.wav",
+    "14.4 ready Запись 29.10.26 14-05-31.wav",
+    "14.4 started Запись 29.10.26 14-05-31.wav",
+    "16.4 done Запись 29.10.26 14-05-31.wav",
+    "16.9 detected Запись 29.10.26 14-05-31 (копия).wav",
+    "22.9 duplicate Запись 29.10.26 14-05-31 (копия).wav"
+  ],
+  "fixture" : "ru-example.wav",
+  "fixtureBytes" : 361324,
+  "ledgerRecorded" : true,
+  "ok" : true,
+  "pauseStatus" : "Автопапки на паузе",
+  "recent" : [
+    "ok: Запись 29.10.26 14-05-31 — 11 с · сохранено: TXT, SRT"
+  ],
+  "secondCopy" : {
+    "detected" : true,
+    "newProcessingRuns" : 0,
+    "skippedAsDuplicate" : true
+  },
+  "seconds" : 25.199999999999999,
+  "speechModelInstalled" : true,
+  "statusAfter" : "Слежу за 1 папкой",
+  "statusIdle" : "Слежу за 1 папкой",
+  "statusWhileGrowing" : "Жду, пока допишется «Запись 29.10.26 14-05-31»",
+  "timings" : {
+    "copyEnd" : 8.5,
+    "copyStart" : 0,
+    "detected" : 0.40000000000000002,
+    "done" : 16.399999999999999,
+    "processingSeconds" : 2,
+    "ready" : 14.4,
+    "started" : 14.4,
+    "waitedAfterLastWrite" : 5.9000000000000004
+  },
+  "written" : {
+    "srt" : 354,
+    "txt" : 424
+  }
+}

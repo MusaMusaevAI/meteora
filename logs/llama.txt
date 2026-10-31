@@ -1,0 +1,2 @@
+llama.cpp b11970 already built (Vendor/llama/lib/libmeteora-llama.a)
+Architectures in the fat file: Vendor/llama/lib/libmeteora-llama.a are: x86_64 arm64 

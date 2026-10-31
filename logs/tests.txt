@@ -1,0 +1,2444 @@
+Building for debugging...
+[0/24] /Users/runner/work/meteora/meteora/.build/arm64-apple-macosx/debug/MeteoraPackageTests.derived/runner.swift
+[1/24] Write sources
+[1/24] Copying Info.plist
+[3/24] Write sources
+[8/24] Write MeteoraConverter-entitlement.plist
+[8/24] Write sources
+[11/24] Write Meteora-entitlement.plist
+[12/24] Copying Fixtures
+[13/24] Write swift-version-1977FEB4D2752686.txt
+[14/39] Compiling CSherpaOnnx shim.c
+[15/41] Compiling CLlama shim.c
+[17/41] Emitting module MeteoraConverterProtocol
+[18/41] Compiling MeteoraConverterProtocol ConverterProtocol.swift
+[19/43] Compiling MeteoraConverter main.swift
+[20/43] Emitting module MeteoraConverter
+[20/43] Write Objects.LinkFileList
+[21/43] Linking MeteoraConverter
+[22/43] Applying MeteoraConverter
+[24/43] Emitting module MeteoraCore
+[25/50] Compiling MeteoraCore MeetingSummary.swift
+[26/50] Compiling MeteoraCore NativeMedia.swift
+[27/50] Compiling MeteoraCore PIIMasking.swift
+[28/50] Compiling MeteoraCore Platform.swift
+[29/50] Compiling MeteoraCore RecordingMixer.swift
+[30/50] Compiling MeteoraCore Report.swift
+[31/50] Compiling MeteoraCore SceneDetection.swift
+[32/50] Compiling MeteoraCore AudioPipeline.swift
+[33/50] Compiling MeteoraCore ByteSource.swift
+[34/50] Compiling MeteoraCore Export.swift
+[35/50] Compiling MeteoraCore ExportDocx.swift
+[36/50] Compiling MeteoraCore ExportRich.swift
+[37/50] Compiling MeteoraCore LinkDefang.swift
+[38/50] Compiling MeteoraCore MeetingMail.swift
+[39/50] Compiling MeteoraCore SpeakerAssignment.swift
+[40/50] Compiling MeteoraCore SummaryGrounding.swift
+[41/50] Compiling MeteoraCore TermDictionary.swift
+[42/50] Compiling MeteoraCore TermHints.swift
+[43/50] Compiling MeteoraCore Transcript.swift
+[44/50] Compiling MeteoraCore WebMDemuxer.swift
+[45/50] Compiling MeteoraCore WebMOpusWriter.swift
+[46/62] Compiling MeteoraCoreTests MeteoraCoreTests.swift
+[47/62] Compiling MeteoraCoreTests PIIMaskingTests.swift
+[48/62] Emitting module MeteoraASR
+[49/62] Compiling MeteoraCoreTests ExportTests.swift
+[50/62] Compiling MeteoraCoreTests MeetingSummaryTests.swift
+[51/63] Compiling MeteoraASR SpeechRecognizer.swift
+[52/68] Compiling MeteoraLLM MeetingSummarizer.swift
+[53/68] Compiling MeteoraLLM PIIGuard.swift
+[54/68] Emitting module MeteoraLLM
+[55/68] Compiling MeteoraLLM CloudSummarizer.swift
+[56/68] Compiling MeteoraLLM LlamaEngine.swift
+[57/70] Compiling MeteoraLLM SummaryModelStore.swift
+[58/70] Compiling MeteoraLLM SummarySelfTest.swift
+[59/104] Compiling Meteora AutoFolderNotifier.swift
+[60/104] Compiling Meteora AutoFolderRows.swift
+[61/104] Compiling Meteora AutoFolderSelfTest.swift
+[62/107] Compiling MeteoraCoreTests TermDictionaryTests.swift
+[63/107] Compiling MeteoraCoreTests WebMWriterTests.swift
+[64/107] Compiling MeteoraCoreTests resource_bundle_accessor.swift
+[65/107] Compiling Meteora AppDelegate+AutoFolders.swift
+/Users/runner/work/meteora/meteora/Tests/MeteoraCoreTests/MeteoraCoreTests.swift:137:22: warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+135 |         XCTAssertEqual(HTTPRange.parse("bytes=90-500", size: 100), .some(90 ... 99))
+136 |         XCTAssertEqual(HTTPRange.parse("bytes=-10", size: 100), .some(90 ... 99))
+137 |         XCTAssertNil(HTTPRange.parse("bytes=100-", size: 100) as ClosedRange<UInt64>??)
+    |                      |                                        |- note: provide a default value to avoid this warning
+    |                      |                                        |- note: force-unwrap the value to avoid this warning
+    |                      |                                        `- note: explicitly cast to 'Any?' with 'as Any?' to silence this warning
+    |                      `- warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+138 |         XCTAssertNil(HTTPRange.parse("bytes=5-1", size: 100) as ClosedRange<UInt64>??)
+139 |         XCTAssertNil(HTTPRange.parse("bytes=0-1,5-6", size: 100) as ClosedRange<UInt64>??)
+
+/Users/runner/work/meteora/meteora/Tests/MeteoraCoreTests/MeteoraCoreTests.swift:138:22: warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+136 |         XCTAssertEqual(HTTPRange.parse("bytes=-10", size: 100), .some(90 ... 99))
+137 |         XCTAssertNil(HTTPRange.parse("bytes=100-", size: 100) as ClosedRange<UInt64>??)
+138 |         XCTAssertNil(HTTPRange.parse("bytes=5-1", size: 100) as ClosedRange<UInt64>??)
+    |                      |                                       |- note: provide a default value to avoid this warning
+    |                      |                                       |- note: force-unwrap the value to avoid this warning
+    |                      |                                       `- note: explicitly cast to 'Any?' with 'as Any?' to silence this warning
+    |                      `- warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+139 |         XCTAssertNil(HTTPRange.parse("bytes=0-1,5-6", size: 100) as ClosedRange<UInt64>??)
+140 |         XCTAssertNil(HTTPRange.parse("items=0-1", size: 100) as ClosedRange<UInt64>??)
+
+/Users/runner/work/meteora/meteora/Tests/MeteoraCoreTests/MeteoraCoreTests.swift:139:22: warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+137 |         XCTAssertNil(HTTPRange.parse("bytes=100-", size: 100) as ClosedRange<UInt64>??)
+138 |         XCTAssertNil(HTTPRange.parse("bytes=5-1", size: 100) as ClosedRange<UInt64>??)
+139 |         XCTAssertNil(HTTPRange.parse("bytes=0-1,5-6", size: 100) as ClosedRange<UInt64>??)
+    |                      |                                           |- note: provide a default value to avoid this warning
+    |                      |                                           |- note: force-unwrap the value to avoid this warning
+    |                      |                                           `- note: explicitly cast to 'Any?' with 'as Any?' to silence this warning
+    |                      `- warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+140 |         XCTAssertNil(HTTPRange.parse("items=0-1", size: 100) as ClosedRange<UInt64>??)
+141 |         XCTAssertNil(HTTPRange.parse("bytes=-0", size: 100) as ClosedRange<UInt64>??)
+
+/Users/runner/work/meteora/meteora/Tests/MeteoraCoreTests/MeteoraCoreTests.swift:140:22: warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+138 |         XCTAssertNil(HTTPRange.parse("bytes=5-1", size: 100) as ClosedRange<UInt64>??)
+139 |         XCTAssertNil(HTTPRange.parse("bytes=0-1,5-6", size: 100) as ClosedRange<UInt64>??)
+140 |         XCTAssertNil(HTTPRange.parse("items=0-1", size: 100) as ClosedRange<UInt64>??)
+    |                      |                                       |- note: provide a default value to avoid this warning
+    |                      |                                       |- note: force-unwrap the value to avoid this warning
+    |                      |                                       `- note: explicitly cast to 'Any?' with 'as Any?' to silence this warning
+    |                      `- warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+141 |         XCTAssertNil(HTTPRange.parse("bytes=-0", size: 100) as ClosedRange<UInt64>??)
+142 |         XCTAssertNil(HTTPRange.parse("bytes=99999999999999999999999-", size: 100) as ClosedRange<UInt64>??)
+
+/Users/runner/work/meteora/meteora/Tests/MeteoraCoreTests/MeteoraCoreTests.swift:141:22: warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+139 |         XCTAssertNil(HTTPRange.parse("bytes=0-1,5-6", size: 100) as ClosedRange<UInt64>??)
+140 |         XCTAssertNil(HTTPRange.parse("items=0-1", size: 100) as ClosedRange<UInt64>??)
+141 |         XCTAssertNil(HTTPRange.parse("bytes=-0", size: 100) as ClosedRange<UInt64>??)
+    |                      |                                      |- note: provide a default value to avoid this warning
+    |                      |                                      |- note: force-unwrap the value to avoid this warning
+    |                      |                                      `- note: explicitly cast to 'Any?' with 'as Any?' to silence this warning
+    |                      `- warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+142 |         XCTAssertNil(HTTPRange.parse("bytes=99999999999999999999999-", size: 100) as ClosedRange<UInt64>??)
+143 |     }
+
+/Users/runner/work/meteora/meteora/Tests/MeteoraCoreTests/MeteoraCoreTests.swift:142:22: warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+140 |         XCTAssertNil(HTTPRange.parse("items=0-1", size: 100) as ClosedRange<UInt64>??)
+141 |         XCTAssertNil(HTTPRange.parse("bytes=-0", size: 100) as ClosedRange<UInt64>??)
+142 |         XCTAssertNil(HTTPRange.parse("bytes=99999999999999999999999-", size: 100) as ClosedRange<UInt64>??)
+    |                      |                                                            |- note: provide a default value to avoid this warning
+    |                      |                                                            |- note: force-unwrap the value to avoid this warning
+    |                      |                                                            `- note: explicitly cast to 'Any?' with 'as Any?' to silence this warning
+    |                      `- warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+143 |     }
+144 | }
+[66/107] Compiling Meteora AppStatusItem.swift
+/Users/runner/work/meteora/meteora/Tests/MeteoraCoreTests/MeteoraCoreTests.swift:137:22: warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+135 |         XCTAssertEqual(HTTPRange.parse("bytes=90-500", size: 100), .some(90 ... 99))
+136 |         XCTAssertEqual(HTTPRange.parse("bytes=-10", size: 100), .some(90 ... 99))
+137 |         XCTAssertNil(HTTPRange.parse("bytes=100-", size: 100) as ClosedRange<UInt64>??)
+    |                      |                                        |- note: provide a default value to avoid this warning
+    |                      |                                        |- note: force-unwrap the value to avoid this warning
+    |                      |                                        `- note: explicitly cast to 'Any?' with 'as Any?' to silence this warning
+    |                      `- warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+138 |         XCTAssertNil(HTTPRange.parse("bytes=5-1", size: 100) as ClosedRange<UInt64>??)
+139 |         XCTAssertNil(HTTPRange.parse("bytes=0-1,5-6", size: 100) as ClosedRange<UInt64>??)
+
+/Users/runner/work/meteora/meteora/Tests/MeteoraCoreTests/MeteoraCoreTests.swift:138:22: warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+136 |         XCTAssertEqual(HTTPRange.parse("bytes=-10", size: 100), .some(90 ... 99))
+137 |         XCTAssertNil(HTTPRange.parse("bytes=100-", size: 100) as ClosedRange<UInt64>??)
+138 |         XCTAssertNil(HTTPRange.parse("bytes=5-1", size: 100) as ClosedRange<UInt64>??)
+    |                      |                                       |- note: provide a default value to avoid this warning
+    |                      |                                       |- note: force-unwrap the value to avoid this warning
+    |                      |                                       `- note: explicitly cast to 'Any?' with 'as Any?' to silence this warning
+    |                      `- warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+139 |         XCTAssertNil(HTTPRange.parse("bytes=0-1,5-6", size: 100) as ClosedRange<UInt64>??)
+140 |         XCTAssertNil(HTTPRange.parse("items=0-1", size: 100) as ClosedRange<UInt64>??)
+
+/Users/runner/work/meteora/meteora/Tests/MeteoraCoreTests/MeteoraCoreTests.swift:139:22: warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+137 |         XCTAssertNil(HTTPRange.parse("bytes=100-", size: 100) as ClosedRange<UInt64>??)
+138 |         XCTAssertNil(HTTPRange.parse("bytes=5-1", size: 100) as ClosedRange<UInt64>??)
+139 |         XCTAssertNil(HTTPRange.parse("bytes=0-1,5-6", size: 100) as ClosedRange<UInt64>??)
+    |                      |                                           |- note: provide a default value to avoid this warning
+    |                      |                                           |- note: force-unwrap the value to avoid this warning
+    |                      |                                           `- note: explicitly cast to 'Any?' with 'as Any?' to silence this warning
+    |                      `- warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+140 |         XCTAssertNil(HTTPRange.parse("items=0-1", size: 100) as ClosedRange<UInt64>??)
+141 |         XCTAssertNil(HTTPRange.parse("bytes=-0", size: 100) as ClosedRange<UInt64>??)
+
+/Users/runner/work/meteora/meteora/Tests/MeteoraCoreTests/MeteoraCoreTests.swift:140:22: warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+138 |         XCTAssertNil(HTTPRange.parse("bytes=5-1", size: 100) as ClosedRange<UInt64>??)
+139 |         XCTAssertNil(HTTPRange.parse("bytes=0-1,5-6", size: 100) as ClosedRange<UInt64>??)
+140 |         XCTAssertNil(HTTPRange.parse("items=0-1", size: 100) as ClosedRange<UInt64>??)
+    |                      |                                       |- note: provide a default value to avoid this warning
+    |                      |                                       |- note: force-unwrap the value to avoid this warning
+    |                      |                                       `- note: explicitly cast to 'Any?' with 'as Any?' to silence this warning
+    |                      `- warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+141 |         XCTAssertNil(HTTPRange.parse("bytes=-0", size: 100) as ClosedRange<UInt64>??)
+142 |         XCTAssertNil(HTTPRange.parse("bytes=99999999999999999999999-", size: 100) as ClosedRange<UInt64>??)
+
+/Users/runner/work/meteora/meteora/Tests/MeteoraCoreTests/MeteoraCoreTests.swift:141:22: warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+139 |         XCTAssertNil(HTTPRange.parse("bytes=0-1,5-6", size: 100) as ClosedRange<UInt64>??)
+140 |         XCTAssertNil(HTTPRange.parse("items=0-1", size: 100) as ClosedRange<UInt64>??)
+141 |         XCTAssertNil(HTTPRange.parse("bytes=-0", size: 100) as ClosedRange<UInt64>??)
+    |                      |                                      |- note: provide a default value to avoid this warning
+    |                      |                                      |- note: force-unwrap the value to avoid this warning
+    |                      |                                      `- note: explicitly cast to 'Any?' with 'as Any?' to silence this warning
+    |                      `- warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+142 |         XCTAssertNil(HTTPRange.parse("bytes=99999999999999999999999-", size: 100) as ClosedRange<UInt64>??)
+143 |     }
+
+/Users/runner/work/meteora/meteora/Tests/MeteoraCoreTests/MeteoraCoreTests.swift:142:22: warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+140 |         XCTAssertNil(HTTPRange.parse("items=0-1", size: 100) as ClosedRange<UInt64>??)
+141 |         XCTAssertNil(HTTPRange.parse("bytes=-0", size: 100) as ClosedRange<UInt64>??)
+142 |         XCTAssertNil(HTTPRange.parse("bytes=99999999999999999999999-", size: 100) as ClosedRange<UInt64>??)
+    |                      |                                                            |- note: provide a default value to avoid this warning
+    |                      |                                                            |- note: force-unwrap the value to avoid this warning
+    |                      |                                                            `- note: explicitly cast to 'Any?' with 'as Any?' to silence this warning
+    |                      `- warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+143 |     }
+144 | }
+[67/107] Compiling Meteora AutoFolderLedger.swift
+/Users/runner/work/meteora/meteora/Tests/MeteoraCoreTests/MeteoraCoreTests.swift:137:22: warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+135 |         XCTAssertEqual(HTTPRange.parse("bytes=90-500", size: 100), .some(90 ... 99))
+136 |         XCTAssertEqual(HTTPRange.parse("bytes=-10", size: 100), .some(90 ... 99))
+137 |         XCTAssertNil(HTTPRange.parse("bytes=100-", size: 100) as ClosedRange<UInt64>??)
+    |                      |                                        |- note: provide a default value to avoid this warning
+    |                      |                                        |- note: force-unwrap the value to avoid this warning
+    |                      |                                        `- note: explicitly cast to 'Any?' with 'as Any?' to silence this warning
+    |                      `- warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+138 |         XCTAssertNil(HTTPRange.parse("bytes=5-1", size: 100) as ClosedRange<UInt64>??)
+139 |         XCTAssertNil(HTTPRange.parse("bytes=0-1,5-6", size: 100) as ClosedRange<UInt64>??)
+
+/Users/runner/work/meteora/meteora/Tests/MeteoraCoreTests/MeteoraCoreTests.swift:138:22: warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+136 |         XCTAssertEqual(HTTPRange.parse("bytes=-10", size: 100), .some(90 ... 99))
+137 |         XCTAssertNil(HTTPRange.parse("bytes=100-", size: 100) as ClosedRange<UInt64>??)
+138 |         XCTAssertNil(HTTPRange.parse("bytes=5-1", size: 100) as ClosedRange<UInt64>??)
+    |                      |                                       |- note: provide a default value to avoid this warning
+    |                      |                                       |- note: force-unwrap the value to avoid this warning
+    |                      |                                       `- note: explicitly cast to 'Any?' with 'as Any?' to silence this warning
+    |                      `- warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+139 |         XCTAssertNil(HTTPRange.parse("bytes=0-1,5-6", size: 100) as ClosedRange<UInt64>??)
+140 |         XCTAssertNil(HTTPRange.parse("items=0-1", size: 100) as ClosedRange<UInt64>??)
+
+/Users/runner/work/meteora/meteora/Tests/MeteoraCoreTests/MeteoraCoreTests.swift:139:22: warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+137 |         XCTAssertNil(HTTPRange.parse("bytes=100-", size: 100) as ClosedRange<UInt64>??)
+138 |         XCTAssertNil(HTTPRange.parse("bytes=5-1", size: 100) as ClosedRange<UInt64>??)
+139 |         XCTAssertNil(HTTPRange.parse("bytes=0-1,5-6", size: 100) as ClosedRange<UInt64>??)
+    |                      |                                           |- note: provide a default value to avoid this warning
+    |                      |                                           |- note: force-unwrap the value to avoid this warning
+    |                      |                                           `- note: explicitly cast to 'Any?' with 'as Any?' to silence this warning
+    |                      `- warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+140 |         XCTAssertNil(HTTPRange.parse("items=0-1", size: 100) as ClosedRange<UInt64>??)
+141 |         XCTAssertNil(HTTPRange.parse("bytes=-0", size: 100) as ClosedRange<UInt64>??)
+
+/Users/runner/work/meteora/meteora/Tests/MeteoraCoreTests/MeteoraCoreTests.swift:140:22: warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+138 |         XCTAssertNil(HTTPRange.parse("bytes=5-1", size: 100) as ClosedRange<UInt64>??)
+139 |         XCTAssertNil(HTTPRange.parse("bytes=0-1,5-6", size: 100) as ClosedRange<UInt64>??)
+140 |         XCTAssertNil(HTTPRange.parse("items=0-1", size: 100) as ClosedRange<UInt64>??)
+    |                      |                                       |- note: provide a default value to avoid this warning
+    |                      |                                       |- note: force-unwrap the value to avoid this warning
+    |                      |                                       `- note: explicitly cast to 'Any?' with 'as Any?' to silence this warning
+    |                      `- warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+141 |         XCTAssertNil(HTTPRange.parse("bytes=-0", size: 100) as ClosedRange<UInt64>??)
+142 |         XCTAssertNil(HTTPRange.parse("bytes=99999999999999999999999-", size: 100) as ClosedRange<UInt64>??)
+
+/Users/runner/work/meteora/meteora/Tests/MeteoraCoreTests/MeteoraCoreTests.swift:141:22: warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+139 |         XCTAssertNil(HTTPRange.parse("bytes=0-1,5-6", size: 100) as ClosedRange<UInt64>??)
+140 |         XCTAssertNil(HTTPRange.parse("items=0-1", size: 100) as ClosedRange<UInt64>??)
+141 |         XCTAssertNil(HTTPRange.parse("bytes=-0", size: 100) as ClosedRange<UInt64>??)
+    |                      |                                      |- note: provide a default value to avoid this warning
+    |                      |                                      |- note: force-unwrap the value to avoid this warning
+    |                      |                                      `- note: explicitly cast to 'Any?' with 'as Any?' to silence this warning
+    |                      `- warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+142 |         XCTAssertNil(HTTPRange.parse("bytes=99999999999999999999999-", size: 100) as ClosedRange<UInt64>??)
+143 |     }
+
+/Users/runner/work/meteora/meteora/Tests/MeteoraCoreTests/MeteoraCoreTests.swift:142:22: warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+140 |         XCTAssertNil(HTTPRange.parse("items=0-1", size: 100) as ClosedRange<UInt64>??)
+141 |         XCTAssertNil(HTTPRange.parse("bytes=-0", size: 100) as ClosedRange<UInt64>??)
+142 |         XCTAssertNil(HTTPRange.parse("bytes=99999999999999999999999-", size: 100) as ClosedRange<UInt64>??)
+    |                      |                                                            |- note: provide a default value to avoid this warning
+    |                      |                                                            |- note: force-unwrap the value to avoid this warning
+    |                      |                                                            `- note: explicitly cast to 'Any?' with 'as Any?' to silence this warning
+    |                      `- warning: expression implicitly coerced from 'ClosedRange<UInt64>??' to 'Any?'
+143 |     }
+144 | }
+[68/107] Emitting module MeteoraCoreTests
+[69/109] Emitting module MeteoraPackageTests
+[70/109] Compiling MeteoraPackageTests runner.swift
+[70/109] Write Objects.LinkFileList
+[71/109] Linking MeteoraPackageTests
+[73/109] Emitting module Meteora
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+112 |     }
+113 | 
+114 |     nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    |     `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+115 |         let f = DateFormatter()
+116 |         f.locale = Locale(identifier: "ru_RU")
+[74/109] Compiling Meteora MediaConverter.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:247:29: warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+245 |                         if isCancelled() || cancelRequested.isSet {
+246 |                             cancelRequested.set()
+247 |                             proxy.cancel()
+    |                             `- warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+248 |                             // If the service doesn't answer, give up after 5 s.
+249 |                             DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+
+/Users/runner/work/meteora/meteora/Sources/MeteoraConverterProtocol/ConverterProtocol.swift:43:17: note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+41 | /// write exactly these two files and nothing else.
+42 | @objc(MeteoraConverterServiceProtocol)
+43 | public protocol ConverterServiceProtocol {
+   |                 `- note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+44 |     /// Converts `input` into MP4 written to `output`: H.264 + AAC when
+45 |     /// `keepVideo` is true and the source has video, otherwise AAC only.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:4:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  2 | import Darwin
+  3 | import Foundation
+  4 | import MeteoraConverterProtocol
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  5 | 
+  6 | /// Errors of the rare-format converter. Messages are shown to the user.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:218:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+216 |                 }, isCancelled: { token.isCancelled })
+217 |                 await MainActor.run {
+218 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+219 |                     self.info = info
+220 |                     self.demuxer = demuxer
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:230:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+228 |             } catch {
+229 |                 await MainActor.run {
+230 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+231 |                     self.loadState = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+232 |                 }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:544:63: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+542 |                 let dec = try await origin.make()
+543 |                 let analysis = try dec.analyze(isCancelled: { token.isCancelled })
+544 |                 await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
+    |                                                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:547:45: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+547 |                     if !token.isCancelled { self?.audioError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription }
+    |                                             `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+548 |                 }
+549 |             }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:346:44: warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+344 |         let core = self.core
+345 |         let tap = SystemAudioCapture { buffer in
+346 |             core.queue.async { core.ingest(buffer, from: .system) }
+    |                                            `- warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+347 |         }
+348 |         tap.onRouteChange = { [weak self] in self?.restartSystemAudio() }
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import Foundation
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import MeteoraCore
+  4 | import os
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[75/109] Compiling Meteora MediaConverterSupport.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:247:29: warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+245 |                         if isCancelled() || cancelRequested.isSet {
+246 |                             cancelRequested.set()
+247 |                             proxy.cancel()
+    |                             `- warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+248 |                             // If the service doesn't answer, give up after 5 s.
+249 |                             DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+
+/Users/runner/work/meteora/meteora/Sources/MeteoraConverterProtocol/ConverterProtocol.swift:43:17: note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+41 | /// write exactly these two files and nothing else.
+42 | @objc(MeteoraConverterServiceProtocol)
+43 | public protocol ConverterServiceProtocol {
+   |                 `- note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+44 |     /// Converts `input` into MP4 written to `output`: H.264 + AAC when
+45 |     /// `keepVideo` is true and the source has video, otherwise AAC only.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:4:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  2 | import Darwin
+  3 | import Foundation
+  4 | import MeteoraConverterProtocol
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  5 | 
+  6 | /// Errors of the rare-format converter. Messages are shown to the user.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:218:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+216 |                 }, isCancelled: { token.isCancelled })
+217 |                 await MainActor.run {
+218 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+219 |                     self.info = info
+220 |                     self.demuxer = demuxer
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:230:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+228 |             } catch {
+229 |                 await MainActor.run {
+230 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+231 |                     self.loadState = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+232 |                 }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:544:63: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+542 |                 let dec = try await origin.make()
+543 |                 let analysis = try dec.analyze(isCancelled: { token.isCancelled })
+544 |                 await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
+    |                                                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:547:45: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+547 |                     if !token.isCancelled { self?.audioError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription }
+    |                                             `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+548 |                 }
+549 |             }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:346:44: warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+344 |         let core = self.core
+345 |         let tap = SystemAudioCapture { buffer in
+346 |             core.queue.async { core.ingest(buffer, from: .system) }
+    |                                            `- warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+347 |         }
+348 |         tap.onRouteChange = { [weak self] in self?.restartSystemAudio() }
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import Foundation
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import MeteoraCore
+  4 | import os
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[76/109] Compiling Meteora MeetingJournal.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:247:29: warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+245 |                         if isCancelled() || cancelRequested.isSet {
+246 |                             cancelRequested.set()
+247 |                             proxy.cancel()
+    |                             `- warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+248 |                             // If the service doesn't answer, give up after 5 s.
+249 |                             DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+
+/Users/runner/work/meteora/meteora/Sources/MeteoraConverterProtocol/ConverterProtocol.swift:43:17: note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+41 | /// write exactly these two files and nothing else.
+42 | @objc(MeteoraConverterServiceProtocol)
+43 | public protocol ConverterServiceProtocol {
+   |                 `- note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+44 |     /// Converts `input` into MP4 written to `output`: H.264 + AAC when
+45 |     /// `keepVideo` is true and the source has video, otherwise AAC only.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:4:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  2 | import Darwin
+  3 | import Foundation
+  4 | import MeteoraConverterProtocol
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  5 | 
+  6 | /// Errors of the rare-format converter. Messages are shown to the user.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:218:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+216 |                 }, isCancelled: { token.isCancelled })
+217 |                 await MainActor.run {
+218 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+219 |                     self.info = info
+220 |                     self.demuxer = demuxer
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:230:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+228 |             } catch {
+229 |                 await MainActor.run {
+230 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+231 |                     self.loadState = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+232 |                 }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:544:63: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+542 |                 let dec = try await origin.make()
+543 |                 let analysis = try dec.analyze(isCancelled: { token.isCancelled })
+544 |                 await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
+    |                                                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:547:45: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+547 |                     if !token.isCancelled { self?.audioError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription }
+    |                                             `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+548 |                 }
+549 |             }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:346:44: warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+344 |         let core = self.core
+345 |         let tap = SystemAudioCapture { buffer in
+346 |             core.queue.async { core.ingest(buffer, from: .system) }
+    |                                            `- warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+347 |         }
+348 |         tap.onRouteChange = { [weak self] in self?.restartSystemAudio() }
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import Foundation
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import MeteoraCore
+  4 | import os
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[77/109] Compiling Meteora MeetingModel.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:247:29: warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+245 |                         if isCancelled() || cancelRequested.isSet {
+246 |                             cancelRequested.set()
+247 |                             proxy.cancel()
+    |                             `- warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+248 |                             // If the service doesn't answer, give up after 5 s.
+249 |                             DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+
+/Users/runner/work/meteora/meteora/Sources/MeteoraConverterProtocol/ConverterProtocol.swift:43:17: note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+41 | /// write exactly these two files and nothing else.
+42 | @objc(MeteoraConverterServiceProtocol)
+43 | public protocol ConverterServiceProtocol {
+   |                 `- note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+44 |     /// Converts `input` into MP4 written to `output`: H.264 + AAC when
+45 |     /// `keepVideo` is true and the source has video, otherwise AAC only.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:4:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  2 | import Darwin
+  3 | import Foundation
+  4 | import MeteoraConverterProtocol
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  5 | 
+  6 | /// Errors of the rare-format converter. Messages are shown to the user.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:218:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+216 |                 }, isCancelled: { token.isCancelled })
+217 |                 await MainActor.run {
+218 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+219 |                     self.info = info
+220 |                     self.demuxer = demuxer
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:230:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+228 |             } catch {
+229 |                 await MainActor.run {
+230 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+231 |                     self.loadState = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+232 |                 }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:544:63: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+542 |                 let dec = try await origin.make()
+543 |                 let analysis = try dec.analyze(isCancelled: { token.isCancelled })
+544 |                 await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
+    |                                                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:547:45: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+547 |                     if !token.isCancelled { self?.audioError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription }
+    |                                             `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+548 |                 }
+549 |             }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:346:44: warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+344 |         let core = self.core
+345 |         let tap = SystemAudioCapture { buffer in
+346 |             core.queue.async { core.ingest(buffer, from: .system) }
+    |                                            `- warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+347 |         }
+348 |         tap.onRouteChange = { [weak self] in self?.restartSystemAudio() }
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import Foundation
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import MeteoraCore
+  4 | import os
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[78/109] Compiling Meteora MeetingProcessor.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:247:29: warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+245 |                         if isCancelled() || cancelRequested.isSet {
+246 |                             cancelRequested.set()
+247 |                             proxy.cancel()
+    |                             `- warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+248 |                             // If the service doesn't answer, give up after 5 s.
+249 |                             DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+
+/Users/runner/work/meteora/meteora/Sources/MeteoraConverterProtocol/ConverterProtocol.swift:43:17: note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+41 | /// write exactly these two files and nothing else.
+42 | @objc(MeteoraConverterServiceProtocol)
+43 | public protocol ConverterServiceProtocol {
+   |                 `- note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+44 |     /// Converts `input` into MP4 written to `output`: H.264 + AAC when
+45 |     /// `keepVideo` is true and the source has video, otherwise AAC only.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:4:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  2 | import Darwin
+  3 | import Foundation
+  4 | import MeteoraConverterProtocol
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  5 | 
+  6 | /// Errors of the rare-format converter. Messages are shown to the user.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:218:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+216 |                 }, isCancelled: { token.isCancelled })
+217 |                 await MainActor.run {
+218 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+219 |                     self.info = info
+220 |                     self.demuxer = demuxer
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:230:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+228 |             } catch {
+229 |                 await MainActor.run {
+230 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+231 |                     self.loadState = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+232 |                 }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:544:63: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+542 |                 let dec = try await origin.make()
+543 |                 let analysis = try dec.analyze(isCancelled: { token.isCancelled })
+544 |                 await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
+    |                                                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:547:45: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+547 |                     if !token.isCancelled { self?.audioError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription }
+    |                                             `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+548 |                 }
+549 |             }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:346:44: warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+344 |         let core = self.core
+345 |         let tap = SystemAudioCapture { buffer in
+346 |             core.queue.async { core.ingest(buffer, from: .system) }
+    |                                            `- warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+347 |         }
+348 |         tap.onRouteChange = { [weak self] in self?.restartSystemAudio() }
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import Foundation
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import MeteoraCore
+  4 | import os
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[79/109] Compiling Meteora MeteoraApp.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:247:29: warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+245 |                         if isCancelled() || cancelRequested.isSet {
+246 |                             cancelRequested.set()
+247 |                             proxy.cancel()
+    |                             `- warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+248 |                             // If the service doesn't answer, give up after 5 s.
+249 |                             DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+
+/Users/runner/work/meteora/meteora/Sources/MeteoraConverterProtocol/ConverterProtocol.swift:43:17: note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+41 | /// write exactly these two files and nothing else.
+42 | @objc(MeteoraConverterServiceProtocol)
+43 | public protocol ConverterServiceProtocol {
+   |                 `- note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+44 |     /// Converts `input` into MP4 written to `output`: H.264 + AAC when
+45 |     /// `keepVideo` is true and the source has video, otherwise AAC only.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:4:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  2 | import Darwin
+  3 | import Foundation
+  4 | import MeteoraConverterProtocol
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  5 | 
+  6 | /// Errors of the rare-format converter. Messages are shown to the user.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:218:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+216 |                 }, isCancelled: { token.isCancelled })
+217 |                 await MainActor.run {
+218 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+219 |                     self.info = info
+220 |                     self.demuxer = demuxer
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:230:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+228 |             } catch {
+229 |                 await MainActor.run {
+230 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+231 |                     self.loadState = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+232 |                 }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:544:63: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+542 |                 let dec = try await origin.make()
+543 |                 let analysis = try dec.analyze(isCancelled: { token.isCancelled })
+544 |                 await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
+    |                                                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:547:45: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+547 |                     if !token.isCancelled { self?.audioError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription }
+    |                                             `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+548 |                 }
+549 |             }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:346:44: warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+344 |         let core = self.core
+345 |         let tap = SystemAudioCapture { buffer in
+346 |             core.queue.async { core.ingest(buffer, from: .system) }
+    |                                            `- warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+347 |         }
+348 |         tap.onRouteChange = { [weak self] in self?.restartSystemAudio() }
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import Foundation
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import MeteoraCore
+  4 | import os
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[80/109] Compiling Meteora NativePlayerController.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:247:29: warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+245 |                         if isCancelled() || cancelRequested.isSet {
+246 |                             cancelRequested.set()
+247 |                             proxy.cancel()
+    |                             `- warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+248 |                             // If the service doesn't answer, give up after 5 s.
+249 |                             DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+
+/Users/runner/work/meteora/meteora/Sources/MeteoraConverterProtocol/ConverterProtocol.swift:43:17: note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+41 | /// write exactly these two files and nothing else.
+42 | @objc(MeteoraConverterServiceProtocol)
+43 | public protocol ConverterServiceProtocol {
+   |                 `- note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+44 |     /// Converts `input` into MP4 written to `output`: H.264 + AAC when
+45 |     /// `keepVideo` is true and the source has video, otherwise AAC only.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:4:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  2 | import Darwin
+  3 | import Foundation
+  4 | import MeteoraConverterProtocol
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  5 | 
+  6 | /// Errors of the rare-format converter. Messages are shown to the user.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:218:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+216 |                 }, isCancelled: { token.isCancelled })
+217 |                 await MainActor.run {
+218 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+219 |                     self.info = info
+220 |                     self.demuxer = demuxer
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:230:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+228 |             } catch {
+229 |                 await MainActor.run {
+230 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+231 |                     self.loadState = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+232 |                 }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:544:63: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+542 |                 let dec = try await origin.make()
+543 |                 let analysis = try dec.analyze(isCancelled: { token.isCancelled })
+544 |                 await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
+    |                                                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:547:45: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+547 |                     if !token.isCancelled { self?.audioError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription }
+    |                                             `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+548 |                 }
+549 |             }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:346:44: warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+344 |         let core = self.core
+345 |         let tap = SystemAudioCapture { buffer in
+346 |             core.queue.async { core.ingest(buffer, from: .system) }
+    |                                            `- warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+347 |         }
+348 |         tap.onRouteChange = { [weak self] in self?.restartSystemAudio() }
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import Foundation
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import MeteoraCore
+  4 | import os
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[81/109] Compiling Meteora Onboarding.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:247:29: warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+245 |                         if isCancelled() || cancelRequested.isSet {
+246 |                             cancelRequested.set()
+247 |                             proxy.cancel()
+    |                             `- warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+248 |                             // If the service doesn't answer, give up after 5 s.
+249 |                             DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+
+/Users/runner/work/meteora/meteora/Sources/MeteoraConverterProtocol/ConverterProtocol.swift:43:17: note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+41 | /// write exactly these two files and nothing else.
+42 | @objc(MeteoraConverterServiceProtocol)
+43 | public protocol ConverterServiceProtocol {
+   |                 `- note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+44 |     /// Converts `input` into MP4 written to `output`: H.264 + AAC when
+45 |     /// `keepVideo` is true and the source has video, otherwise AAC only.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:4:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  2 | import Darwin
+  3 | import Foundation
+  4 | import MeteoraConverterProtocol
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  5 | 
+  6 | /// Errors of the rare-format converter. Messages are shown to the user.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:218:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+216 |                 }, isCancelled: { token.isCancelled })
+217 |                 await MainActor.run {
+218 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+219 |                     self.info = info
+220 |                     self.demuxer = demuxer
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:230:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+228 |             } catch {
+229 |                 await MainActor.run {
+230 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+231 |                     self.loadState = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+232 |                 }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:544:63: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+542 |                 let dec = try await origin.make()
+543 |                 let analysis = try dec.analyze(isCancelled: { token.isCancelled })
+544 |                 await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
+    |                                                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:547:45: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+547 |                     if !token.isCancelled { self?.audioError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription }
+    |                                             `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+548 |                 }
+549 |             }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:346:44: warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+344 |         let core = self.core
+345 |         let tap = SystemAudioCapture { buffer in
+346 |             core.queue.async { core.ingest(buffer, from: .system) }
+    |                                            `- warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+347 |         }
+348 |         tap.onRouteChange = { [weak self] in self?.restartSystemAudio() }
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import Foundation
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import MeteoraCore
+  4 | import os
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[82/109] Compiling Meteora PlayerController.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:247:29: warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+245 |                         if isCancelled() || cancelRequested.isSet {
+246 |                             cancelRequested.set()
+247 |                             proxy.cancel()
+    |                             `- warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+248 |                             // If the service doesn't answer, give up after 5 s.
+249 |                             DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+
+/Users/runner/work/meteora/meteora/Sources/MeteoraConverterProtocol/ConverterProtocol.swift:43:17: note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+41 | /// write exactly these two files and nothing else.
+42 | @objc(MeteoraConverterServiceProtocol)
+43 | public protocol ConverterServiceProtocol {
+   |                 `- note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+44 |     /// Converts `input` into MP4 written to `output`: H.264 + AAC when
+45 |     /// `keepVideo` is true and the source has video, otherwise AAC only.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:4:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  2 | import Darwin
+  3 | import Foundation
+  4 | import MeteoraConverterProtocol
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  5 | 
+  6 | /// Errors of the rare-format converter. Messages are shown to the user.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:218:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+216 |                 }, isCancelled: { token.isCancelled })
+217 |                 await MainActor.run {
+218 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+219 |                     self.info = info
+220 |                     self.demuxer = demuxer
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:230:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+228 |             } catch {
+229 |                 await MainActor.run {
+230 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+231 |                     self.loadState = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+232 |                 }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:544:63: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+542 |                 let dec = try await origin.make()
+543 |                 let analysis = try dec.analyze(isCancelled: { token.isCancelled })
+544 |                 await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
+    |                                                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:547:45: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+547 |                     if !token.isCancelled { self?.audioError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription }
+    |                                             `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+548 |                 }
+549 |             }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:346:44: warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+344 |         let core = self.core
+345 |         let tap = SystemAudioCapture { buffer in
+346 |             core.queue.async { core.ingest(buffer, from: .system) }
+    |                                            `- warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+347 |         }
+348 |         tap.onRouteChange = { [weak self] in self?.restartSystemAudio() }
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import Foundation
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import MeteoraCore
+  4 | import os
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[83/109] Compiling Meteora PlayerWeb.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:247:29: warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+245 |                         if isCancelled() || cancelRequested.isSet {
+246 |                             cancelRequested.set()
+247 |                             proxy.cancel()
+    |                             `- warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+248 |                             // If the service doesn't answer, give up after 5 s.
+249 |                             DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+
+/Users/runner/work/meteora/meteora/Sources/MeteoraConverterProtocol/ConverterProtocol.swift:43:17: note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+41 | /// write exactly these two files and nothing else.
+42 | @objc(MeteoraConverterServiceProtocol)
+43 | public protocol ConverterServiceProtocol {
+   |                 `- note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+44 |     /// Converts `input` into MP4 written to `output`: H.264 + AAC when
+45 |     /// `keepVideo` is true and the source has video, otherwise AAC only.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:4:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  2 | import Darwin
+  3 | import Foundation
+  4 | import MeteoraConverterProtocol
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  5 | 
+  6 | /// Errors of the rare-format converter. Messages are shown to the user.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:218:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+216 |                 }, isCancelled: { token.isCancelled })
+217 |                 await MainActor.run {
+218 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+219 |                     self.info = info
+220 |                     self.demuxer = demuxer
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:230:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+228 |             } catch {
+229 |                 await MainActor.run {
+230 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+231 |                     self.loadState = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+232 |                 }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:544:63: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+542 |                 let dec = try await origin.make()
+543 |                 let analysis = try dec.analyze(isCancelled: { token.isCancelled })
+544 |                 await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
+    |                                                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:547:45: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+547 |                     if !token.isCancelled { self?.audioError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription }
+    |                                             `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+548 |                 }
+549 |             }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:346:44: warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+344 |         let core = self.core
+345 |         let tap = SystemAudioCapture { buffer in
+346 |             core.queue.async { core.ingest(buffer, from: .system) }
+    |                                            `- warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+347 |         }
+348 |         tap.onRouteChange = { [weak self] in self?.restartSystemAudio() }
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import Foundation
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import MeteoraCore
+  4 | import os
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[84/109] Compiling Meteora AudioInputCatalog.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:247:29: warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+245 |                         if isCancelled() || cancelRequested.isSet {
+246 |                             cancelRequested.set()
+247 |                             proxy.cancel()
+    |                             `- warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+248 |                             // If the service doesn't answer, give up after 5 s.
+249 |                             DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+
+/Users/runner/work/meteora/meteora/Sources/MeteoraConverterProtocol/ConverterProtocol.swift:43:17: note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+41 | /// write exactly these two files and nothing else.
+42 | @objc(MeteoraConverterServiceProtocol)
+43 | public protocol ConverterServiceProtocol {
+   |                 `- note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+44 |     /// Converts `input` into MP4 written to `output`: H.264 + AAC when
+45 |     /// `keepVideo` is true and the source has video, otherwise AAC only.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:4:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  2 | import Darwin
+  3 | import Foundation
+  4 | import MeteoraConverterProtocol
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  5 | 
+  6 | /// Errors of the rare-format converter. Messages are shown to the user.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:218:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+216 |                 }, isCancelled: { token.isCancelled })
+217 |                 await MainActor.run {
+218 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+219 |                     self.info = info
+220 |                     self.demuxer = demuxer
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:230:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+228 |             } catch {
+229 |                 await MainActor.run {
+230 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+231 |                     self.loadState = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+232 |                 }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:544:63: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+542 |                 let dec = try await origin.make()
+543 |                 let analysis = try dec.analyze(isCancelled: { token.isCancelled })
+544 |                 await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
+    |                                                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:547:45: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+547 |                     if !token.isCancelled { self?.audioError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription }
+    |                                             `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+548 |                 }
+549 |             }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:346:44: warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+344 |         let core = self.core
+345 |         let tap = SystemAudioCapture { buffer in
+346 |             core.queue.async { core.ingest(buffer, from: .system) }
+    |                                            `- warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+347 |         }
+348 |         tap.onRouteChange = { [weak self] in self?.restartSystemAudio() }
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import Foundation
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import MeteoraCore
+  4 | import os
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[85/109] Compiling Meteora MeetingRecorder.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:247:29: warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+245 |                         if isCancelled() || cancelRequested.isSet {
+246 |                             cancelRequested.set()
+247 |                             proxy.cancel()
+    |                             `- warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+248 |                             // If the service doesn't answer, give up after 5 s.
+249 |                             DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+
+/Users/runner/work/meteora/meteora/Sources/MeteoraConverterProtocol/ConverterProtocol.swift:43:17: note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+41 | /// write exactly these two files and nothing else.
+42 | @objc(MeteoraConverterServiceProtocol)
+43 | public protocol ConverterServiceProtocol {
+   |                 `- note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+44 |     /// Converts `input` into MP4 written to `output`: H.264 + AAC when
+45 |     /// `keepVideo` is true and the source has video, otherwise AAC only.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:4:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  2 | import Darwin
+  3 | import Foundation
+  4 | import MeteoraConverterProtocol
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  5 | 
+  6 | /// Errors of the rare-format converter. Messages are shown to the user.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:218:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+216 |                 }, isCancelled: { token.isCancelled })
+217 |                 await MainActor.run {
+218 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+219 |                     self.info = info
+220 |                     self.demuxer = demuxer
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:230:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+228 |             } catch {
+229 |                 await MainActor.run {
+230 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+231 |                     self.loadState = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+232 |                 }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:544:63: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+542 |                 let dec = try await origin.make()
+543 |                 let analysis = try dec.analyze(isCancelled: { token.isCancelled })
+544 |                 await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
+    |                                                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:547:45: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+547 |                     if !token.isCancelled { self?.audioError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription }
+    |                                             `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+548 |                 }
+549 |             }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:346:44: warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+344 |         let core = self.core
+345 |         let tap = SystemAudioCapture { buffer in
+346 |             core.queue.async { core.ingest(buffer, from: .system) }
+    |                                            `- warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+347 |         }
+348 |         tap.onRouteChange = { [weak self] in self?.restartSystemAudio() }
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import Foundation
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import MeteoraCore
+  4 | import os
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[86/109] Compiling Meteora MicrophoneCapture.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:247:29: warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+245 |                         if isCancelled() || cancelRequested.isSet {
+246 |                             cancelRequested.set()
+247 |                             proxy.cancel()
+    |                             `- warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+248 |                             // If the service doesn't answer, give up after 5 s.
+249 |                             DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+
+/Users/runner/work/meteora/meteora/Sources/MeteoraConverterProtocol/ConverterProtocol.swift:43:17: note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+41 | /// write exactly these two files and nothing else.
+42 | @objc(MeteoraConverterServiceProtocol)
+43 | public protocol ConverterServiceProtocol {
+   |                 `- note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+44 |     /// Converts `input` into MP4 written to `output`: H.264 + AAC when
+45 |     /// `keepVideo` is true and the source has video, otherwise AAC only.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:4:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  2 | import Darwin
+  3 | import Foundation
+  4 | import MeteoraConverterProtocol
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  5 | 
+  6 | /// Errors of the rare-format converter. Messages are shown to the user.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:218:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+216 |                 }, isCancelled: { token.isCancelled })
+217 |                 await MainActor.run {
+218 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+219 |                     self.info = info
+220 |                     self.demuxer = demuxer
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:230:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+228 |             } catch {
+229 |                 await MainActor.run {
+230 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+231 |                     self.loadState = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+232 |                 }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:544:63: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+542 |                 let dec = try await origin.make()
+543 |                 let analysis = try dec.analyze(isCancelled: { token.isCancelled })
+544 |                 await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
+    |                                                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:547:45: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+547 |                     if !token.isCancelled { self?.audioError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription }
+    |                                             `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+548 |                 }
+549 |             }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:346:44: warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+344 |         let core = self.core
+345 |         let tap = SystemAudioCapture { buffer in
+346 |             core.queue.async { core.ingest(buffer, from: .system) }
+    |                                            `- warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+347 |         }
+348 |         tap.onRouteChange = { [weak self] in self?.restartSystemAudio() }
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import Foundation
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import MeteoraCore
+  4 | import os
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[87/109] Compiling Meteora RecordingEngine.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:247:29: warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+245 |                         if isCancelled() || cancelRequested.isSet {
+246 |                             cancelRequested.set()
+247 |                             proxy.cancel()
+    |                             `- warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+248 |                             // If the service doesn't answer, give up after 5 s.
+249 |                             DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+
+/Users/runner/work/meteora/meteora/Sources/MeteoraConverterProtocol/ConverterProtocol.swift:43:17: note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+41 | /// write exactly these two files and nothing else.
+42 | @objc(MeteoraConverterServiceProtocol)
+43 | public protocol ConverterServiceProtocol {
+   |                 `- note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+44 |     /// Converts `input` into MP4 written to `output`: H.264 + AAC when
+45 |     /// `keepVideo` is true and the source has video, otherwise AAC only.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:4:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  2 | import Darwin
+  3 | import Foundation
+  4 | import MeteoraConverterProtocol
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  5 | 
+  6 | /// Errors of the rare-format converter. Messages are shown to the user.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:218:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+216 |                 }, isCancelled: { token.isCancelled })
+217 |                 await MainActor.run {
+218 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+219 |                     self.info = info
+220 |                     self.demuxer = demuxer
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:230:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+228 |             } catch {
+229 |                 await MainActor.run {
+230 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+231 |                     self.loadState = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+232 |                 }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:544:63: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+542 |                 let dec = try await origin.make()
+543 |                 let analysis = try dec.analyze(isCancelled: { token.isCancelled })
+544 |                 await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
+    |                                                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:547:45: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+547 |                     if !token.isCancelled { self?.audioError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription }
+    |                                             `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+548 |                 }
+549 |             }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:346:44: warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+344 |         let core = self.core
+345 |         let tap = SystemAudioCapture { buffer in
+346 |             core.queue.async { core.ingest(buffer, from: .system) }
+    |                                            `- warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+347 |         }
+348 |         tap.onRouteChange = { [weak self] in self?.restartSystemAudio() }
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import Foundation
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import MeteoraCore
+  4 | import os
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[88/109] Compiling Meteora RecordingFolder.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:247:29: warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+245 |                         if isCancelled() || cancelRequested.isSet {
+246 |                             cancelRequested.set()
+247 |                             proxy.cancel()
+    |                             `- warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+248 |                             // If the service doesn't answer, give up after 5 s.
+249 |                             DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+
+/Users/runner/work/meteora/meteora/Sources/MeteoraConverterProtocol/ConverterProtocol.swift:43:17: note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+41 | /// write exactly these two files and nothing else.
+42 | @objc(MeteoraConverterServiceProtocol)
+43 | public protocol ConverterServiceProtocol {
+   |                 `- note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+44 |     /// Converts `input` into MP4 written to `output`: H.264 + AAC when
+45 |     /// `keepVideo` is true and the source has video, otherwise AAC only.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:4:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  2 | import Darwin
+  3 | import Foundation
+  4 | import MeteoraConverterProtocol
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  5 | 
+  6 | /// Errors of the rare-format converter. Messages are shown to the user.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:218:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+216 |                 }, isCancelled: { token.isCancelled })
+217 |                 await MainActor.run {
+218 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+219 |                     self.info = info
+220 |                     self.demuxer = demuxer
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:230:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+228 |             } catch {
+229 |                 await MainActor.run {
+230 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+231 |                     self.loadState = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+232 |                 }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:544:63: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+542 |                 let dec = try await origin.make()
+543 |                 let analysis = try dec.analyze(isCancelled: { token.isCancelled })
+544 |                 await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
+    |                                                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:547:45: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+547 |                     if !token.isCancelled { self?.audioError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription }
+    |                                             `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+548 |                 }
+549 |             }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:346:44: warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+344 |         let core = self.core
+345 |         let tap = SystemAudioCapture { buffer in
+346 |             core.queue.async { core.ingest(buffer, from: .system) }
+    |                                            `- warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+347 |         }
+348 |         tap.onRouteChange = { [weak self] in self?.restartSystemAudio() }
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import Foundation
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import MeteoraCore
+  4 | import os
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[89/109] Compiling Meteora RecordingPanel.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:247:29: warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+245 |                         if isCancelled() || cancelRequested.isSet {
+246 |                             cancelRequested.set()
+247 |                             proxy.cancel()
+    |                             `- warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure [#SendableClosureCaptures]
+248 |                             // If the service doesn't answer, give up after 5 s.
+249 |                             DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+
+/Users/runner/work/meteora/meteora/Sources/MeteoraConverterProtocol/ConverterProtocol.swift:43:17: note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+41 | /// write exactly these two files and nothing else.
+42 | @objc(MeteoraConverterServiceProtocol)
+43 | public protocol ConverterServiceProtocol {
+   |                 `- note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+44 |     /// Converts `input` into MP4 written to `output`: H.264 + AAC when
+45 |     /// `keepVideo` is true and the source has video, otherwise AAC only.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:4:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  2 | import Darwin
+  3 | import Foundation
+  4 | import MeteoraConverterProtocol
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+  5 | 
+  6 | /// Errors of the rare-format converter. Messages are shown to the user.
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:218:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+216 |                 }, isCancelled: { token.isCancelled })
+217 |                 await MainActor.run {
+218 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+219 |                     self.info = info
+220 |                     self.demuxer = demuxer
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:230:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+228 |             } catch {
+229 |                 await MainActor.run {
+230 |                     guard let self, !token.isCancelled else { return }
+    |                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+231 |                     self.loadState = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+232 |                 }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:544:63: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+542 |                 let dec = try await origin.make()
+543 |                 let analysis = try dec.analyze(isCancelled: { token.isCancelled })
+544 |                 await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
+    |                                                               `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:547:45: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+545 |             } catch {
+546 |                 await MainActor.run {
+547 |                     if !token.isCancelled { self?.audioError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription }
+    |                                             `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+548 |                 }
+549 |             }
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:346:44: warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+344 |         let core = self.core
+345 |         let tap = SystemAudioCapture { buffer in
+346 |             core.queue.async { core.ingest(buffer, from: .system) }
+    |                                            `- warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+347 |         }
+348 |         tap.onRouteChange = { [weak self] in self?.restartSystemAudio() }
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import Foundation
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import MeteoraCore
+  4 | import os
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[99/109] Compiling Meteora LoginItem.swift
+[100/109] Compiling Meteora WatchedFolder.swift
+[101/109] Compiling Meteora Batch.swift
+[102/109] Compiling Meteora DictionaryViews.swift
+[103/109] Compiling Meteora ExportViews.swift
+[104/109] Compiling Meteora JournalViews.swift
+[105/109] Compiling Meteora Logo.swift
+[106/109] Compiling Meteora MacWhisper.swift
+[107/125] Compiling Meteora RecordingSelfTest.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:478:57: warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+476 |         _ = conv.convert(to: outBuf, error: &err) { _, s in
+477 |             if given { s.pointee = .endOfStream; return nil }
+478 |             given = true; s.pointee = .haveData; return inBuf
+    |                                                         `- warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+479 |         }
+480 |         return Array(UnsafeBufferPointer(start: outBuf.floatChannelData![0], count: Int(outBuf.frameLength)))
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import AppKit
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import SwiftUI
+  4 | import MeteoraCore
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+112 |     }
+113 | 
+114 |     nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    |     `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+115 |         let f = DateFormatter()
+116 |         f.locale = Locale(identifier: "ru_RU")
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[108/125] Compiling Meteora RecordingSinks.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:478:57: warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+476 |         _ = conv.convert(to: outBuf, error: &err) { _, s in
+477 |             if given { s.pointee = .endOfStream; return nil }
+478 |             given = true; s.pointee = .haveData; return inBuf
+    |                                                         `- warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+479 |         }
+480 |         return Array(UnsafeBufferPointer(start: outBuf.floatChannelData![0], count: Int(outBuf.frameLength)))
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import AppKit
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import SwiftUI
+  4 | import MeteoraCore
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+112 |     }
+113 | 
+114 |     nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    |     `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+115 |         let f = DateFormatter()
+116 |         f.locale = Locale(identifier: "ru_RU")
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[109/125] Compiling Meteora RecordingStatusItem.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:478:57: warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+476 |         _ = conv.convert(to: outBuf, error: &err) { _, s in
+477 |             if given { s.pointee = .endOfStream; return nil }
+478 |             given = true; s.pointee = .haveData; return inBuf
+    |                                                         `- warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+479 |         }
+480 |         return Array(UnsafeBufferPointer(start: outBuf.floatChannelData![0], count: Int(outBuf.frameLength)))
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import AppKit
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import SwiftUI
+  4 | import MeteoraCore
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+112 |     }
+113 | 
+114 |     nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    |     `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+115 |         let f = DateFormatter()
+116 |         f.locale = Locale(identifier: "ru_RU")
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[110/125] Compiling Meteora SystemAudioCapture.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:478:57: warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+476 |         _ = conv.convert(to: outBuf, error: &err) { _, s in
+477 |             if given { s.pointee = .endOfStream; return nil }
+478 |             given = true; s.pointee = .haveData; return inBuf
+    |                                                         `- warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+479 |         }
+480 |         return Array(UnsafeBufferPointer(start: outBuf.floatChannelData![0], count: Int(outBuf.frameLength)))
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import AppKit
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import SwiftUI
+  4 | import MeteoraCore
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+112 |     }
+113 | 
+114 |     nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    |     `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+115 |         let f = DateFormatter()
+116 |         f.locale = Locale(identifier: "ru_RU")
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[111/125] Compiling Meteora SelfTest.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:478:57: warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+476 |         _ = conv.convert(to: outBuf, error: &err) { _, s in
+477 |             if given { s.pointee = .endOfStream; return nil }
+478 |             given = true; s.pointee = .haveData; return inBuf
+    |                                                         `- warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+479 |         }
+480 |         return Array(UnsafeBufferPointer(start: outBuf.floatChannelData![0], count: Int(outBuf.frameLength)))
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import AppKit
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import SwiftUI
+  4 | import MeteoraCore
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+112 |     }
+113 | 
+114 |     nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    |     `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+115 |         let f = DateFormatter()
+116 |         f.locale = Locale(identifier: "ru_RU")
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[112/125] Compiling Meteora SettingsWindow.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:478:57: warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+476 |         _ = conv.convert(to: outBuf, error: &err) { _, s in
+477 |             if given { s.pointee = .endOfStream; return nil }
+478 |             given = true; s.pointee = .haveData; return inBuf
+    |                                                         `- warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+479 |         }
+480 |         return Array(UnsafeBufferPointer(start: outBuf.floatChannelData![0], count: Int(outBuf.frameLength)))
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import AppKit
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import SwiftUI
+  4 | import MeteoraCore
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+112 |     }
+113 | 
+114 |     nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    |     `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+115 |         let f = DateFormatter()
+116 |         f.locale = Locale(identifier: "ru_RU")
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[113/125] Compiling Meteora Storage.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:478:57: warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+476 |         _ = conv.convert(to: outBuf, error: &err) { _, s in
+477 |             if given { s.pointee = .endOfStream; return nil }
+478 |             given = true; s.pointee = .haveData; return inBuf
+    |                                                         `- warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+479 |         }
+480 |         return Array(UnsafeBufferPointer(start: outBuf.floatChannelData![0], count: Int(outBuf.frameLength)))
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import AppKit
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import SwiftUI
+  4 | import MeteoraCore
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+112 |     }
+113 | 
+114 |     nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    |     `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+115 |         let f = DateFormatter()
+116 |         f.locale = Locale(identifier: "ru_RU")
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[114/125] Compiling Meteora SummaryModel.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:478:57: warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+476 |         _ = conv.convert(to: outBuf, error: &err) { _, s in
+477 |             if given { s.pointee = .endOfStream; return nil }
+478 |             given = true; s.pointee = .haveData; return inBuf
+    |                                                         `- warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+479 |         }
+480 |         return Array(UnsafeBufferPointer(start: outBuf.floatChannelData![0], count: Int(outBuf.frameLength)))
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import AppKit
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import SwiftUI
+  4 | import MeteoraCore
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+112 |     }
+113 | 
+114 |     nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    |     `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+115 |         let f = DateFormatter()
+116 |         f.locale = Locale(identifier: "ru_RU")
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[115/125] Compiling Meteora SummaryViews.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:478:57: warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+476 |         _ = conv.convert(to: outBuf, error: &err) { _, s in
+477 |             if given { s.pointee = .endOfStream; return nil }
+478 |             given = true; s.pointee = .haveData; return inBuf
+    |                                                         `- warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+479 |         }
+480 |         return Array(UnsafeBufferPointer(start: outBuf.floatChannelData![0], count: Int(outBuf.frameLength)))
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import AppKit
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import SwiftUI
+  4 | import MeteoraCore
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+112 |     }
+113 | 
+114 |     nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    |     `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+115 |         let f = DateFormatter()
+116 |         f.locale = Locale(identifier: "ru_RU")
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[116/125] Compiling Meteora TempCleanup.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:478:57: warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+476 |         _ = conv.convert(to: outBuf, error: &err) { _, s in
+477 |             if given { s.pointee = .endOfStream; return nil }
+478 |             given = true; s.pointee = .haveData; return inBuf
+    |                                                         `- warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+479 |         }
+480 |         return Array(UnsafeBufferPointer(start: outBuf.floatChannelData![0], count: Int(outBuf.frameLength)))
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import AppKit
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import SwiftUI
+  4 | import MeteoraCore
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+112 |     }
+113 | 
+114 |     nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    |     `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+115 |         let f = DateFormatter()
+116 |         f.locale = Locale(identifier: "ru_RU")
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[117/125] Compiling Meteora Theme.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:478:57: warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+476 |         _ = conv.convert(to: outBuf, error: &err) { _, s in
+477 |             if given { s.pointee = .endOfStream; return nil }
+478 |             given = true; s.pointee = .haveData; return inBuf
+    |                                                         `- warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+479 |         }
+480 |         return Array(UnsafeBufferPointer(start: outBuf.floatChannelData![0], count: Int(outBuf.frameLength)))
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import AppKit
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import SwiftUI
+  4 | import MeteoraCore
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+112 |     }
+113 | 
+114 |     nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    |     `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+115 |         let f = DateFormatter()
+116 |         f.locale = Locale(identifier: "ru_RU")
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[118/125] Compiling Meteora TranscriptViews.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:478:57: warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+476 |         _ = conv.convert(to: outBuf, error: &err) { _, s in
+477 |             if given { s.pointee = .endOfStream; return nil }
+478 |             given = true; s.pointee = .haveData; return inBuf
+    |                                                         `- warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+479 |         }
+480 |         return Array(UnsafeBufferPointer(start: outBuf.floatChannelData![0], count: Int(outBuf.frameLength)))
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import AppKit
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import SwiftUI
+  4 | import MeteoraCore
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+112 |     }
+113 | 
+114 |     nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    |     `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+115 |         let f = DateFormatter()
+116 |         f.locale = Locale(identifier: "ru_RU")
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[119/125] Compiling Meteora Transcription.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:478:57: warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+476 |         _ = conv.convert(to: outBuf, error: &err) { _, s in
+477 |             if given { s.pointee = .endOfStream; return nil }
+478 |             given = true; s.pointee = .haveData; return inBuf
+    |                                                         `- warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+479 |         }
+480 |         return Array(UnsafeBufferPointer(start: outBuf.floatChannelData![0], count: Int(outBuf.frameLength)))
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import AppKit
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import SwiftUI
+  4 | import MeteoraCore
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+112 |     }
+113 | 
+114 |     nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    |     `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+115 |         let f = DateFormatter()
+116 |         f.locale = Locale(identifier: "ru_RU")
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[120/125] Compiling Meteora Updates.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:478:57: warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+476 |         _ = conv.convert(to: outBuf, error: &err) { _, s in
+477 |             if given { s.pointee = .endOfStream; return nil }
+478 |             given = true; s.pointee = .haveData; return inBuf
+    |                                                         `- warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+479 |         }
+480 |         return Array(UnsafeBufferPointer(start: outBuf.floatChannelData![0], count: Int(outBuf.frameLength)))
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import AppKit
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import SwiftUI
+  4 | import MeteoraCore
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+112 |     }
+113 | 
+114 |     nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    |     `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+115 |         let f = DateFormatter()
+116 |         f.locale = Locale(identifier: "ru_RU")
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[121/125] Compiling Meteora Views.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:478:57: warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+476 |         _ = conv.convert(to: outBuf, error: &err) { _, s in
+477 |             if given { s.pointee = .endOfStream; return nil }
+478 |             given = true; s.pointee = .haveData; return inBuf
+    |                                                         `- warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+479 |         }
+480 |         return Array(UnsafeBufferPointer(start: outBuf.floatChannelData![0], count: Int(outBuf.frameLength)))
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import AppKit
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import SwiftUI
+  4 | import MeteoraCore
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+112 |     }
+113 | 
+114 |     nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    |     `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+115 |         let f = DateFormatter()
+116 |         f.locale = Locale(identifier: "ru_RU")
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[122/125] Compiling Meteora Workspace.swift
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:478:57: warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+476 |         _ = conv.convert(to: outBuf, error: &err) { _, s in
+477 |             if given { s.pointee = .endOfStream; return nil }
+478 |             given = true; s.pointee = .haveData; return inBuf
+    |                                                         `- warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure [#SendableClosureCaptures]
+479 |         }
+480 |         return Array(UnsafeBufferPointer(start: outBuf.floatChannelData![0], count: Int(outBuf.frameLength)))
+
+/Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 65 | */
+ 66 | API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
+ 67 | @interface AVAudioPCMBuffer : AVAudioBuffer
+    |            `- note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+ 68 | 
+ 69 | /*!	@method initWithPCMFormat:frameCapacity:
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  1 | import AppKit
+  2 | import AVFoundation
+    | `- warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+  3 | import SwiftUI
+  4 | import MeteoraCore
+
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+112 |     }
+113 | 
+114 |     nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    |     `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+115 |         let f = DateFormatter()
+116 |         f.locale = Locale(identifier: "ru_RU")
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[122/125] Write Objects.LinkFileList
+[123/125] Linking Meteora
+[124/125] Applying Meteora
+Build complete! (58.03s)
+Test Suite 'All tests' started at 2026-10-31 13:05:49.964.
+Test Suite 'MeteoraPackageTests.xctest' started at 2026-10-31 13:05:49.966.
+Test Suite 'AudioTests' started at 2026-10-31 13:05:49.966.
+Test Case '-[MeteoraCoreTests.AudioTests testCancelledExportLeavesNoFile]' started.
+Test Case '-[MeteoraCoreTests.AudioTests testCancelledExportLeavesNoFile]' passed (0.372 seconds).
+Test Case '-[MeteoraCoreTests.AudioTests testDecodeAndAnalyze]' started.
+Test Case '-[MeteoraCoreTests.AudioTests testDecodeAndAnalyze]' passed (0.952 seconds).
+Test Case '-[MeteoraCoreTests.AudioTests testExportBothQualities]' started.
+Test Case '-[MeteoraCoreTests.AudioTests testExportBothQualities]' passed (3.711 seconds).
+Test Case '-[MeteoraCoreTests.AudioTests testLimiter]' started.
+Test Case '-[MeteoraCoreTests.AudioTests testLimiter]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.AudioTests testMonoAudioOnlyExport]' started.
+Test Case '-[MeteoraCoreTests.AudioTests testMonoAudioOnlyExport]' passed (0.311 seconds).
+Test Case '-[MeteoraCoreTests.AudioTests testOpusSampleCount]' started.
+Test Case '-[MeteoraCoreTests.AudioTests testOpusSampleCount]' passed (0.000 seconds).
+Test Suite 'AudioTests' passed at 2026-10-31 13:05:55.313.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 5.346 (5.347) seconds
+Test Suite 'ExportTests' started at 2026-10-31 13:05:55.313.
+Test Case '-[MeteoraCoreTests.ExportTests testCSVQuotingInjectionAndBOM]' started.
+Test Case '-[MeteoraCoreTests.ExportTests testCSVQuotingInjectionAndBOM]' passed (0.004 seconds).
+Test Case '-[MeteoraCoreTests.ExportTests testDocxPackageIsValid]' started.
+Test Case '-[MeteoraCoreTests.ExportTests testDocxPackageIsValid]' passed (0.015 seconds).
+Test Case '-[MeteoraCoreTests.ExportTests testFormatsMetadata]' started.
+Test Case '-[MeteoraCoreTests.ExportTests testFormatsMetadata]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.ExportTests testHTMLEscapesEverything]' started.
+Test Case '-[MeteoraCoreTests.ExportTests testHTMLEscapesEverything]' passed (0.001 seconds).
+Test Case '-[MeteoraCoreTests.ExportTests testJSONIsStableAndParsable]' started.
+Test Case '-[MeteoraCoreTests.ExportTests testJSONIsStableAndParsable]' passed (0.001 seconds).
+Test Case '-[MeteoraCoreTests.ExportTests testMarkdownOrdersFramesAndWritesAttachments]' started.
+Test Case '-[MeteoraCoreTests.ExportTests testMarkdownOrdersFramesAndWritesAttachments]' passed (0.004 seconds).
+Test Case '-[MeteoraCoreTests.ExportTests testNothingToExportThrows]' started.
+Test Case '-[MeteoraCoreTests.ExportTests testNothingToExportThrows]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.ExportTests testOptionsDecodeTolerantly]' started.
+Test Case '-[MeteoraCoreTests.ExportTests testOptionsDecodeTolerantly]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.ExportTests testParagraphsRespectMaxLength]' started.
+Test Case '-[MeteoraCoreTests.ExportTests testParagraphsRespectMaxLength]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.ExportTests testParagraphsSoftCharacterLimit]' started.
+Test Case '-[MeteoraCoreTests.ExportTests testParagraphsSoftCharacterLimit]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.ExportTests testParagraphsSplitOnPauses]' started.
+Test Case '-[MeteoraCoreTests.ExportTests testParagraphsSplitOnPauses]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.ExportTests testParagraphsSplitOnSpeakerAndDecodeOldJSON]' started.
+Test Case '-[MeteoraCoreTests.ExportTests testParagraphsSplitOnSpeakerAndDecodeOldJSON]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.ExportTests testPDFIsProducedAndPaged]' started.
+Test Case '-[MeteoraCoreTests.ExportTests testPDFIsProducedAndPaged]' passed (0.174 seconds).
+Test Case '-[MeteoraCoreTests.ExportTests testPlainTextTimestampModes]' started.
+Test Case '-[MeteoraCoreTests.ExportTests testPlainTextTimestampModes]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.ExportTests testRTF]' started.
+Test Case '-[MeteoraCoreTests.ExportTests testRTF]' passed (0.015 seconds).
+Test Case '-[MeteoraCoreTests.ExportTests testRussianPlural]' started.
+Test Case '-[MeteoraCoreTests.ExportTests testRussianPlural]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.ExportTests testSRTAndVTTCues]' started.
+Test Case '-[MeteoraCoreTests.ExportTests testSRTAndVTTCues]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.ExportTests testZipCRCKnownValue]' started.
+Test Case '-[MeteoraCoreTests.ExportTests testZipCRCKnownValue]' passed (0.000 seconds).
+Test Suite 'ExportTests' passed at 2026-10-31 13:05:55.531.
+	 Executed 18 tests, with 0 failures (0 unexpected) in 0.216 (0.218) seconds
+Test Suite 'FrameMixerTests' started at 2026-10-31 13:05:55.531.
+Test Case '-[MeteoraCoreTests.FrameMixerTests testBurstyBluetoothDeliveryLeavesNoHoles]' started.
+Test Case '-[MeteoraCoreTests.FrameMixerTests testBurstyBluetoothDeliveryLeavesNoHoles]' passed (0.572 seconds).
+Test Case '-[MeteoraCoreTests.FrameMixerTests testFastSystemClockLeavesNoHoles]' started.
+Test Case '-[MeteoraCoreTests.FrameMixerTests testFastSystemClockLeavesNoHoles]' passed (0.862 seconds).
+Test Case '-[MeteoraCoreTests.FrameMixerTests testMeterScale]' started.
+Test Case '-[MeteoraCoreTests.FrameMixerTests testMeterScale]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.FrameMixerTests testOverflowDropsOldest]' started.
+Test Case '-[MeteoraCoreTests.FrameMixerTests testOverflowDropsOldest]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.FrameMixerTests testResamplerIsTransparentAtUnitStep]' started.
+Test Case '-[MeteoraCoreTests.FrameMixerTests testResamplerIsTransparentAtUnitStep]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.FrameMixerTests testSingleInputPassesThrough]' started.
+Test Case '-[MeteoraCoreTests.FrameMixerTests testSingleInputPassesThrough]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.FrameMixerTests testSlowSystemClockLeavesNoHoles]' started.
+Test Case '-[MeteoraCoreTests.FrameMixerTests testSlowSystemClockLeavesNoHoles]' passed (0.863 seconds).
+Test Case '-[MeteoraCoreTests.FrameMixerTests testStalledInputIsSilent]' started.
+Test Case '-[MeteoraCoreTests.FrameMixerTests testStalledInputIsSilent]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.FrameMixerTests testStartupRateMismatchIsRealigned]' started.
+Test Case '-[MeteoraCoreTests.FrameMixerTests testStartupRateMismatchIsRealigned]' passed (0.843 seconds).
+Test Case '-[MeteoraCoreTests.FrameMixerTests testSystemStallIsOneGap]' started.
+Test Case '-[MeteoraCoreTests.FrameMixerTests testSystemStallIsOneGap]' passed (0.551 seconds).
+Test Case '-[MeteoraCoreTests.FrameMixerTests testTwoInputsAreSummedAndLimited]' started.
+Test Case '-[MeteoraCoreTests.FrameMixerTests testTwoInputsAreSummedAndLimited]' passed (0.000 seconds).
+Test Suite 'FrameMixerTests' passed at 2026-10-31 13:05:59.225.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 3.693 (3.695) seconds
+Test Suite 'MeetingMailTests' started at 2026-10-31 13:05:59.225.
+Test Case '-[MeteoraCoreTests.MeetingMailTests testDefangKeepsOrdinaryText]' started.
+Test Case '-[MeteoraCoreTests.MeetingMailTests testDefangKeepsOrdinaryText]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.MeetingMailTests testEmlIsAnUnsentMimeMessageWithAttachment]' started.
+Test Case '-[MeteoraCoreTests.MeetingMailTests testEmlIsAnUnsentMimeMessageWithAttachment]' passed (0.001 seconds).
+Test Case '-[MeteoraCoreTests.MeetingMailTests testHeaderLineBreaksNeverReachRawHeaders]' started.
+Test Case '-[MeteoraCoreTests.MeetingMailTests testHeaderLineBreaksNeverReachRawHeaders]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.MeetingMailTests testHtmlEscapesModelText]' started.
+Test Case '-[MeteoraCoreTests.MeetingMailTests testHtmlEscapesModelText]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.MeetingMailTests testLongMailtoIsShortened]' started.
+Test Case '-[MeteoraCoreTests.MeetingMailTests testLongMailtoIsShortened]' passed (0.027 seconds).
+Test Case '-[MeteoraCoreTests.MeetingMailTests testMailtoCarriesSubjectAndBody]' started.
+Test Case '-[MeteoraCoreTests.MeetingMailTests testMailtoCarriesSubjectAndBody]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.MeetingMailTests testModelLinksAreNotClickable]' started.
+Test Case '-[MeteoraCoreTests.MeetingMailTests testModelLinksAreNotClickable]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.MeetingMailTests testTitleFromModelIsOneSafeFileName]' started.
+Test Case '-[MeteoraCoreTests.MeetingMailTests testTitleFromModelIsOneSafeFileName]' passed (0.001 seconds).
+Test Suite 'MeetingMailTests' passed at 2026-10-31 13:05:59.256.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.030 (0.030) seconds
+Test Suite 'MeetingSummaryTests' started at 2026-10-31 13:05:59.256.
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testActionItemObjectsAndEmptyMarkers]' started.
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testActionItemObjectsAndEmptyMarkers]' passed (0.001 seconds).
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testChunksRespectBudget]' started.
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testChunksRespectBudget]' passed (0.003 seconds).
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testCompleteObjectDetection]' started.
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testCompleteObjectDetection]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testDecodesOldOrPartialJSON]' started.
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testDecodesOldOrPartialJSON]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testFallsBackToSections]' started.
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testFallsBackToSections]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testMarkdownEscapesModelOutput]' started.
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testMarkdownEscapesModelOutput]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testParsesFencedJSONWithThinkingAndTrailingCommas]' started.
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testParsesFencedJSONWithThinkingAndTrailingCommas]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testParsesPlainJSON]' started.
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testParsesPlainJSON]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testRepairsTruncatedJSON]' started.
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testRepairsTruncatedJSON]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testTitleLengthAndDate]' started.
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testTitleLengthAndDate]' passed (0.004 seconds).
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testTranscriptLinesWithSpeakers]' started.
+Test Case '-[MeteoraCoreTests.MeetingSummaryTests testTranscriptLinesWithSpeakers]' passed (0.000 seconds).
+Test Suite 'MeetingSummaryTests' passed at 2026-10-31 13:05:59.266.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.009 (0.010) seconds
+Test Suite 'PIIMaskingTests' started at 2026-10-31 13:05:59.266.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testAddressAndPatchedBranch]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testAddressAndPatchedBranch]' passed (0.002 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testAllRulesCompile]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testAllRulesCompile]' passed (0.001 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testBankAccount20Digits]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testBankAccount20Digits]' passed (0.002 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testBirthDatesOnlyWithContext]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testBirthDatesOnlyWithContext]' passed (0.002 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testCardsLuhnAndContext]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testCardsLuhnAndContext]' passed (0.002 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testEmailAndPlaceholderFormat]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testEmailAndPlaceholderFormat]' passed (0.002 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testEmptyAndPlainText]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testEmptyAndPlainText]' passed (0.001 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testGenericSpeakerLabels]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testGenericSpeakerLabels]' passed (0.003 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testInnChecksums]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testInnChecksums]' passed (0.002 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testLiteralPlaceholdersAreReservedAndNotRestored]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testLiteralPlaceholdersAreReservedAndNotRestored]' passed (0.002 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testMapIsSharedAcrossTexts]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testMapIsSharedAcrossTexts]' passed (0.002 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testNames]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testNames]' passed (0.002 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testOrdinaryMeetingNumbers]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testOrdinaryMeetingNumbers]' passed (0.002 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testPassportNeedsKeyword]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testPassportNeedsKeyword]' passed (0.002 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testPhones]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testPhones]' passed (0.002 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testRoundTripLongText]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testRoundTripLongText]' passed (0.150 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testSameValueSamePlaceholder]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testSameValueSamePlaceholder]' passed (0.002 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testSampleCorpus]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testSampleCorpus]' passed (0.008 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testSnilsChecksum]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testSnilsChecksum]' passed (0.002 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testSpeakerNames]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testSpeakerNames]' passed (0.004 seconds).
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testUnmaskToleratesModelFormatting]' started.
+Test Case '-[MeteoraCoreTests.PIIMaskingTests testUnmaskToleratesModelFormatting]' passed (0.002 seconds).
+Test Suite 'PIIMaskingTests' passed at 2026-10-31 13:05:59.463.
+	 Executed 21 tests, with 0 failures (0 unexpected) in 0.195 (0.197) seconds
+Test Suite 'ParserTests' started at 2026-10-31 13:05:59.463.
+Test Case '-[MeteoraCoreTests.ParserTests testAudioOnly]' started.
+Test Case '-[MeteoraCoreTests.ParserTests testAudioOnly]' passed (0.001 seconds).
+Test Case '-[MeteoraCoreTests.ParserTests testBitFlipsNeverCrash]' started.
+Test Case '-[MeteoraCoreTests.ParserTests testBitFlipsNeverCrash]' passed (4.425 seconds).
+Test Case '-[MeteoraCoreTests.ParserTests testHTTPRange]' started.
+Test Case '-[MeteoraCoreTests.ParserTests testHTTPRange]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.ParserTests testLacing]' started.
+Test Case '-[MeteoraCoreTests.ParserTests testLacing]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.ParserTests testParsesLiveStreamWithUnknownSizes]' started.
+Test Case '-[MeteoraCoreTests.ParserTests testParsesLiveStreamWithUnknownSizes]' passed (0.005 seconds).
+Test Case '-[MeteoraCoreTests.ParserTests testParsesTelemostLikeRecording]' started.
+Test Case '-[MeteoraCoreTests.ParserTests testParsesTelemostLikeRecording]' passed (0.005 seconds).
+Test Case '-[MeteoraCoreTests.ParserTests testParsesVP9]' started.
+Test Case '-[MeteoraCoreTests.ParserTests testParsesVP9]' passed (0.003 seconds).
+Test Case '-[MeteoraCoreTests.ParserTests testRejectsNonWebM]' started.
+Test Case '-[MeteoraCoreTests.ParserTests testRejectsNonWebM]' passed (0.001 seconds).
+Test Case '-[MeteoraCoreTests.ParserTests testTruncatedFilesNeverCrash]' started.
+Test Case '-[MeteoraCoreTests.ParserTests testTruncatedFilesNeverCrash]' passed (16.197 seconds).
+Test Case '-[MeteoraCoreTests.ParserTests testVint]' started.
+Test Case '-[MeteoraCoreTests.ParserTests testVint]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.ParserTests testVorbisIsRejectedGracefully]' started.
+Test Case '-[MeteoraCoreTests.ParserTests testVorbisIsRejectedGracefully]' passed (0.001 seconds).
+Test Suite 'ParserTests' passed at 2026-10-31 13:06:20.104.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 20.640 (20.641) seconds
+Test Suite 'SceneTests' started at 2026-10-31 13:06:20.105.
+Test Case '-[MeteoraCoreTests.SceneTests testCollector]' started.
+Test Case '-[MeteoraCoreTests.SceneTests testCollector]' passed (0.020 seconds).
+Test Case '-[MeteoraCoreTests.SceneTests testDecodePlanFindsPrecedingKeyframe]' started.
+Test Case '-[MeteoraCoreTests.SceneTests testDecodePlanFindsPrecedingKeyframe]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SceneTests testDecodePlanStaysBoundedOnHugeDamagedGOP]' started.
+Test Case '-[MeteoraCoreTests.SceneTests testDecodePlanStaysBoundedOnHugeDamagedGOP]' passed (0.284 seconds).
+Test Case '-[MeteoraCoreTests.SceneTests testHelpers]' started.
+Test Case '-[MeteoraCoreTests.SceneTests testHelpers]' passed (0.001 seconds).
+Test Case '-[MeteoraCoreTests.SceneTests testOCRRecognizesRussian]' started.
+IOServiceMatchingfailed for: AppleM2ScalerParavirtDriver
+Test Case '-[MeteoraCoreTests.SceneTests testOCRRecognizesRussian]' passed (1.873 seconds).
+Test Case '-[MeteoraCoreTests.SceneTests testPlannerFillsLongGaps]' started.
+Test Case '-[MeteoraCoreTests.SceneTests testPlannerFillsLongGaps]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SceneTests testPlannerUsesKeyframesAndFindsSpikes]' started.
+Test Case '-[MeteoraCoreTests.SceneTests testPlannerUsesKeyframesAndFindsSpikes]' passed (0.052 seconds).
+Test Case '-[MeteoraCoreTests.SceneTests testReports]' started.
+Test Case '-[MeteoraCoreTests.SceneTests testReports]' passed (0.122 seconds).
+Test Suite 'SceneTests' passed at 2026-10-31 13:06:22.457.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 2.352 (2.353) seconds
+Test Suite 'SecurityRegressionTests' started at 2026-10-31 13:06:22.457.
+Test Case '-[MeteoraCoreTests.SecurityRegressionTests testFIFOIsRejected]' started.
+Test Case '-[MeteoraCoreTests.SecurityRegressionTests testFIFOIsRejected]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SecurityRegressionTests testFileNamesAreSafe]' started.
+Test Case '-[MeteoraCoreTests.SecurityRegressionTests testFileNamesAreSafe]' passed (0.001 seconds).
+Test Case '-[MeteoraCoreTests.SecurityRegressionTests testSilenceBombIsBounded]' started.
+Test Case '-[MeteoraCoreTests.SecurityRegressionTests testSilenceBombIsBounded]' passed (0.023 seconds).
+Test Case '-[MeteoraCoreTests.SecurityRegressionTests testTimestampOverflowDoesNotCrash]' started.
+Test Case '-[MeteoraCoreTests.SecurityRegressionTests testTimestampOverflowDoesNotCrash]' passed (0.001 seconds).
+Test Suite 'SecurityRegressionTests' passed at 2026-10-31 13:06:22.482.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.024 (0.025) seconds
+Test Suite 'SpeakerAssignmentTests' started at 2026-10-31 13:06:22.482.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testAllMicroTurnsAreKept]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testAllMicroTurnsAreKept]' passed (0.001 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testCleanupExactCountAndCap]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testCleanupExactCountAndCap]' passed (0.003 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testCleanupMergesSameVoiceKeepsDifferentOnes]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testCleanupMergesSameVoiceKeepsDifferentOnes]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testCleanupNumbersByFirstMember]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testCleanupNumbersByFirstMember]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testFragmentsJoinBeforeMicroCheck]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testFragmentsJoinBeforeMicroCheck]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testInvalidTurnsAreDropped]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testInvalidTurnsAreDropped]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testLinkingEdgeCases]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testLinkingEdgeCases]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testLinkingJoinsSameVoiceAcrossWindows]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testLinkingJoinsSameVoiceAcrossWindows]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testLinkingRespectsSameWindowSeparation]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testLinkingRespectsSameWindowSeparation]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testLinkingWithKnownCount]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testLinkingWithKnownCount]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testLongPauseKeepsTurnsApart]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testLongPauseKeepsTurnsApart]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testMajorityOverlapWins]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testMajorityOverlapWins]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testMicroTurnDoesNotStealPhrase]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testMicroTurnDoesNotStealPhrase]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testMicroTurnIsAbsorbed]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testMicroTurnIsAbsorbed]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testNoOverlapUsesNearestTurnWithinLimit]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testNoOverlapUsesNearestTurnWithinLimit]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testNoTurnsClearsSpeakers]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testNoTurnsClearsSpeakers]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testNumberingFollowsFirstAppearanceInTranscript]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testNumberingFollowsFirstAppearanceInTranscript]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testOverlapIsSummedAcrossTurns]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testOverlapIsSummedAcrossTurns]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testRename]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testRename]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testRenameSwapAndIgnoreEmpty]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testRenameSwapAndIgnoreEmpty]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testShortRecordingNeedsStrongerEvidence]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testShortRecordingNeedsStrongerEvidence]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testSpeakerSurvivesJSONRoundTrip]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testSpeakerSurvivesJSONRoundTrip]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testSpeakerWithoutPhrasesTakesNoNumber]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testSpeakerWithoutPhrasesTakesNoNumber]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testTinySpeakersJoinUnlessClearlyDifferent]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testTinySpeakersJoinUnlessClearlyDifferent]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testTranscriptHelpers]' started.
+Test Case '-[MeteoraCoreTests.SpeakerAssignmentTests testTranscriptHelpers]' passed (0.000 seconds).
+Test Suite 'SpeakerAssignmentTests' passed at 2026-10-31 13:06:22.492.
+	 Executed 25 tests, with 0 failures (0 unexpected) in 0.007 (0.010) seconds
+Test Suite 'SummaryGroundingTests' started at 2026-10-31 13:06:22.492.
+Test Case '-[MeteoraCoreTests.SummaryGroundingTests testAssessment]' started.
+Test Case '-[MeteoraCoreTests.SummaryGroundingTests testAssessment]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SummaryGroundingTests testKeepsSupportedLinesAndDropsInventedOnes]' started.
+Test Case '-[MeteoraCoreTests.SummaryGroundingTests testKeepsSupportedLinesAndDropsInventedOnes]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.SummaryGroundingTests testNoMeetingAnswerIsVoid]' started.
+Test Case '-[MeteoraCoreTests.SummaryGroundingTests testNoMeetingAnswerIsVoid]' passed (0.000 seconds).
+Test Suite 'SummaryGroundingTests' passed at 2026-10-31 13:06:22.493.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'TermDictionaryTests' started at 2026-10-31 13:06:22.493.
+Test Case '-[MeteoraCoreTests.TermDictionaryTests testAbbreviationsReadAloud]' started.
+Test Case '-[MeteoraCoreTests.TermDictionaryTests testAbbreviationsReadAloud]' passed (0.002 seconds).
+Test Case '-[MeteoraCoreTests.TermDictionaryTests testCSVRoundTrip]' started.
+Test Case '-[MeteoraCoreTests.TermDictionaryTests testCSVRoundTrip]' passed (0.001 seconds).
+Test Case '-[MeteoraCoreTests.TermDictionaryTests testDoesNotTouchOtherWords]' started.
+Test Case '-[MeteoraCoreTests.TermDictionaryTests testDoesNotTouchOtherWords]' passed (0.002 seconds).
+Test Case '-[MeteoraCoreTests.TermDictionaryTests testNamesAndJoinedWords]' started.
+Test Case '-[MeteoraCoreTests.TermDictionaryTests testNamesAndJoinedWords]' passed (0.001 seconds).
+Test Case '-[MeteoraCoreTests.TermDictionaryTests testRecognizerHints]' started.
+Test Case '-[MeteoraCoreTests.TermDictionaryTests testRecognizerHints]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.TermDictionaryTests testTranscript]' started.
+Test Case '-[MeteoraCoreTests.TermDictionaryTests testTranscript]' passed (0.000 seconds).
+Test Suite 'TermDictionaryTests' passed at 2026-10-31 13:06:22.500.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.006 (0.007) seconds
+Test Suite 'TranscriptTests' started at 2026-10-31 13:06:22.500.
+Test Case '-[MeteoraCoreTests.TranscriptTests testMarkdownMergesSpeechAndFramesSafely]' started.
+Test Case '-[MeteoraCoreTests.TranscriptTests testMarkdownMergesSpeechAndFramesSafely]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.TranscriptTests testPlainText]' started.
+Test Case '-[MeteoraCoreTests.TranscriptTests testPlainText]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.TranscriptTests testSegmentLookup]' started.
+Test Case '-[MeteoraCoreTests.TranscriptTests testSegmentLookup]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.TranscriptTests testSRT]' started.
+Test Case '-[MeteoraCoreTests.TranscriptTests testSRT]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.TranscriptTests testTinySizes]' started.
+Test Case '-[MeteoraCoreTests.TranscriptTests testTinySizes]' passed (0.000 seconds).
+Test Suite 'TranscriptTests' passed at 2026-10-31 13:06:22.501.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'WebMWriterTests' started at 2026-10-31 13:06:22.501.
+Test Case '-[MeteoraCoreTests.WebMWriterTests testEBMLEncoding]' started.
+Test Case '-[MeteoraCoreTests.WebMWriterTests testEBMLEncoding]' passed (0.000 seconds).
+Test Case '-[MeteoraCoreTests.WebMWriterTests testLongRecordingSpansManyClusters]' started.
+Test Case '-[MeteoraCoreTests.WebMWriterTests testLongRecordingSpansManyClusters]' passed (0.037 seconds).
+Test Case '-[MeteoraCoreTests.WebMWriterTests testStereoAndHeader]' started.
+Test Case '-[MeteoraCoreTests.WebMWriterTests testStereoAndHeader]' passed (0.001 seconds).
+Test Case '-[MeteoraCoreTests.WebMWriterTests testUnfinishedFileIsReadable]' started.
+Test Case '-[MeteoraCoreTests.WebMWriterTests testUnfinishedFileIsReadable]' passed (0.008 seconds).
+Test Case '-[MeteoraCoreTests.WebMWriterTests testWritesReadableOpusWebM]' started.
+Test Case '-[MeteoraCoreTests.WebMWriterTests testWritesReadableOpusWebM]' passed (0.003 seconds).
+Test Suite 'WebMWriterTests' passed at 2026-10-31 13:06:22.551.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.049 (0.049) seconds
+Test Suite 'MeteoraPackageTests.xctest' passed at 2026-10-31 13:06:22.551.
+	 Executed 142 tests, with 0 failures (0 unexpected) in 32.567 (32.585) seconds
+Test Suite 'All tests' passed at 2026-10-31 13:06:22.551.
+	 Executed 142 tests, with 0 failures (0 unexpected) in 32.567 (32.586) seconds
+◇ Test run started.
+↳ Testing Library Version: 1501
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

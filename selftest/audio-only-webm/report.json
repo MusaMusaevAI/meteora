@@ -1,0 +1,824 @@
+{
+  "activationPolicy" : 0,
+  "asr" : {
+    "error" : "",
+    "hints" : {
+      "beamSlowdown" : 1.1213489779110724,
+      "injected" : [
+
+      ],
+      "mixed" : {
+        "decodeSeconds" : 1.3079020977020264,
+        "hintsActive" : 27,
+        "hintsNote" : "",
+        "loadSeconds" : 0.45720791816711426,
+        "text" : "Требуя похвал, счастлив уж я надеждой сладкой, Что дева с трепетом любви Посмотрит, может быть, украдкой На песни грешные мои. У лукоморья дуб зелёный."
+      },
+      "mixedHintCount" : 27,
+      "notWorse" : true,
+      "plain" : {
+        "decodeSeconds" : 1.1663649082183838,
+        "hintsActive" : 0,
+        "hintsNote" : "",
+        "loadSeconds" : 0.66372501850128174,
+        "text" : "Требуя похвал, счастлив уж я надеждой сладкой, Что дева с трепетом любви Посмотрит, может быть, украдкой На песни грешные мои. У лукоморья дуб зелёный."
+      },
+      "recallMixed" : 0.88888888888888884,
+      "recallPlain" : 0.88888888888888884,
+      "recallUnrelatedOnly" : 0.88888888888888884,
+      "unrelatedOnly" : {
+        "decodeSeconds" : 1.3238790035247803,
+        "hintsActive" : 26,
+        "hintsNote" : "",
+        "loadSeconds" : 0.48044097423553467,
+        "text" : "Требуя похвал, счастлив уж я надеждой сладкой, Что дева с трепетом любви Посмотрит, может быть, украдкой На песни грешные мои. У лукоморья дуб зелёный."
+      },
+      "unrelatedOnlyUnchanged" : true
+    },
+    "hintsTokenizerVerified" : true,
+    "installed" : true,
+    "recordingSample" : [
+      "[0:00] This Recording Hazonly Sounds"
+    ],
+    "recordingSeconds" : 0.85090899467468262,
+    "recordingSegments" : 1,
+    "runtime" : "2.0.1",
+    "vadBundled" : true,
+    "wavDecodeSeconds" : 1.1663649082183838,
+    "wavSeconds" : 11.289999999999999,
+    "wavText" : "Требуя похвал, счастлив уж я надеждой сладкой, Что дева с трепетом любви Посмотрит, может быть, украдкой На песни грешные мои. У лукоморья дуб зелёный."
+  },
+  "audio" : {
+    "activeRMS" : 0.07474905252456665,
+    "analysisSeconds" : 0.00013899803161621094,
+    "decodedDuration" : 12.0175,
+    "envelopePoints" : 121,
+    "high" : {
+      "bytes" : 299876,
+      "channels" : 1,
+      "duration" : 12.0175,
+      "ok" : true,
+      "sampleRate" : 48000,
+      "seconds" : 0.15258502960205078
+    },
+    "medium" : {
+      "bytes" : 68593,
+      "channels" : 1,
+      "duration" : 12.0175,
+      "ok" : true,
+      "sampleRate" : 24000,
+      "seconds" : 0.065037012100219727
+    },
+    "peak" : 0.2386474609375
+  },
+  "autofolders" : {
+    "bookmark" : true,
+    "errors" : [
+
+    ],
+    "events" : [
+      "0.4 detected Запись 29.10.26 14-05-31.wav",
+      "15.4 ready Запись 29.10.26 14-05-31.wav",
+      "15.4 started Запись 29.10.26 14-05-31.wav",
+      "17.5 done Запись 29.10.26 14-05-31.wav",
+      "18.0 detected Запись 29.10.26 14-05-31 (копия).wav",
+      "24.0 duplicate Запись 29.10.26 14-05-31 (копия).wav"
+    ],
+    "fixture" : "ru-example.wav",
+    "fixtureBytes" : 361324,
+    "ledgerRecorded" : true,
+    "ok" : true,
+    "pauseStatus" : "Автопапки на паузе",
+    "recent" : [
+      "ok: Запись 29.10.26 14-05-31 — 11 с · сохранено: TXT, SRT"
+    ],
+    "secondCopy" : {
+      "detected" : true,
+      "newProcessingRuns" : 0,
+      "skippedAsDuplicate" : true
+    },
+    "seconds" : 26.100000000000001,
+    "speechModelInstalled" : true,
+    "statusAfter" : "Слежу за 1 папкой",
+    "statusIdle" : "Слежу за 1 папкой",
+    "statusWhileGrowing" : "Жду, пока допишется «Запись 29.10.26 14-05-31»",
+    "timings" : {
+      "copyEnd" : 8.5,
+      "copyStart" : 0,
+      "detected" : 0.40000000000000002,
+      "done" : 17.5,
+      "processingSeconds" : 2.1000000000000001,
+      "ready" : 15.4,
+      "started" : 15.4,
+      "waitedAfterLastWrite" : 7
+    },
+    "written" : {
+      "srt" : 354,
+      "txt" : 424
+    }
+  },
+  "convert" : {
+    "cancel" : {
+      "beforeStart" : "ok",
+      "leftovers" : [
+
+      ],
+      "running" : "finished before the cancel arrived"
+    },
+    "errors" : [
+
+    ],
+    "files" : {
+      "mpeg4-mp3.avi" : {
+        "audioTracks" : 1,
+        "bytes" : 614335,
+        "duration" : 3.0670000000000002,
+        "lastProgress" : 1,
+        "needsConversion" : true,
+        "ok" : true,
+        "output" : "meteora-converted-9032AA4F-A697-4DBB-9349-B280C5898084.mp4",
+        "playable" : true,
+        "seconds" : 0.87683403491973877,
+        "videoCodec" : "avc1",
+        "videoSize" : "320x240",
+        "videoTracks" : 1
+      },
+      "vorbis.ogg" : {
+        "audioTracks" : 1,
+        "bytes" : 44621,
+        "duration" : 2.9753287981859411,
+        "lastProgress" : 1,
+        "needsConversion" : true,
+        "ok" : true,
+        "output" : "meteora-converted-73202585-8EE5-4220-9D9E-FBBAE58E12C6.m4a",
+        "playable" : true,
+        "seconds" : 0.16398799419403076,
+        "videoTracks" : 0
+      },
+      "vp9-opus.mkv" : {
+        "audioTracks" : 1,
+        "bytes" : 729580,
+        "duration" : 3,
+        "lastProgress" : 1,
+        "needsConversion" : true,
+        "ok" : true,
+        "output" : "meteora-converted-2D2409AF-7A60-4516-BFBA-110C4A171628.mp4",
+        "playable" : true,
+        "seconds" : 0.34243595600128174,
+        "videoCodec" : "avc1",
+        "videoSize" : "320x240",
+        "videoTracks" : 1
+      },
+      "wmv2-wma2.wmv" : {
+        "audioTracks" : 1,
+        "bytes" : 645482,
+        "duration" : 3.0659999999999998,
+        "lastProgress" : 1,
+        "needsConversion" : true,
+        "ok" : true,
+        "output" : "meteora-converted-A5D119FA-612C-4924-8F25-B1FA549C5A7E.mp4",
+        "playable" : true,
+        "seconds" : 0.29784607887268066,
+        "videoCodec" : "avc1",
+        "videoSize" : "320x240",
+        "videoTracks" : 1
+      }
+    },
+    "isolation" : {
+      "detail" : "service open: errno 1 Operation not permitted\nconnect: errno 1 Operation not permitted\nffmpeg exit 255 reason 1: [in#0 @ 0x600002404700] Error opening input: Operation not permitted | Error opening input file file:\/Users\/runner\/Downloads\/meteora-selftest\/in\/convert\/mpeg4-mp3.avi. | Error opening input files: Operation not permitted | ",
+      "ffmpegFileBlocked" : true,
+      "networkBlocked" : true,
+      "serviceFileBlocked" : true
+    },
+    "ok" : true
+  },
+  "engine" : "webm",
+  "entitlements_sandboxed" : true,
+  "errors" : [
+
+  ],
+  "exports" : {
+    "csv" : 118,
+    "docx" : 6534,
+    "html" : 2707,
+    "json" : 814,
+    "md" : 416,
+    "pdf" : 19129,
+    "rtf" : 2117,
+    "srt" : 79,
+    "txt" : 162,
+    "vtt" : 87
+  },
+  "jsInfo" : "{\"w\":0,\"h\":0,\"d\":12.0135,\"rs\":4,\"ns\":1,\"err\":0,\"msg\":\"\",\"src\":\"meteora-media:\/\/local\/media.webm\",\"vis\":\"visible\",\"vp8\":\"probably\",\"vp9\":\"probably\",\"webm\":\"maybe\",\"mse\":true}",
+  "ok" : true,
+  "parse" : {
+    "audio" : "A_OPUS 1ch 48000.0",
+    "audioPackets" : 601,
+    "duration" : 12.007999999999999,
+    "hasCues" : true,
+    "keyframes" : 0,
+    "seconds" : 0.13024401664733887,
+    "video" : "none",
+    "videoPackets" : 0
+  },
+  "pii" : {
+    "engine" : "Cloud.ru guardrails-llm-filter v0.1.2 rules (Apache-2.0), ported to Swift; local, no network",
+    "errors" : [
+
+    ],
+    "falsePositives" : [
+
+    ],
+    "longChars" : 198800,
+    "longSeconds" : 0.65570807456970215,
+    "meteoraRules" : 2,
+    "missed" : [
+
+    ],
+    "negatives" : 18,
+    "ok" : true,
+    "positives" : 28,
+    "rules" : 26,
+    "speakerPlaceholders" : {
+      "EMAIL" : 1,
+      "FIO" : 4,
+      "PHONE_RU" : 1
+    },
+    "upstreamRules" : 24
+  },
+  "playback" : {
+    "mediaError" : 0,
+    "ready" : true,
+    "videoSize" : "0x0",
+    "waitedOK" : true,
+    "webDuration" : 12.007999999999999
+  },
+  "playbackAdvancedTo" : 1.157014999999963,
+  "recordedPlayback" : {
+    "recording-test.m4a" : {
+      "advancedTo" : 1.4502675840000001,
+      "diagnostics" : [
+        "native:ready"
+      ],
+      "duration" : 3,
+      "engine" : "native",
+      "mediaError" : 0,
+      "ready" : true
+    },
+    "recording-test.webm" : {
+      "advancedTo" : 1.4008412079999999,
+      "diagnostics" : [
+        "native:ready"
+      ],
+      "duration" : 3.0175000000000001,
+      "engine" : "webm→m4a",
+      "mediaError" : 0,
+      "ready" : true
+    }
+  },
+  "recorder" : {
+    "defaultFormat" : "m4a",
+    "defaultInput" : "Apple Virtual Sound Device",
+    "fileName" : {
+      "name" : "Запись 29.10.26 14-05-31.webm",
+      "parsedBack" : true
+    },
+    "inputDevices" : [
+      "Apple Virtual Sound Device [builtIn]",
+      "Null Audio Device [virtual]"
+    ],
+    "microphoneAuthorization" : "notDetermined",
+    "mix" : {
+      "frames" : 50,
+      "ok" : true,
+      "peak" : 0.97377413511276245
+    },
+    "ok" : true,
+    "opusEncoderAvailable" : true,
+    "processTapsAvailable" : true,
+    "tone" : {
+      "codec" : "A_OPUS",
+      "containerDuration" : 3.02,
+      "decodedDuration" : 3.0175000000000001,
+      "encodeSeconds" : 0.0294189453125,
+      "fileBytes" : 16862,
+      "format" : "WebM · Opus · 48 кГц · моно · 50 кбит\/с",
+      "frequency" : 438.2176520994002,
+      "hasCues" : 1,
+      "ok" : true,
+      "packets" : 151,
+      "rms" : 0.21182405981631389
+    },
+    "toneM4A" : {
+      "bytes" : 10372,
+      "duration" : 3,
+      "format" : "M4A · AAC · 48 кГц · моно · 64 кбит\/с",
+      "frequency" : 439.82758620689657,
+      "ok" : true,
+      "rms" : 0.21213280144004032
+    }
+  },
+  "screens" : 1,
+  "speakers" : {
+    "accurate" : {
+      "bytes" : 107398406,
+      "doubled" : {
+        "audioSeconds" : 23.079999999999998,
+        "countOK" : true,
+        "expected" : 1,
+        "rtf" : 0.105690641047843,
+        "seconds" : 2.4393399953842163,
+        "speakers" : 1,
+        "turns" : [
+          "0.03–8.50 S1",
+          "9.26–10.92 S1",
+          "11.74–20.30 S1",
+          "21.04–22.71 S1"
+        ]
+      },
+      "doubledWindowed" : {
+        "audioSeconds" : 23.079999999999998,
+        "countOK" : true,
+        "expected" : 1,
+        "rtf" : 0.028795494570475932,
+        "seconds" : 0.66460001468658447,
+        "speakers" : 1,
+        "turns" : [
+          "0.03–7.98 S1",
+          "8.03–8.52 S1",
+          "9.30–10.93 S1",
+          "11.76–15.98 S1",
+          "16.03–20.30 S1",
+          "21.06–22.73 S1"
+        ]
+      },
+      "installed" : true,
+      "loadSeconds" : 0.2928619384765625,
+      "model" : "pyannote 3.0 + TitaNet-L",
+      "oneSpeaker30s" : {
+        "audioSeconds" : 30.326125000000001,
+        "countOK" : true,
+        "expected" : 1,
+        "rtf" : 0.10297972277937643,
+        "score" : {
+          "confusion" : 0,
+          "foundChanges" : 0,
+          "missed" : 0.13983050847457626,
+          "trueChanges" : 0
+        },
+        "seconds" : 3.1229759454727173,
+        "speakers" : 1,
+        "turns" : [
+          "0.12–1.97 S1",
+          "2.49–4.01 S1",
+          "4.84–9.09 S1",
+          "10.09–12.10 S1",
+          "12.97–17.77 S1",
+          "18.71–24.74 S1",
+          "25.71–29.63 S1"
+        ]
+      },
+      "oneSpeakerTwice" : {
+        "audioSeconds" : 40.084000000000003,
+        "countOK" : true,
+        "expected" : 1,
+        "rtf" : 0.098863510823323564,
+        "score" : {
+          "confusion" : 0,
+          "foundChanges" : 0,
+          "missed" : 0.15160753880266076,
+          "trueChanges" : 0
+        },
+        "seconds" : 3.9628449678421021,
+        "speakers" : 1,
+        "turns" : [
+          "0.03–1.90 S1",
+          "2.53–7.49 S1",
+          "8.15–10.66 S1",
+          "11.46–12.74 S1",
+          "13.92–16.60 S1",
+          "17.29–19.23 S1",
+          "19.84–21.87 S1",
+          "22.47–23.81 S1",
+          "25.02–27.71 S1",
+          "28.30–36.94 S1",
+          "37.48–39.97 S1"
+        ]
+      },
+      "single" : {
+        "audioSeconds" : 11.289999999999999,
+        "countOK" : true,
+        "expected" : 1,
+        "rtf" : 0.10285916003217943,
+        "seconds" : 1.1612799167633057,
+        "speakers" : 1,
+        "turns" : [
+          "0.03–8.50 S1",
+          "9.24–10.92 S1"
+        ]
+      },
+      "threeSpeakers" : {
+        "audioSeconds" : 65.674812500000002,
+        "countOK" : true,
+        "expected" : 3,
+        "rtf" : 0.1071152661256858,
+        "score" : {
+          "boundaryError" : 0.8792192337036141,
+          "confusion" : 0.041285167304811056,
+          "foundChanges" : 5,
+          "missed" : 0.15931413351090395,
+          "trueChanges" : 5
+        },
+        "seconds" : 7.0347750186920166,
+        "speakers" : 3,
+        "turns" : [
+          "0.20–1.85 S1",
+          "2.82–7.49 S1",
+          "8.37–12.30 S2",
+          "13.09–17.34 S2",
+          "18.17–20.64 S3",
+          "21.60–23.10 S3",
+          "23.79–25.07 S3",
+          "25.83–28.14 S1",
+          "28.94–30.20 S1",
+          "31.47–34.14 S1",
+          "35.03–36.78 S1",
+          "37.88–39.82 S2",
+          "40.75–45.54 S2",
+          "46.47–52.53 S2",
+          "53.49–54.98 S2",
+          "54.98–57.46 S3",
+          "58.33–61.69 S3",
+          "62.27–64.95 S3"
+        ]
+      },
+      "threeSpeakersWindowed" : {
+        "audioSeconds" : 65.674812500000002,
+        "countOK" : true,
+        "expected" : 3,
+        "rtf" : 0.091792997821822611,
+        "score" : {
+          "boundaryError" : 0.72125687711536846,
+          "confusion" : 0.027135009155984685,
+          "foundChanges" : 5,
+          "missed" : 0.17429665390377894,
+          "trueChanges" : 5
+        },
+        "seconds" : 6.0284879207611084,
+        "speakers" : 3,
+        "turns" : [
+          "0.20–1.85 S1",
+          "2.82–7.49 S1",
+          "8.37–12.30 S2",
+          "13.13–17.34 S2",
+          "18.17–20.64 S3",
+          "21.60–23.10 S3",
+          "23.82–25.09 S3",
+          "25.83–28.11 S1",
+          "29.16–29.97 S1",
+          "31.63–34.17 S1",
+          "35.08–36.78 S1",
+          "37.88–39.82 S2",
+          "40.75–45.54 S2",
+          "46.48–52.53 S2",
+          "53.49–57.47 S2",
+          "58.33–59.97 S2",
+          "60.03–61.74 S3",
+          "62.33–64.81 S3"
+        ]
+      },
+      "twoSpeakers" : {
+        "audioSeconds" : 50.368124999999999,
+        "countOK" : true,
+        "expected" : 2,
+        "rtf" : 0.10473687560404273,
+        "score" : {
+          "boundaryError" : 0.41151117197672588,
+          "confusion" : 0,
+          "foundChanges" : 3,
+          "missed" : 0.16307161345987919,
+          "trueChanges" : 3
+        },
+        "seconds" : 5.2754000425338745,
+        "speakers" : 2,
+        "turns" : [
+          "0.03–1.90 S1",
+          "2.53–7.49 S1",
+          "8.30–10.78 S1",
+          "11.59–13.43 S2",
+          "13.97–15.49 S2",
+          "16.32–20.57 S2",
+          "21.45–22.49 S1",
+          "23.89–26.42 S1",
+          "27.33–29.04 S1",
+          "30.14–32.16 S2",
+          "33.04–37.80 S2",
+          "38.76–44.80 S2",
+          "45.76–49.69 S2"
+        ]
+      },
+      "twoSpeakersExact" : {
+        "audioSeconds" : 50.368124999999999,
+        "countOK" : true,
+        "expected" : 2,
+        "rtf" : 0.12336427017645694,
+        "score" : {
+          "boundaryError" : 0.41151117197672588,
+          "confusion" : 0,
+          "foundChanges" : 3,
+          "missed" : 0.16307161345987919,
+          "trueChanges" : 3
+        },
+        "seconds" : 6.2136269807815552,
+        "speakers" : 2,
+        "turns" : [
+          "0.03–1.90 S1",
+          "2.53–7.49 S1",
+          "8.30–10.78 S1",
+          "11.59–13.43 S2",
+          "13.97–15.49 S2",
+          "16.32–20.57 S2",
+          "21.45–22.49 S1",
+          "23.89–26.42 S1",
+          "27.33–29.04 S1",
+          "30.14–32.16 S2",
+          "33.04–37.80 S2",
+          "38.76–44.80 S2",
+          "45.76–49.69 S2"
+        ]
+      }
+    },
+    "clipsOK" : true,
+    "engine" : "pyannote 3.0 + TitaNet-S",
+    "errors" : [
+
+    ],
+    "ok" : true,
+    "recordingSeconds" : 0.42776894569396973,
+    "recordingSpeakers" : [
+      "Спикер 1"
+    ],
+    "runtime" : "2.0.1",
+    "standard" : {
+      "bytes" : 46250196,
+      "doubled" : {
+        "audioSeconds" : 23.079999999999998,
+        "countOK" : true,
+        "expected" : 1,
+        "rtf" : 0.03928396482814743,
+        "seconds" : 0.90667390823364258,
+        "speakers" : 1,
+        "turns" : [
+          "0.03–8.50 S1",
+          "9.26–10.92 S1",
+          "11.74–20.30 S1",
+          "21.04–22.71 S1"
+        ]
+      },
+      "doubledWindowed" : {
+        "audioSeconds" : 23.079999999999998,
+        "countOK" : true,
+        "expected" : 1,
+        "rtf" : 0.012038645545985919,
+        "seconds" : 0.27785193920135498,
+        "speakers" : 1,
+        "turns" : [
+          "0.03–7.98 S1",
+          "8.03–8.52 S1",
+          "9.30–10.93 S1",
+          "11.76–15.98 S1",
+          "16.03–20.30 S1",
+          "21.06–22.73 S1"
+        ]
+      },
+      "installed" : true,
+      "loadSeconds" : 0.20502793788909912,
+      "model" : "pyannote 3.0 + TitaNet-S",
+      "oneSpeaker30s" : {
+        "audioSeconds" : 30.326125000000001,
+        "countOK" : true,
+        "expected" : 1,
+        "rtf" : 0.045498892062313036,
+        "score" : {
+          "confusion" : 0,
+          "foundChanges" : 0,
+          "missed" : 0.13983050847457626,
+          "trueChanges" : 0
+        },
+        "seconds" : 1.3798050880432129,
+        "speakers" : 1,
+        "turns" : [
+          "0.12–1.97 S1",
+          "2.49–4.01 S1",
+          "4.84–9.09 S1",
+          "10.09–12.10 S1",
+          "12.97–17.77 S1",
+          "18.71–24.74 S1",
+          "25.71–29.63 S1"
+        ]
+      },
+      "oneSpeakerTwice" : {
+        "audioSeconds" : 40.084000000000003,
+        "countOK" : true,
+        "expected" : 1,
+        "rtf" : 0.046870199556943597,
+        "score" : {
+          "confusion" : 0,
+          "foundChanges" : 0,
+          "missed" : 0.15160753880266076,
+          "trueChanges" : 0
+        },
+        "seconds" : 1.8787450790405273,
+        "speakers" : 1,
+        "turns" : [
+          "0.03–1.90 S1",
+          "2.53–7.49 S1",
+          "8.15–10.66 S1",
+          "11.46–12.74 S1",
+          "13.92–16.60 S1",
+          "17.29–19.23 S1",
+          "19.84–21.87 S1",
+          "22.47–23.81 S1",
+          "25.02–27.71 S1",
+          "28.30–36.94 S1",
+          "37.48–39.97 S1"
+        ]
+      },
+      "single" : {
+        "audioSeconds" : 11.289999999999999,
+        "countOK" : true,
+        "expected" : 1,
+        "rtf" : 0.030355183184938798,
+        "seconds" : 0.34271001815795898,
+        "speakers" : 1,
+        "turns" : [
+          "0.03–8.50 S1",
+          "9.24–10.92 S1"
+        ]
+      },
+      "threeSpeakers" : {
+        "audioSeconds" : 65.674812500000002,
+        "countOK" : true,
+        "expected" : 3,
+        "rtf" : 0.053027376649135129,
+        "score" : {
+          "boundaryError" : 0.71000750885009722,
+          "confusion" : 0.027301481604794408,
+          "foundChanges" : 5,
+          "missed" : 0.15998002330614283,
+          "trueChanges" : 5
+        },
+        "seconds" : 3.4825630187988281,
+        "speakers" : 3,
+        "turns" : [
+          "0.20–1.85 S1",
+          "2.82–7.49 S1",
+          "8.37–12.30 S2",
+          "13.13–17.34 S2",
+          "18.17–20.64 S3",
+          "21.60–23.10 S3",
+          "23.79–25.07 S3",
+          "25.83–28.14 S1",
+          "28.94–30.20 S1",
+          "31.47–34.14 S1",
+          "35.03–36.78 S1",
+          "37.88–39.82 S2",
+          "40.75–45.54 S2",
+          "46.47–52.53 S2",
+          "53.49–57.47 S2",
+          "58.33–59.97 S2",
+          "59.97–61.69 S3",
+          "62.30–64.95 S3"
+        ]
+      },
+      "threeSpeakersWindowed" : {
+        "audioSeconds" : 65.674812500000002,
+        "countOK" : true,
+        "expected" : 3,
+        "rtf" : 0.046524867527357357,
+        "score" : {
+          "boundaryError" : 0.72125687711536846,
+          "confusion" : 0.027135009155984685,
+          "foundChanges" : 5,
+          "missed" : 0.17429665390377894,
+          "trueChanges" : 5
+        },
+        "seconds" : 3.0555119514465332,
+        "speakers" : 3,
+        "turns" : [
+          "0.20–1.85 S1",
+          "2.82–7.49 S1",
+          "8.37–12.30 S2",
+          "13.13–17.34 S2",
+          "18.17–20.64 S3",
+          "21.60–23.10 S3",
+          "23.82–25.09 S3",
+          "25.83–28.11 S1",
+          "29.16–29.97 S1",
+          "31.63–34.17 S1",
+          "35.08–36.78 S1",
+          "37.88–39.82 S2",
+          "40.75–45.54 S2",
+          "46.48–52.53 S2",
+          "53.49–57.47 S2",
+          "58.33–59.97 S2",
+          "60.03–61.74 S3",
+          "62.33–64.81 S3"
+        ]
+      },
+      "twoSpeakers" : {
+        "audioSeconds" : 50.368124999999999,
+        "countOK" : true,
+        "expected" : 2,
+        "rtf" : 0.051390022554553674,
+        "score" : {
+          "boundaryError" : 0.41151117197672588,
+          "confusion" : 0,
+          "foundChanges" : 3,
+          "missed" : 0.16307161345987919,
+          "trueChanges" : 3
+        },
+        "seconds" : 2.5884190797805786,
+        "speakers" : 2,
+        "turns" : [
+          "0.03–1.90 S1",
+          "2.53–7.49 S1",
+          "8.30–10.78 S1",
+          "11.59–13.43 S2",
+          "13.97–15.49 S2",
+          "16.32–20.57 S2",
+          "21.45–22.49 S1",
+          "23.89–26.42 S1",
+          "27.33–29.04 S1",
+          "30.14–32.16 S2",
+          "33.04–37.80 S2",
+          "38.76–44.80 S2",
+          "45.76–49.69 S2"
+        ]
+      },
+      "twoSpeakersExact" : {
+        "audioSeconds" : 50.368124999999999,
+        "countOK" : true,
+        "expected" : 2,
+        "rtf" : 0.048536549571383231,
+        "score" : {
+          "boundaryError" : 0.41151117197672588,
+          "confusion" : 0,
+          "foundChanges" : 3,
+          "missed" : 0.16307161345987919,
+          "trueChanges" : 3
+        },
+        "seconds" : 2.444694995880127,
+        "speakers" : 2,
+        "turns" : [
+          "0.03–1.90 S1",
+          "2.53–7.49 S1",
+          "8.30–10.78 S1",
+          "11.59–13.43 S2",
+          "13.97–15.49 S2",
+          "16.32–20.57 S2",
+          "21.45–22.49 S1",
+          "23.89–26.42 S1",
+          "27.33–29.04 S1",
+          "30.14–32.16 S2",
+          "33.04–37.80 S2",
+          "38.76–44.80 S2",
+          "45.76–49.69 S2"
+        ]
+      }
+    },
+    "totalSeconds" : 54.25379204750061,
+    "warnings" : [
+
+    ],
+    "wavSeconds" : 11.289999999999999
+  },
+  "storage" : [
+    "Модель распознавания речи: GigaAM-v3 — русская речь — 242778112",
+    "Модель распознавания речи: TitaNet-L — голоса спикеров, точная — 117813248",
+    "Модель распознавания речи: TitaNet-S — голоса спикеров, стандартная — 40570880",
+    "Модель распознавания речи: pyannote 3.0 — разделение по спикерам (общая часть) — 6000640",
+    "Модель для резюме встреч: Qwen3.5-0.8B — итоги встреч, лёгкая — 639037440",
+    "Сохранённые расшифровки и итоги: long-1920 — 2232",
+    "Сохранённые расшифровки и итоги: Запись 29.10.26 14-05-31 — 508",
+    "Сохранённые расшифровки и итоги: Запись 29.10.26 14-05-31 — 508",
+    "Сохранённые расшифровки и итоги: Запись 29.10.26 14-05-31 — 508",
+    "Сохранённые расшифровки и итоги: slides — 424",
+    "Сохранённые расшифровки и итоги: audio-only — 233",
+    "Временные файлы: Временные файлы и кэш — 1953792"
+  ],
+  "webDiagnostics" : [
+    "rules:installed",
+    "scheme:\/player.html range=-",
+    "js:init rs=0",
+    "scheme:\/media.webm range=-",
+    "js:loadedmetadata rs=0",
+    "js:loadeddata rs=0",
+    "js:canplay rs=0",
+    "nav:finish"
+  ],
+  "windows" : [
+    "NSWindow visible=true onScreen=true 1024x681",
+    "TUINSWindow visible=false onScreen=false 500x500"
+  ]
+}

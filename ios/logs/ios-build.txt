@@ -1,0 +1,11 @@
+⚙️  Generating plists...
+⚙️  Generating project...
+⚙️  Writing project...
+Created project at /Users/runner/work/meteora/meteora/iOS/Meteora.xcodeproj
+== simulator build
+** BUILD SUCCEEDED **
+== device build (unsigned)
+** BUILD SUCCEEDED **
+ 57M	build/ios-dev/Build/Products/Debug-iphoneos/Meteora.app
+== Meteora-iOS.zip
+ 51M	build/Meteora-iOS.zip

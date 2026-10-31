@@ -1,0 +1,25 @@
+sha256 sherpa-onnx-v2.0.1-osx-universal2-static-no-tts-lib.tar.bz2 = bd4cdc1c4122d249c46187fb36528733186f7bf52e8ceae716bd37255550a567
+sha256 silero_vad.onnx = 9e2449e1087496d8d4caba907f23e0bd3f78d91fa552479bb9c23ac09cbb1fd6
+Vendor/models:
+total 1264
+drwxr-xr-x  3 runner  staff      96 Oct 31 13:04 .
+drwxr-xr-x  5 runner  staff     160 Oct 31 13:04 ..
+-rw-r--r--  1 runner  staff  643854 Oct 31 13:04 silero_vad.onnx
+
+Vendor/sherpa-onnx/lib:
+total 399064
+drwxr-xr-x  15 runner  staff        480 Oct 26 16:55 .
+drwxr-xr-x   3 runner  staff         96 Oct 31 13:04 ..
+-rw-r--r--   1 runner  staff    1483640 Oct 26 16:53 libkaldi-decoder-core.a
+-rw-r--r--   1 runner  staff     484144 Oct 26 16:53 libkaldi-native-fbank-core.a
+-rw-r--r--   1 runner  staff      46568 Oct 26 16:53 libkissfft-float.a
+-rw-r--r--   1 runner  staff  153782712 Oct 26 16:38 libonnxruntime.a
+-rw-r--r--   1 runner  staff     337824 Oct 26 16:53 libsherpa-onnx-c-api.a
+-rw-r--r--   1 runner  staff   23947984 Oct 26 16:53 libsherpa-onnx-core.a
+-rw-r--r--   1 runner  staff     327472 Oct 26 16:53 libsherpa-onnx-cxx-api.a
+-rw-r--r--   1 runner  staff    5275312 Oct 26 16:53 libsherpa-onnx-fst.a
+-rw-r--r--   1 runner  staff     118120 Oct 26 16:53 libsherpa-onnx-fstfar.a
+-rw-r--r--   1 runner  staff    3197600 Oct 26 16:53 libsherpa-onnx-kaldifst-core.a
+-rw-r--r--   1 runner  staff     260280 Oct 26 16:53 libsherpa-onnx-portaudio_static.a
+-rw-r--r--   1 runner  staff     308712 Oct 26 16:53 libssentencepiece_core.a
+-rw-r--r--   1 runner  staff     716576 Oct 26 16:53 libutf8proc.a

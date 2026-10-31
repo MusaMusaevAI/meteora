@@ -1,0 +1,10 @@
+0.0 start
+26.6 import
+29.9 playback
+41.9 transcribe
+57.1 speakers
+60.6 export
+60.7 summary-refusal
+88.5 summary
+104.0 recorder
+109.8 finish

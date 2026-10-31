@@ -1,0 +1,7 @@
+iOS libraries already built (Vendor/ios)
+LICENSE-llama.cpp
+LICENSE-sherpa-onnx
+meteora-llama.xcframework
+onnxruntime.xcframework
+sherpa-onnx.xcframework
+STAMP

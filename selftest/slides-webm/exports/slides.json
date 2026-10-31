@@ -1,0 +1,90 @@
+{
+  "format" : "meteora.transcript",
+  "frames" : [
+    {
+      "id" : 1,
+      "text" : "Итоги квартала: ПДС\nНовых договоров: 12 480\nПервые взносы: 64%\nАвтоплатёж подключили: 3 115\nСредний взнос: 4 200 руб.",
+      "time" : 0
+    },
+    {
+      "id" : 2,
+      "text" : "Воронка конверсии\nЗаявка → договор: 41%\nДоговор → первый взнос: 58%\nПовторный взнос через 90 дней: 33%",
+      "time" : 9.5
+    },
+    {
+      "id" : 3,
+      "text" : "Быстрый слайд\nПоказан всего две секунды",
+      "time" : 21
+    },
+    {
+      "id" : 4,
+      "text" : "",
+      "time" : 25
+    },
+    {
+      "id" : 5,
+      "text" : "Next steps / Следующие шаги\n1. Обновить лендинг до 15 ноября\n2. А/в-тест письма\n3. Отчёт для правления",
+      "time" : 30
+    }
+  ],
+  "meta" : {
+    "created" : "2026-10-31T13:10:02Z",
+    "duration" : 40.008,
+    "engine" : "GigaAM-v3 e2e RNN-T",
+    "sourceName" : "slides.webm",
+    "title" : "slides"
+  },
+  "options" : {
+    "includeFrameText" : true,
+    "includeFrames" : true,
+    "maxParagraphSeconds" : 75,
+    "paragraphs" : true,
+    "pauseForParagraph" : 1.6,
+    "timestamps" : "paragraph"
+  },
+  "paragraphs" : [
+    {
+      "end" : 3.848,
+      "phrases" : [
+        {
+          "end" : 3.848,
+          "speaker" : "Спикер 1",
+          "start" : 1.254,
+          "text" : "Kingorning Every One plot Us Review the cuarter"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 1.254,
+      "text" : "Kingorning Every One plot Us Review the cuarter"
+    },
+    {
+      "end" : 13.896,
+      "phrases" : [
+        {
+          "end" : 13.896,
+          "speaker" : "Спикер 1",
+          "start" : 12.262,
+          "text" : "Conversion Impravise man"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 12.262,
+      "text" : "Conversion Impravise man"
+    },
+    {
+      "end" : 33.32,
+      "phrases" : [
+        {
+          "end" : 33.32,
+          "speaker" : "Спикер 1",
+          "start" : 31.206,
+          "text" : "Next step seralista Danna slide."
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 31.206,
+      "text" : "Next step seralista Danna slide."
+    }
+  ],
+  "version" : 1
+}

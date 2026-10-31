@@ -1,0 +1,38 @@
+{
+  "format" : "meteora.transcript",
+  "frames" : [
+
+  ],
+  "meta" : {
+    "created" : "2026-10-31T13:17:44Z",
+    "duration" : 12.008,
+    "engine" : "GigaAM-v3 e2e RNN-T",
+    "sourceName" : "audio-only.webm",
+    "title" : "audio-only"
+  },
+  "options" : {
+    "includeFrameText" : true,
+    "includeFrames" : true,
+    "maxParagraphSeconds" : 75,
+    "paragraphs" : true,
+    "pauseForParagraph" : 1.6,
+    "timestamps" : "paragraph"
+  },
+  "paragraphs" : [
+    {
+      "end" : 2.664,
+      "phrases" : [
+        {
+          "end" : 2.664,
+          "speaker" : "Спикер 1",
+          "start" : 0.71,
+          "text" : "This Recording Hazonly Sounds"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 0.71,
+      "text" : "This Recording Hazonly Sounds"
+    }
+  ],
+  "version" : 1
+}

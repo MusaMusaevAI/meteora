@@ -1,0 +1,34 @@
+long-1920
+Длительность 10:00 · 16 фраз · распознавание: GigaAM-v3 e2e RNN-T
+
+[0:05] Спикер 1: Weard Discucing the Pancion Savings Program& the Next Cempain
+
+[0:42] Спикер 1: We ard Discuting the Panchin Savings Program& the Next Cent Pan
+
+[1:19] Спикер 1: We ard Discucing the Pancion Savings Program& the Next CamPan
+
+[1:56] Спикер 1: Weard Discucing the Pancion Savings Program& the Next CemPan
+
+[2:33] Спикер 1: Weard Discucing the Pancion Savings Program& the Next Cempain
+
+[3:10] Спикер 1: We ard Discuting the Panchin Savings Program& the Next Cempain
+
+[3:47] Спикер 1: We ard Discusing the Pancion Savings Program& the Next CemPain
+
+[4:24] Спикер 1: We ard Discucing the Pancion Savings Program& the Next Cempain
+
+[5:01] Спикер 1: Weard Discucing the Pancion Savings Program& the Next Cempain
+
+[5:38] Спикер 1: We ard Discuting the Panchin Savings Program& the Next Cempain
+
+[6:15] Спикер 1: We ard Discucing the Pancion Savings Program& he Next CemPan
+
+[6:52] Спикер 1: Weard Discucing the Pancion Savings Program& the Next Cempain
+
+[7:29] Спикер 1: We ard Discuting the Pancion Savings Program& the Next Cent Pain
+
+[8:06] Спикер 1: We ard Discuting the Panchin Savings Program& the Next Cempain
+
+[8:43] Спикер 1: We ard Discucing the Pancion Savings Program& he Next CemPan
+
+[9:20] Спикер 1: Weard Discucing the Pancion Savings Program& the Next Cempain

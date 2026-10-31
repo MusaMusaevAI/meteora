@@ -1,0 +1,663 @@
+sha256 silero_vad.onnx = 9e2449e1087496d8d4caba907f23e0bd3f78d91fa552479bb9c23ac09cbb1fd6
+Vendor/models:
+total 1264
+drwxr-xr-x  3 runner  staff      96 Oct 31 13:04 .
+drwxr-xr-x  7 runner  staff     224 Oct 31 13:06 ..
+-rw-r--r--  1 runner  staff  643854 Oct 31 13:04 silero_vad.onnx
+
+Vendor/sherpa-onnx/lib:
+total 399064
+drwxr-xr-x  15 runner  staff        480 Oct 26 16:55 .
+drwxr-xr-x   3 runner  staff         96 Oct 31 13:04 ..
+-rw-r--r--   1 runner  staff    1483640 Oct 26 16:53 libkaldi-decoder-core.a
+-rw-r--r--   1 runner  staff     484144 Oct 26 16:53 libkaldi-native-fbank-core.a
+-rw-r--r--   1 runner  staff      46568 Oct 26 16:53 libkissfft-float.a
+-rw-r--r--   1 runner  staff  153782712 Oct 26 16:38 libonnxruntime.a
+-rw-r--r--   1 runner  staff     337824 Oct 26 16:53 libsherpa-onnx-c-api.a
+-rw-r--r--   1 runner  staff   23947984 Oct 26 16:53 libsherpa-onnx-core.a
+-rw-r--r--   1 runner  staff     327472 Oct 26 16:53 libsherpa-onnx-cxx-api.a
+-rw-r--r--   1 runner  staff    5275312 Oct 26 16:53 libsherpa-onnx-fst.a
+-rw-r--r--   1 runner  staff     118120 Oct 26 16:53 libsherpa-onnx-fstfar.a
+-rw-r--r--   1 runner  staff    3197600 Oct 26 16:53 libsherpa-onnx-kaldifst-core.a
+-rw-r--r--   1 runner  staff     260280 Oct 26 16:53 libsherpa-onnx-portaudio_static.a
+-rw-r--r--   1 runner  staff     308712 Oct 26 16:53 libssentencepiece_core.a
+-rw-r--r--   1 runner  staff     716576 Oct 26 16:53 libutf8proc.a
+ffmpeg 7.1.5 already built (Vendor/ffmpeg/bin/ffmpeg)
+Architectures in the fat file: Vendor/ffmpeg/bin/ffmpeg are: x86_64 arm64 
+llama.cpp b11970 already built (Vendor/llama/lib/libmeteora-llama.a)
+Architectures in the fat file: Vendor/llama/lib/libmeteora-llama.a are: x86_64 arm64 
+0%: Compute target dependency graph
+Building targets in dependency order
+Target dependency graph (7 targets)
+0%: Gather provisioning inputs
+0%: Create build description
+0%: Discovering version info for clang
+0%: Discovering version info for swiftc
+0%: Discovering version info for clang
+0%: Discovering version info for ld
+0%: Discovering version info for clang
+Build description signature: 131d024caa36970fb0b7ae483d4be0ea
+
+Build description path: /Users/runner/work/meteora/meteora/.build/apple/Intermediates.noindex/XCBuildData/131d024caa36970fb0b7ae483d4be0ea.xcbuilddata
+
+0%: Create build directory $(TARGET_BUILD_DIR)
+0%: Build stat cache for /Applications/Xcode_26.3.0.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk
+0%: Create build directory $(OBJROOT)
+0%: Create build directory $(TARGET_BUILD_DIR)/Release
+0%: Create build directory $(OBJROOT)/SwiftExplicitPrecompiledModules
+0%: Create build directory $(OBJROOT)/ExplicitPrecompiledModules
+0%: Create build directory $(TARGET_BUILD_DIR)/Release/PackageFrameworks
+0%: Create build directory $(OBJROOT)/EagerLinkingTBDs/Release
+0%: Write Meteora.SwiftFileList (x86_64)
+0%: Write Meteora_const_extract_protocols.json (x86_64)
+0%: Write Meteora.LinkFileList (x86_64)
+0%: Write Meteora-OutputFileMap.json (x86_64)
+0%: Write Meteora.SwiftFileList (arm64)
+0%: Write Meteora_const_extract_protocols.json (arm64)
+0%: Write Meteora.LinkFileList (arm64)
+0%: Write Meteora-OutputFileMap.json (arm64)
+0%: Write Meteora.DependencyStaticMetadataFileList
+0%: Write Meteora.DependencyMetadataFileList
+0%: Write MeteoraLLM_Module_const_extract_protocols.json (x86_64)
+0%: Write MeteoraLLM_Module.SwiftFileList (x86_64)
+0%: Write MeteoraLLM_Module.SwiftConstValuesFileList
+0%: Write MeteoraLLM_Module.LinkFileList (x86_64)
+0%: Write MeteoraLLM_Module-OutputFileMap.json (x86_64)
+0%: Write MeteoraLLM_Module_const_extract_protocols.json (arm64)
+0%: Write MeteoraLLM_Module.SwiftFileList (arm64)
+0%: Write MeteoraLLM_Module.SwiftConstValuesFileList
+0%: Write MeteoraLLM_Module.LinkFileList (arm64)
+0%: Write MeteoraLLM_Module-OutputFileMap.json (arm64)
+0%: Write MeteoraLLM_Module.DependencyStaticMetadataFileList
+0%: Write MeteoraLLM_Module.DependencyMetadataFileList
+0%: Write MeteoraLLM.modulemap
+0%: Write MeteoraCore_Module_const_extract_protocols.json (x86_64)
+0%: Write MeteoraCore_Module.SwiftFileList (x86_64)
+0%: Copy MeteoraLLM.modulemap
+0%: Write MeteoraCore_Module.SwiftConstValuesFileList
+0%: Write MeteoraCore_Module.LinkFileList (x86_64)
+0%: Write MeteoraCore_Module-OutputFileMap.json (x86_64)
+0%: Write MeteoraCore_Module_const_extract_protocols.json (arm64)
+0%: Write MeteoraCore_Module.SwiftFileList (arm64)
+0%: Write MeteoraCore_Module.SwiftConstValuesFileList
+0%: Write MeteoraCore_Module.LinkFileList (arm64)
+0%: Write MeteoraCore_Module-OutputFileMap.json (arm64)
+0%: Write MeteoraCore_Module.DependencyStaticMetadataFileList
+0%: Write MeteoraCore_Module.DependencyMetadataFileList
+0%: Write MeteoraCore.modulemap
+0%: Copy MeteoraCore.modulemap
+0%: Write MeteoraConverterProtocol_Module_const_extract_protocols.json (x86_64)
+0%: Write MeteoraConverterProtocol_Module.SwiftFileList (x86_64)
+0%: Write MeteoraConverterProtocol_Module.SwiftConstValuesFileList
+0%: Write MeteoraConverterProtocol_Module.LinkFileList (x86_64)
+0%: Write MeteoraConverterProtocol_Module-OutputFileMap.json (x86_64)
+0%: Write MeteoraConverterProtocol_Module_const_extract_protocols.json (arm64)
+0%: Write MeteoraConverterProtocol_Module.SwiftFileList (arm64)
+0%: Write MeteoraConverterProtocol_Module.SwiftConstValuesFileList
+0%: Write MeteoraConverterProtocol_Module.LinkFileList (arm64)
+0%: Write MeteoraConverterProtocol_Module-OutputFileMap.json (arm64)
+0%: Write MeteoraConverterProtocol_Module.DependencyStaticMetadataFileList
+0%: Write MeteoraConverterProtocol_Module.DependencyMetadataFileList
+0%: Write MeteoraConverterProtocol.modulemap
+0%: Copy MeteoraConverterProtocol.modulemap
+0%: Write MeteoraASR_Module_const_extract_protocols.json (x86_64)
+0%: Write MeteoraASR_Module.SwiftFileList (x86_64)
+0%: Write MeteoraASR_Module.SwiftConstValuesFileList
+0%: Write MeteoraASR_Module.LinkFileList (x86_64)
+33%: Write MeteoraASR_Module-OutputFileMap.json (x86_64)
+33%: Write MeteoraASR_Module_const_extract_protocols.json (arm64)
+33%: Write MeteoraASR_Module.SwiftFileList (arm64)
+33%: Write MeteoraASR_Module.SwiftConstValuesFileList
+33%: Write MeteoraASR_Module.LinkFileList (arm64)
+33%: Write MeteoraASR_Module-OutputFileMap.json (arm64)
+33%: Write MeteoraASR_Module.DependencyStaticMetadataFileList
+33%: Write MeteoraASR_Module.DependencyMetadataFileList
+33%: Write MeteoraASR.modulemap
+Explicit modules is enabled but could not resolve libclang.dylib, continuing with explicit modules disabled.
+Candidate '/Applications/Xcode_26.3.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libclang.dylib' skipped because it did not match the configured compiler
+Explicit modules is enabled but could not resolve libclang.dylib, continuing with explicit modules disabled.
+Candidate '/Applications/Xcode_26.3.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libclang.dylib' skipped because it did not match the configured compiler
+33%: Write CSherpaOnnx_Module.LinkFileList (x86_64)
+33%: Write 7187679823f38a2a940e0043cdf9d637-common-args.resp (x86_64)
+33%: Copy MeteoraASR.modulemap
+-target x86_64-apple-macos14.0 -fmodules -gmodules '-fmodules-cache-path=/Users/runner/work/meteora/meteora/.build/apple/ModuleCache.noindex' '-fmodule-name=CSherpaOnnx' -fpascal-strings -Os -DSWIFT_PACKAGE -isysroot /Applications/Xcode_26.3.0.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -fasm-blocks -g -I/Users/runner/work/meteora/meteora/.build/apple/Products/Release/include -I/Users/runner/work/meteora/meteora/Sources/CSherpaOnnx/include -I/Users/runner/work/meteora/meteora/.build/apple/Intermediates.noindex/Meteora.build/Release/CSherpaOnnx_Module.build/DerivedSources-normal/x86_64 -I/Users/runner/work/meteora/meteora/.build/apple/Intermediates.noindex/Meteora.build/Release/CSherpaOnnx_Module.build/DerivedSources/x86_64 -I/Users/runner/work/meteora/meteora/.build/apple/Intermediates.noindex/Meteora.build/Release/CSherpaOnnx_Module.build/DerivedSources -F/Users/runner/work/meteora/meteora/.build/apple/Products/Release -F/Applications/Xcode_26.3.0.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -isysroot /Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -F /Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F /Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks -fPIC -g
+33%: Write CSherpaOnnx_Module.LinkFileList (arm64)
+33%: Write 7187679823f38a2a940e0043cdf9d637-common-args.resp (arm64)
+33%: Write CSherpaOnnx_Module.DependencyStaticMetadataFileList
+-target arm64-apple-macos14.0 -fmodules -gmodules '-fmodules-cache-path=/Users/runner/work/meteora/meteora/.build/apple/ModuleCache.noindex' '-fmodule-name=CSherpaOnnx' -fpascal-strings -Os -DSWIFT_PACKAGE -isysroot /Applications/Xcode_26.3.0.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -g -I/Users/runner/work/meteora/meteora/.build/apple/Products/Release/include -I/Users/runner/work/meteora/meteora/Sources/CSherpaOnnx/include -I/Users/runner/work/meteora/meteora/.build/apple/Intermediates.noindex/Meteora.build/Release/CSherpaOnnx_Module.build/DerivedSources-normal/arm64 -I/Users/runner/work/meteora/meteora/.build/apple/Intermediates.noindex/Meteora.build/Release/CSherpaOnnx_Module.build/DerivedSources/arm64 -I/Users/runner/work/meteora/meteora/.build/apple/Intermediates.noindex/Meteora.build/Release/CSherpaOnnx_Module.build/DerivedSources -F/Users/runner/work/meteora/meteora/.build/apple/Products/Release -F/Applications/Xcode_26.3.0.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -isysroot /Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -F /Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F /Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks -fPIC -g
+33%: Write CSherpaOnnx_Module.DependencyMetadataFileList
+Explicit modules is enabled but could not resolve libclang.dylib, continuing with explicit modules disabled.
+Candidate '/Applications/Xcode_26.3.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libclang.dylib' skipped because it did not match the configured compiler
+Explicit modules is enabled but could not resolve libclang.dylib, continuing with explicit modules disabled.
+Candidate '/Applications/Xcode_26.3.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libclang.dylib' skipped because it did not match the configured compiler
+33%: Write CLlama_Module.LinkFileList (x86_64)
+33%: Write 7187679823f38a2a940e0043cdf9d637-common-args.resp (x86_64)
+33%: Write CLlama_Module.LinkFileList (arm64)
+-target x86_64-apple-macos14.0 -fmodules -gmodules '-fmodules-cache-path=/Users/runner/work/meteora/meteora/.build/apple/ModuleCache.noindex' '-fmodule-name=CLlama' -fpascal-strings -Os -DSWIFT_PACKAGE -isysroot /Applications/Xcode_26.3.0.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -fasm-blocks -g -I/Users/runner/work/meteora/meteora/.build/apple/Products/Release/include -I/Users/runner/work/meteora/meteora/Sources/CLlama/include -I/Users/runner/work/meteora/meteora/.build/apple/Intermediates.noindex/Meteora.build/Release/CLlama_Module.build/DerivedSources-normal/x86_64 -I/Users/runner/work/meteora/meteora/.build/apple/Intermediates.noindex/Meteora.build/Release/CLlama_Module.build/DerivedSources/x86_64 -I/Users/runner/work/meteora/meteora/.build/apple/Intermediates.noindex/Meteora.build/Release/CLlama_Module.build/DerivedSources -F/Users/runner/work/meteora/meteora/.build/apple/Products/Release -F/Applications/Xcode_26.3.0.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -isysroot /Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -F /Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F /Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks -fPIC -g
+33%: Write 7187679823f38a2a940e0043cdf9d637-common-args.resp (arm64)
+33%: Write CLlama_Module.DependencyStaticMetadataFileList
+-target arm64-apple-macos14.0 -fmodules -gmodules '-fmodules-cache-path=/Users/runner/work/meteora/meteora/.build/apple/ModuleCache.noindex' '-fmodule-name=CLlama' -fpascal-strings -Os -DSWIFT_PACKAGE -isysroot /Applications/Xcode_26.3.0.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -g -I/Users/runner/work/meteora/meteora/.build/apple/Products/Release/include -I/Users/runner/work/meteora/meteora/Sources/CLlama/include -I/Users/runner/work/meteora/meteora/.build/apple/Intermediates.noindex/Meteora.build/Release/CLlama_Module.build/DerivedSources-normal/arm64 -I/Users/runner/work/meteora/meteora/.build/apple/Intermediates.noindex/Meteora.build/Release/CLlama_Module.build/DerivedSources/arm64 -I/Users/runner/work/meteora/meteora/.build/apple/Intermediates.noindex/Meteora.build/Release/CLlama_Module.build/DerivedSources -F/Users/runner/work/meteora/meteora/.build/apple/Products/Release -F/Applications/Xcode_26.3.0.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -isysroot /Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -F /Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F /Applications/Xcode_26.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks -fPIC -g
+33%: Write CLlama_Module.DependencyMetadataFileList
+45%: Compile shim.c (x86_64)
+45%: Compile shim.c (arm64)
+45%: Planning Swift module MeteoraCore (arm64)
+45%: Planning Swift module MeteoraCore (x86_64)
+46%: Planning Swift module MeteoraConverterProtocol (x86_64)
+46%: Planning Swift module MeteoraConverterProtocol (arm64)
+40%: Link CSherpaOnnx_Module.o (x86_64)
+40%: Link CSherpaOnnx_Module.o (arm64)
+40%: Compiling Clang module _Builtin_stdarg
+40%: Create universal binary CSherpaOnnx_Module.o
+36%: Compiling Clang module _Builtin_stdbool
+36%: Compiling Clang module ptrauth
+36%: Compiling Clang module _SwiftConcurrencyShims
+36%: Compiling Clang module _AvailabilityInternal
+36%: Compiling Clang module SwiftShims
+36%: Compiling Clang module DeveloperToolsSupport
+29%: Compiling Clang module _SwiftConcurrencyShims
+29%: Compiling Clang module DeveloperToolsSupport
+29%: Compiling Clang module _Builtin_stddef
+29%: Compiling Clang module _AvailabilityInternal
+29%: Compiling Clang module _Builtin_stdarg
+29%: Compiling Clang module _Builtin_float
+29%: Compiling Clang module _Builtin_float
+29%: Compiling Clang module SwiftShims
+32%: Compiling Clang module _Builtin_stddef
+32%: Compiling Clang module ptrcheck
+32%: Compiling Clang module ptrauth
+32%: Compiling Clang module ptrcheck
+32%: Compiling Clang module _Builtin_stdbool
+32%: Compiling Clang module _DarwinFoundation1
+32%: Compile shim.c (x86_64)
+32%: Compile shim.c (arm64)
+32%: Compiling Clang module _DarwinFoundation1
+34%: Compile MeteoraCore_Module (x86_64)
+34%: Link CLlama_Module.o (x86_64)
+34%: Link CLlama_Module.o (arm64)
+34%: Compiling Clang module _DarwinFoundation2
+34%: Compiling Clang module _Builtin_limits
+34%: Create universal binary CLlama_Module.o
+34%: Compiling Clang module _DarwinFoundation2
+34%: Compiling Clang module _Builtin_limits
+34%: Compile MeteoraCore_Module (arm64)
+34%: Compiling Clang module _Builtin_stdint
+34%: Compiling Clang module _Builtin_tgmath
+34%: Compiling Clang module sys_types
+38%: Compile MeteoraConverterProtocol_Module (x86_64)
+38%: Compiling Clang module _DarwinFoundation3
+38%: Compiling Clang module _Builtin_tgmath
+38%: Compiling Clang module sys_types
+38%: Compiling Clang module libDER
+38%: Compiling Clang module OpenGL
+38%: Compiling Clang module _Builtin_inttypes
+38%: Compiling Clang module _Builtin_intrinsics
+38%: Compiling Clang module _Builtin_stdatomic
+41%: Compiling Clang module Darwin
+41%: Compiling Clang module _Builtin_stdint
+41%: Compile MeteoraConverterProtocol_Module (arm64)
+41%: Compiling Clang module _Builtin_intrinsics
+41%: Compiling Clang module _Builtin_stdatomic
+42%: Compiling Clang module _DarwinFoundation3
+42%: Compiling Clang module simd
+42%: Compiling Clang module simd
+43%: Compiling Clang module launch
+43%: Compiling Clang module CUPS
+43%: Compiling Clang module MachO
+44%: Compiling Clang module libDER
+44%: Compiling Clang module ObjectiveC
+44%: Compiling Clang module OpenGL
+45%: Compiling Clang module os_object
+45%: Compiling Clang module libkern
+45%: Compiling Clang module os_workgroup
+45%: Compiling Clang module _Builtin_inttypes
+46%: Compiling Clang module Dispatch
+46%: Register execution policy exception for CSherpaOnnx_Module.o
+46%: Register execution policy exception for CLlama_Module.o
+46%: Compiling Clang module Darwin
+46%: Compiling Clang module XPC
+46%: Compiling Clang module CoreFoundation
+48%: Compiling Clang module os
+48%: Compiling Clang module IOKit
+48%: Compiling Clang module CFNetwork
+48%: Compiling Clang module Security
+48%: Compiling Clang module CoreAudioTypes
+49%: Compiling Clang module launch
+49%: Compiling Clang module MachO
+49%: Compiling Clang module DiskArbitration
+49%: Compiling Clang module CoreGraphics
+50%: Compiling Clang module CUPS
+50%: Compiling Clang module libkern
+50%: Compiling Clang module ObjectiveC
+50%: Compiling Clang module ColorSync
+50%: Compiling Clang module CoreServices
+50%: Compiling Clang module ImageIO
+52%: Compiling Clang module CoreText
+52%: Compiling Clang module os_object
+52%: Compiling Clang module os_workgroup
+53%: Compiling Clang module Dispatch
+53%: Compiling Clang module Foundation
+53%: Compiling Clang module CoreFoundation
+53%: Compiling Clang module XPC
+54%: Compiling Clang module os
+54%: Compiling Clang module IOKit
+54%: Compiling Clang module CFNetwork
+54%: Compiling Clang module Security
+54%: Compiling Clang module ColorSync
+56%: Compiling ConverterProtocol.swift
+56%: Compiling Clang module CoreGraphics
+56%: Compile ConverterProtocol.swift (x86_64)
+56%: Compiling Clang module DataDetection
+56%: Compiling Clang module ApplicationServices
+56%: Compiling Clang module CoreAudio
+57%: Compiling Clang module ImageIO
+57%: Discovering Swift tasks after 'Compiling ConverterProtocol.swift'
+57%: Unblock downstream dependents of MeteoraConverterProtocol_Module (x86_64)
+57%: Compiling Clang module UniformTypeIdentifiers
+57%: Copy MeteoraConverterProtocol.swiftmodule (x86_64)
+57%: Copy MeteoraConverterProtocol.swiftdoc (x86_64)
+57%: Copy MeteoraConverterProtocol.abi.json (x86_64)
+57%: Copy MeteoraConverterProtocol.swiftsourceinfo (x86_64)
+57%: Compiling Clang module CoreText
+57%: Compiling Clang module CoreTransferable
+57%: Compiling Clang module Symbols
+60%: Compiling Clang module Carbon
+60%: Compiling Clang module CoreData
+60%: Compiling Clang module OSLog
+60%: Compiling Clang module Accessibility
+60%: Compiling Clang module CoreMIDI
+62%: Compiling Clang module DiskArbitration
+62%: Compiling Clang module IOSurface
+62%: Compiling Clang module CoreAudioTypes
+62%: Compiling Clang module CoreServices
+62%: Compiling Clang module AudioToolbox
+62%: Compiling Clang module Metal
+63%: Compiling Clang module CoreVideo
+63%: Compiling Clang module Foundation
+63%: Compiling Clang module CoreMedia
+63%: Compiling Clang module QuartzCore
+63%: Compiling Clang module Accelerate
+65%: Compiling Clang module SwiftUICore
+65%: Compiling Clang module AVFAudio
+65%: Compiling Clang module CoreML
+66%: Compiling Clang module MediaToolbox
+66%: Compiling ConverterProtocol.swift
+66%: Compiling Clang module CoreTransferable
+66%: Compile ConverterProtocol.swift (arm64)
+66%: Compiling Clang module ApplicationServices
+67%: Compiling Clang module CoreData
+67%: Discovering Swift tasks after 'Compiling ConverterProtocol.swift'
+67%: Unblock downstream dependents of MeteoraConverterProtocol_Module (arm64)
+67%: Compiling Clang module UniformTypeIdentifiers
+67%: Merge Objective-C generated interface headers
+67%: Copy MeteoraConverterProtocol.swiftmodule (arm64)
+67%: Copy MeteoraConverterProtocol.swiftdoc (arm64)
+67%: Copy MeteoraConverterProtocol.abi.json (arm64)
+67%: Copy MeteoraConverterProtocol.swiftsourceinfo (arm64)
+67%: Compiling Clang module DataDetection
+67%: Compiling Clang module CoreMIDI
+67%: Compiling Clang module IOSurface
+67%: Compiling Clang module CoreAudio
+67%: Compiling Clang module Accessibility
+71%: Compiling Clang module Symbols
+71%: Compiling Clang module Metal
+71%: Compiling Clang module Carbon
+71%: Compiling Clang module OSLog
+71%: Compiling Clang module Vision
+72%: Compiling Clang module CoreImage
+72%: Compiling Clang module CoreVideo
+72%: Compiling Clang module AVFoundation
+73%: Compiling Clang module AudioToolbox
+73%: Compiling Clang module CoreMedia
+73%: Compiling Clang module CoreML
+74%: Compiling Clang module QuartzCore
+74%: Compiling Clang module AVFAudio
+74%: Compiling Clang module Vision
+74%: Compiling Clang module SwiftUICore
+75%: Compiling Clang module Accelerate
+75%: Compiling Clang module AppKit
+75%: Compiling Clang module CoreImage
+75%: Compiling Clang module MediaToolbox
+76%: Compiling Clang module AppKit
+76%: Compiling Clang module AVFoundation
+77%: Compiling AudioPipeline.swift, ByteSource.swift, Export.swift, ExportDocx.swift, ExportRich.swift, LinkDefang.swift, MeetingMail.swift, MeetingSummary.swift, NativeMedia.swift, PIIMasking.swift, Platform.swift, RecordingMixer.swift, Report.swift, SceneDetection.swift, SpeakerAssignment.swift, SummaryGrounding.swift, TermDictionary.swift, TermHints.swift, Transcript.swift, WebMDemuxer.swift, WebMOpusWriter.swift
+77%: Compile 21 Swift source files (x86_64)
+77%: Link MeteoraConverterProtocol_Module.o (x86_64)
+77%: Link MeteoraConverterProtocol_Module.o (arm64)
+77%: Compiling AudioPipeline.swift, ByteSource.swift, Export.swift, ExportDocx.swift, ExportRich.swift, LinkDefang.swift, MeetingMail.swift, MeetingSummary.swift, NativeMedia.swift, PIIMasking.swift, Platform.swift, RecordingMixer.swift, Report.swift, SceneDetection.swift, SpeakerAssignment.swift, SummaryGrounding.swift, TermDictionary.swift, TermHints.swift, Transcript.swift, WebMDemuxer.swift, WebMOpusWriter.swift
+77%: Create universal binary MeteoraConverterProtocol_Module.o
+77%: Extract app intents metadata
+77%: Compile 21 Swift source files (arm64)
+2026-10-31 13:06:42.185 appintentsmetadataprocessor[3790:14305] Starting appintentsmetadataprocessor export
+2026-10-31 13:06:42.341 appintentsmetadataprocessor[3790:14305] Extracted no relevant App Intents symbols, skipping writing output
+
+79%: Register execution policy exception for MeteoraConverterProtocol_Module.o
+79%: Discovering Swift tasks after 'Compiling AudioPipeline.swift, ByteSource.swift, Export.swift, ExportDocx.swift, ExportRich.swift, LinkDefang.swift, MeetingMail.swift, MeetingSummary.swift, NativeMedia.swift, PIIMasking.swift, Platform.swift, RecordingMixer.swift, Report.swift, SceneDetection.swift, SpeakerAssignment.swift, SummaryGrounding.swift, TermDictionary.swift, TermHints.swift, Transcript.swift, WebMDemuxer.swift, WebMOpusWriter.swift'
+79%: Unblock downstream dependents of MeteoraCore_Module (x86_64)
+79%: Copy MeteoraCore.swiftmodule (x86_64)
+79%: Copy MeteoraCore.swiftdoc (x86_64)
+79%: Copy MeteoraCore.abi.json (x86_64)
+79%: Copy MeteoraCore.swiftsourceinfo (x86_64)
+79%: Discovering Swift tasks after 'Compiling AudioPipeline.swift, ByteSource.swift, Export.swift, ExportDocx.swift, ExportRich.swift, LinkDefang.swift, MeetingMail.swift, MeetingSummary.swift, NativeMedia.swift, PIIMasking.swift, Platform.swift, RecordingMixer.swift, Report.swift, SceneDetection.swift, SpeakerAssignment.swift, SummaryGrounding.swift, TermDictionary.swift, TermHints.swift, Transcript.swift, WebMDemuxer.swift, WebMOpusWriter.swift'
+79%: Unblock downstream dependents of MeteoraCore_Module (arm64)
+79%: Merge Objective-C generated interface headers
+79%: Copy MeteoraCore.swiftmodule (arm64)
+79%: Copy MeteoraCore.swiftdoc (arm64)
+79%: Copy MeteoraCore.abi.json (arm64)
+79%: Copy MeteoraCore.swiftsourceinfo (arm64)
+79%: Link MeteoraCore_Module.o (x86_64)
+79%: Link MeteoraCore_Module.o (arm64)
+79%: Planning Swift module MeteoraASR (x86_64)
+79%: Planning Swift module MeteoraASR (arm64)
+83%: Create universal binary MeteoraCore_Module.o
+83%: Extract app intents metadata
+2026-10-31 13:06:59.826 appintentsmetadataprocessor[4137:15134] Starting appintentsmetadataprocessor export
+2026-10-31 13:07:00.188 appintentsmetadataprocessor[4137:15134] Extracted no relevant App Intents symbols, skipping writing output
+
+84%: Register execution policy exception for MeteoraCore_Module.o
+84%: Compile MeteoraASR_Module (x86_64)
+84%: Compiling Clang module CSherpaOnnx
+84%: Compiling Clang module LocalAuthentication
+84%: Compiling Clang module CSherpaOnnx
+84%: Compiling Clang module LocalAuthentication
+84%: Compile MeteoraASR_Module (arm64)
+84%: Compiling HintTokenizer.swift, ModelStore.swift, SpeakerDiarizer.swift, SpeakerModelStore.swift, SpeechRecognizer.swift
+84%: Compile 5 Swift source files (x86_64)
+84%: Compiling HintTokenizer.swift, ModelStore.swift, SpeakerDiarizer.swift, SpeakerModelStore.swift, SpeechRecognizer.swift
+84%: Compile 5 Swift source files (arm64)
+85%: Discovering Swift tasks after 'Compiling HintTokenizer.swift, ModelStore.swift, SpeakerDiarizer.swift, SpeakerModelStore.swift, SpeechRecognizer.swift'
+85%: Unblock downstream dependents of MeteoraASR_Module (x86_64)
+85%: Copy MeteoraASR.swiftdoc (x86_64)
+85%: Copy MeteoraASR.swiftmodule (x86_64)
+85%: Copy MeteoraASR.abi.json (x86_64)
+85%: Copy MeteoraASR.swiftsourceinfo (x86_64)
+86%: Discovering Swift tasks after 'Compiling HintTokenizer.swift, ModelStore.swift, SpeakerDiarizer.swift, SpeakerModelStore.swift, SpeechRecognizer.swift'
+86%: Unblock downstream dependents of MeteoraASR_Module (arm64)
+86%: Merge Objective-C generated interface headers
+86%: Copy MeteoraASR.swiftmodule (arm64)
+86%: Copy MeteoraASR.swiftdoc (arm64)
+86%: Copy MeteoraASR.abi.json (arm64)
+86%: Copy MeteoraASR.swiftsourceinfo (arm64)
+86%: Link MeteoraASR_Module.o (x86_64)
+86%: Link MeteoraASR_Module.o (arm64)
+86%: Planning Swift module MeteoraLLM (arm64)
+86%: Planning Swift module MeteoraLLM (x86_64)
+86%: Create universal binary MeteoraASR_Module.o
+86%: Extract app intents metadata
+2026-10-31 13:07:09.678 appintentsmetadataprocessor[4412:15971] Starting appintentsmetadataprocessor export
+2026-10-31 13:07:09.872 appintentsmetadataprocessor[4412:15971] Extracted no relevant App Intents symbols, skipping writing output
+
+89%: Register execution policy exception for MeteoraASR_Module.o
+89%: Compile MeteoraLLM_Module (arm64)
+89%: Compiling Clang module CLlama
+89%: Compile MeteoraLLM_Module (x86_64)
+89%: Compiling Clang module CLlama
+89%: Compiling CloudSummarizer.swift, LlamaEngine.swift, MeetingSummarizer.swift, PIIGuard.swift, SummaryModelStore.swift, SummarySelfTest.swift
+89%: Compiling CloudSummarizer.swift, LlamaEngine.swift, MeetingSummarizer.swift, PIIGuard.swift, SummaryModelStore.swift, SummarySelfTest.swift
+89%: Compile 6 Swift source files (x86_64)
+89%: Compile 6 Swift source files (arm64)
+90%: Discovering Swift tasks after 'Compiling CloudSummarizer.swift, LlamaEngine.swift, MeetingSummarizer.swift, PIIGuard.swift, SummaryModelStore.swift, SummarySelfTest.swift'
+90%: Unblock downstream dependents of MeteoraLLM_Module (arm64)
+90%: Copy MeteoraLLM.swiftmodule (arm64)
+90%: Copy MeteoraLLM.swiftdoc (arm64)
+90%: Copy MeteoraLLM.abi.json (arm64)
+90%: Copy MeteoraLLM.swiftsourceinfo (arm64)
+90%: Discovering Swift tasks after 'Compiling CloudSummarizer.swift, LlamaEngine.swift, MeetingSummarizer.swift, PIIGuard.swift, SummaryModelStore.swift, SummarySelfTest.swift'
+90%: Unblock downstream dependents of MeteoraLLM_Module (x86_64)
+90%: Merge Objective-C generated interface headers
+90%: Copy MeteoraLLM.swiftmodule (x86_64)
+90%: Copy MeteoraLLM.swiftdoc (x86_64)
+90%: Copy MeteoraLLM.abi.json (x86_64)
+90%: Copy MeteoraLLM.swiftsourceinfo (x86_64)
+90%: Link MeteoraLLM_Module.o (x86_64)
+90%: Link MeteoraLLM_Module.o (arm64)
+90%: Planning Swift module Meteora (x86_64)
+90%: Planning Swift module Meteora (arm64)
+90%: Create universal binary MeteoraLLM_Module.o
+90%: Extract app intents metadata
+2026-10-31 13:07:14.954 appintentsmetadataprocessor[4428:16207] Starting appintentsmetadataprocessor export
+2026-10-31 13:07:15.216 appintentsmetadataprocessor[4428:16207] Extracted no relevant App Intents symbols, skipping writing output
+
+94%: Register execution policy exception for MeteoraLLM_Module.o
+95%: Compile Meteora (x86_64)
+95%: Compiling Clang module SwiftUI
+95%: Compiling Clang module JavaScriptCore
+95%: Compiling Clang module UserNotifications
+95%: Compiling Clang module Cocoa
+95%: Compiling Clang module dnssd
+95%: Compiling Clang module SwiftUI
+95%: Compiling Clang module Spatial
+91%: Compiling Clang module UserNotifications
+91%: Compiling Clang module Network
+91%: Compiling Clang module ServiceManagement
+91%: Compiling Clang module Cocoa
+91%: Compiling Clang module JavaScriptCore
+92%: Compiling Clang module dnssd
+92%: Compiling Clang module AVKit
+92%: Compiling Clang module WebKit
+92%: Compiling Clang module Network
+92%: Compiling Clang module AVKit
+94%: Compiling Clang module WebKit
+94%: Compiling Clang module ServiceManagement
+94%: Compiling Clang module Spatial
+95%: Compile Meteora (arm64)
+95%: Compiling AppDelegate+AutoFolders.swift, AppStatusItem.swift, AutoFolderLedger.swift, AutoFolderNotifier.swift, AutoFolderRows.swift, AutoFolderSelfTest.swift, AutoFolderStore.swift, AutoFolderWatcher.swift, AutoFoldersSettings.swift, LoginItem.swift, WatchedFolder.swift, Batch.swift, DictionaryViews.swift, ExportViews.swift, JournalViews.swift, Logo.swift, MacWhisper.swift, MediaConverter.swift, MediaConverterSupport.swift, MeetingJournal.swift, MeetingModel.swift, MeetingProcessor.swift, MeteoraApp.swift, NativePlayerController.swift, Onboarding.swift, PlayerController.swift, PlayerWeb.swift, AudioInputCatalog.swift, MeetingRecorder.swift, MicrophoneCapture.swift, RecordingEngine.swift, RecordingFolder.swift, RecordingPanel.swift, RecordingSelfTest.swift, RecordingSinks.swift, RecordingStatusItem.swift, SystemAudioCapture.swift, SelfTest.swift, SettingsWindow.swift, Storage.swift, SummaryModel.swift, SummaryViews.swift, TempCleanup.swift, Theme.swift, TranscriptViews.swift, Transcription.swift, Updates.swift, Views.swift, Workspace.swift
+95%: Compile 49 Swift source files (arm64)
+95%: Compiling AppDelegate+AutoFolders.swift, AppStatusItem.swift, AutoFolderLedger.swift, AutoFolderNotifier.swift, AutoFolderRows.swift, AutoFolderSelfTest.swift, AutoFolderStore.swift, AutoFolderWatcher.swift, AutoFoldersSettings.swift, LoginItem.swift, WatchedFolder.swift, Batch.swift, DictionaryViews.swift, ExportViews.swift, JournalViews.swift, Logo.swift, MacWhisper.swift, MediaConverter.swift, MediaConverterSupport.swift, MeetingJournal.swift, MeetingModel.swift, MeetingProcessor.swift, MeteoraApp.swift, NativePlayerController.swift, Onboarding.swift, PlayerController.swift, PlayerWeb.swift, AudioInputCatalog.swift, MeetingRecorder.swift, MicrophoneCapture.swift, RecordingEngine.swift, RecordingFolder.swift, RecordingPanel.swift, RecordingSelfTest.swift, RecordingSinks.swift, RecordingStatusItem.swift, SystemAudioCapture.swift, SelfTest.swift, SettingsWindow.swift, Storage.swift, SummaryModel.swift, SummaryViews.swift, TempCleanup.swift, Theme.swift, TranscriptViews.swift, Transcription.swift, Updates.swift, Views.swift, Workspace.swift
+95%: Compile 49 Swift source files (x86_64)
+capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure
+add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode
+reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode
+reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode
+reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode
+capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure
+add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure
+add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:247:29: warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure
+                            proxy.cancel()
+                            ^
+MeteoraConverterProtocol.ConverterServiceProtocol:1:56: note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+@objc(MeteoraConverterServiceProtocol) public protocol ConverterServiceProtocol {
+                                                       ^
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:4:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+import MeteoraConverterProtocol
+^
+@preconcurrency 
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:218:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode
+                    guard let self, !token.isCancelled else { return }
+                              ^
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:230:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode
+                    guard let self, !token.isCancelled else { return }
+                              ^
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:544:63: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode
+                await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
+                                                              ^
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:547:45: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode
+                    if !token.isCancelled { self?.audioError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription }
+                                            ^
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:346:44: warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure
+            core.queue.async { core.ingest(buffer, from: .system) }
+                                           ^
+/Applications/Xcode_26.3.0.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+@interface AVAudioPCMBuffer : AVAudioBuffer
+           ^
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+import AVFoundation
+^
+@preconcurrency 
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:478:57: warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure
+            given = true; s.pointee = .haveData; return inBuf
+                                                        ^
+/Applications/Xcode_26.3.0.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+@interface AVAudioPCMBuffer : AVAudioBuffer
+           ^
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+import AVFoundation
+^
+@preconcurrency 
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+    nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    ^~~~~~~~~~~~~~~~~~~~
+    
+
+95%: Discovering Swift tasks after 'Compiling AppDelegate+AutoFolders.swift, AppStatusItem.swift, AutoFolderLedger.swift, AutoFolderNotifier.swift, AutoFolderRows.swift, AutoFolderSelfTest.swift, AutoFolderStore.swift, AutoFolderWatcher.swift, AutoFoldersSettings.swift, LoginItem.swift, WatchedFolder.swift, Batch.swift, DictionaryViews.swift, ExportViews.swift, JournalViews.swift, Logo.swift, MacWhisper.swift, MediaConverter.swift, MediaConverterSupport.swift, MeetingJournal.swift, MeetingModel.swift, MeetingProcessor.swift, MeteoraApp.swift, NativePlayerController.swift, Onboarding.swift, PlayerController.swift, PlayerWeb.swift, AudioInputCatalog.swift, MeetingRecorder.swift, MicrophoneCapture.swift, RecordingEngine.swift, RecordingFolder.swift, RecordingPanel.swift, RecordingSelfTest.swift, RecordingSinks.swift, RecordingStatusItem.swift, SystemAudioCapture.swift, SelfTest.swift, SettingsWindow.swift, Storage.swift, SummaryModel.swift, SummaryViews.swift, TempCleanup.swift, Theme.swift, TranscriptViews.swift, Transcription.swift, Updates.swift, Views.swift, Workspace.swift'
+95%: Unblock downstream dependents of Meteora (x86_64)
+95%: Link Meteora (x86_64)
+95%: Copy Meteora.swiftmodule (x86_64)
+95%: Copy Meteora.swiftdoc (x86_64)
+95%: Copy Meteora.abi.json (x86_64)
+95%: Copy Meteora.swiftsourceinfo (x86_64)
+capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure
+add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode
+reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode
+reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode
+reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode
+capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure
+add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure
+add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:247:29: warning: capture of 'proxy' with non-Sendable type 'any ConverterServiceProtocol' in a '@Sendable' closure
+                            proxy.cancel()
+                            ^
+MeteoraConverterProtocol.ConverterServiceProtocol:1:56: note: protocol 'ConverterServiceProtocol' does not conform to the 'Sendable' protocol
+@objc(MeteoraConverterServiceProtocol) public protocol ConverterServiceProtocol {
+                                                       ^
+/Users/runner/work/meteora/meteora/Sources/Meteora/MediaConverter.swift:4:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'MeteoraConverterProtocol'
+import MeteoraConverterProtocol
+^
+@preconcurrency 
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:218:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode
+                    guard let self, !token.isCancelled else { return }
+                              ^
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:230:31: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode
+                    guard let self, !token.isCancelled else { return }
+                              ^
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:544:63: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode
+                await MainActor.run { if !token.isCancelled { self?.audioAnalysis = analysis } }
+                                                              ^
+/Users/runner/work/meteora/meteora/Sources/Meteora/MeetingModel.swift:547:45: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode
+                    if !token.isCancelled { self?.audioError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription }
+                                            ^
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:346:44: warning: capture of 'buffer' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure
+            core.queue.async { core.ingest(buffer, from: .system) }
+                                           ^
+/Applications/Xcode_26.3.0.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+@interface AVAudioPCMBuffer : AVAudioBuffer
+           ^
+/Users/runner/work/meteora/meteora/Sources/Meteora/Recording/RecordingEngine.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+import AVFoundation
+^
+@preconcurrency 
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:478:57: warning: capture of 'inBuf' with non-Sendable type 'AVAudioPCMBuffer' in a '@Sendable' closure
+            given = true; s.pointee = .haveData; return inBuf
+                                                        ^
+/Applications/Xcode_26.3.0.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVAudioBuffer.h:67:12: note: class 'AVAudioPCMBuffer' does not conform to the 'Sendable' protocol
+@interface AVAudioPCMBuffer : AVAudioBuffer
+           ^
+/Users/runner/work/meteora/meteora/Sources/Meteora/SelfTest.swift:2:1: warning: add '@preconcurrency' to suppress 'Sendable'-related warnings from module 'AVFAudio'
+import AVFoundation
+^
+@preconcurrency 
+/Users/runner/work/meteora/meteora/Sources/Meteora/Storage.swift:114:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it
+    nonisolated(unsafe) private static let dateFormatter: DateFormatter = {
+    ^~~~~~~~~~~~~~~~~~~~
+    
+
+97%: Discovering Swift tasks after 'Compiling AppDelegate+AutoFolders.swift, AppStatusItem.swift, AutoFolderLedger.swift, AutoFolderNotifier.swift, AutoFolderRows.swift, AutoFolderSelfTest.swift, AutoFolderStore.swift, AutoFolderWatcher.swift, AutoFoldersSettings.swift, LoginItem.swift, WatchedFolder.swift, Batch.swift, DictionaryViews.swift, ExportViews.swift, JournalViews.swift, Logo.swift, MacWhisper.swift, MediaConverter.swift, MediaConverterSupport.swift, MeetingJournal.swift, MeetingModel.swift, MeetingProcessor.swift, MeteoraApp.swift, NativePlayerController.swift, Onboarding.swift, PlayerController.swift, PlayerWeb.swift, AudioInputCatalog.swift, MeetingRecorder.swift, MicrophoneCapture.swift, RecordingEngine.swift, RecordingFolder.swift, RecordingPanel.swift, RecordingSelfTest.swift, RecordingSinks.swift, RecordingStatusItem.swift, SystemAudioCapture.swift, SelfTest.swift, SettingsWindow.swift, Storage.swift, SummaryModel.swift, SummaryViews.swift, TempCleanup.swift, Theme.swift, TranscriptViews.swift, Transcription.swift, Updates.swift, Views.swift, Workspace.swift'
+97%: Unblock downstream dependents of Meteora (arm64)
+97%: Copy Meteora.swiftmodule (arm64)
+97%: Copy Meteora.swiftdoc (arm64)
+97%: Link Meteora (arm64)
+97%: Copy Meteora.abi.json (arm64)
+97%: Copy Meteora.swiftsourceinfo (arm64)
+99%: Create universal binary Meteora
+99%: Generate Meteora.dSYM for Meteora
+99%: Register execution policy exception for Meteora
+100%: Build succeeded
+Build complete!
+0%: Compute target dependency graph
+Building targets in dependency order
+Target dependency graph (2 targets)
+0%: Gather provisioning inputs
+0%: Create build description
+0%: Discovering version info for swiftc
+0%: Discovering version info for clang
+0%: Discovering version info for ld
+Build description signature: d62ded6180ecc6464e0c2fbca22999df
+
+Build description path: /Users/runner/work/meteora/meteora/.build/apple/Intermediates.noindex/XCBuildData/d62ded6180ecc6464e0c2fbca22999df.xcbuilddata
+
+0%: Build stat cache for /Applications/Xcode_26.3.0.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk
+0%: Write MeteoraConverter.SwiftFileList (x86_64)
+0%: Write MeteoraConverter_const_extract_protocols.json (x86_64)
+0%: Write MeteoraConverter.LinkFileList (x86_64)
+0%: Write MeteoraConverter-OutputFileMap.json (x86_64)
+0%: Write MeteoraConverter_const_extract_protocols.json (arm64)
+0%: Write MeteoraConverter.SwiftFileList (arm64)
+0%: Write MeteoraConverter.LinkFileList (arm64)
+0%: Write MeteoraConverter-OutputFileMap.json (arm64)
+0%: Write MeteoraConverter.DependencyStaticMetadataFileList
+0%: Write MeteoraConverter.DependencyMetadataFileList
+35%: Planning Swift module MeteoraConverter (x86_64)
+35%: Planning Swift module MeteoraConverter (arm64)
+49%: Compile MeteoraConverter (arm64)
+49%: Compiling main.swift
+49%: Compiling main.swift
+49%: Compile MeteoraConverter (x86_64)
+49%: Compile main.swift (arm64)
+49%: Compile main.swift (x86_64)
+57%: Discovering Swift tasks after 'Compiling main.swift'
+57%: Unblock downstream dependents of MeteoraConverter (arm64)
+57%: Link MeteoraConverter (arm64)
+57%: Copy MeteoraConverter.swiftmodule (arm64)
+57%: Copy MeteoraConverter.swiftdoc (arm64)
+57%: Copy MeteoraConverter.abi.json (arm64)
+57%: Copy MeteoraConverter.swiftsourceinfo (arm64)
+57%: Discovering Swift tasks after 'Compiling main.swift'
+57%: Unblock downstream dependents of MeteoraConverter (x86_64)
+57%: Link MeteoraConverter (x86_64)
+57%: Copy MeteoraConverter.swiftmodule (x86_64)
+57%: Copy MeteoraConverter.swiftdoc (x86_64)
+57%: Copy MeteoraConverter.abi.json (x86_64)
+57%: Copy MeteoraConverter.swiftsourceinfo (x86_64)
+91%: Create universal binary MeteoraConverter
+91%: Generate MeteoraConverter.dSYM for MeteoraConverter
+97%: Register execution policy exception for MeteoraConverter
+100%: Build succeeded
+Build complete!
+actool: Assets.car compiled from AppIcon.icon
+build/Meteora.app/Contents/XPCServices/com.musamusaev.meteora.converter.xpc/Contents/MacOS/ffmpeg: replacing existing signature
+build/Meteora.app/Contents/XPCServices/com.musamusaev.meteora.converter.xpc: replacing existing signature
+build/Meteora.app: replacing existing signature
+--prepared:/Users/runner/work/meteora/meteora/build/Meteora.app/Contents/XPCServices/com.musamusaev.meteora.converter.xpc
+--prepared:/Users/runner/work/meteora/meteora/build/Meteora.app/Contents/XPCServices/com.musamusaev.meteora.converter.xpc/Contents/MacOS/ffmpeg
+--validated:/Users/runner/work/meteora/meteora/build/Meteora.app/Contents/XPCServices/com.musamusaev.meteora.converter.xpc/Contents/MacOS/ffmpeg
+--validated:/Users/runner/work/meteora/meteora/build/Meteora.app/Contents/XPCServices/com.musamusaev.meteora.converter.xpc
+build/Meteora.app: valid on disk
+build/Meteora.app: satisfies its Designated Requirement
+{
+  "com.apple.security.app-sandbox" => 1
+  "com.apple.security.device.audio-input" => 1
+  "com.apple.security.files.bookmarks.app-scope" => 1
+  "com.apple.security.files.downloads.read-write" => 1
+  "com.apple.security.files.user-selected.read-write" => 1
+  "com.apple.security.network.client" => 1
+}
+converter service entitlements:
+{
+  "com.apple.security.app-sandbox" => 1
+}
+ffmpeg entitlements:
+{
+  "com.apple.security.app-sandbox" => 1
+  "com.apple.security.inherit" => 1
+}
+Architectures in the fat file: build/Meteora.app/Contents/MacOS/Meteora are: x86_64 arm64 
+Architectures in the fat file: build/Meteora.app/Contents/XPCServices/com.musamusaev.meteora.converter.xpc/Contents/MacOS/MeteoraConverter are: x86_64 arm64 
+Architectures in the fat file: build/Meteora.app/Contents/XPCServices/com.musamusaev.meteora.converter.xpc/Contents/MacOS/ffmpeg are: x86_64 arm64 
+ 89M	build/Meteora.app
+67 e3bf7336af87d7e7e538019b3a79ac03fed0421172551a2ba8504ef3096b45ca

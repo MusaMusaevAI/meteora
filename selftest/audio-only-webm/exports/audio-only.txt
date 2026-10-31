@@ -1,0 +1,4 @@
+audio-only
+Длительность 0:12 · 1 фраза · распознавание: GigaAM-v3 e2e RNN-T
+
+[0:00] Спикер 1: This Recording Hazonly Sounds

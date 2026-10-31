@@ -1,0 +1,4 @@
+pin check light: Qwen3.5-0.8B-Q6_K.gguf size 639029504 (expected 639029504)
+pin check medium: Qwen3.5-2B-Q5_K_M.gguf size 1435238656 (expected 1435238656)
+pin check strong: Qwen3.5-4B-Q4_K_M.gguf size 2740937888 (expected 2740937888)
+summary model cached and verified: /Users/runner/Downloads/Meteora-CI-models/Qwen3.5-0.8B-Q6_K.gguf

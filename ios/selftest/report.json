@@ -1,0 +1,106 @@
+{
+  "asr" : {
+    "seconds" : 11.755624055862427,
+    "segments" : 2,
+    "text" : "Чьих не требуя похвал, счастлив уж я надеждой сладкой, что дева с трепетом любви посмотрит, может быть, украдкой на песни грешные мои У лукоморья дуб зелёный."
+  },
+  "errors" : [
+
+  ],
+  "export" : [
+    "speech.docx: 6783",
+    "speech.pdf: 18981",
+    "speech.txt: 415",
+    "speech.md: 669",
+    "speech.srt: 385"
+  ],
+  "imported" : {
+    "audio-only.webm" : {
+      "date" : "2026-10-31 13:10:38 +0000",
+      "duration" : 12.007999999999999,
+      "video" : false
+    },
+    "slides.webm" : {
+      "date" : "2026-10-31 13:10:38 +0000",
+      "duration" : 40.008000000000003,
+      "video" : true
+    },
+    "speech.m4a" : {
+      "date" : "2026-10-31 13:10:38 +0000",
+      "duration" : 11.289999999999999,
+      "video" : false
+    }
+  },
+  "llm" : {
+    "contextTokens" : 4096,
+    "device" : "CPU, 3 потоков",
+    "errors" : [
+
+    ],
+    "file" : "Qwen3.5-0.8B-Q6_K.gguf",
+    "forceCPU" : true,
+    "generatedTokens" : 148,
+    "gpuDevices" : [
+
+    ],
+    "hitTokenLimit" : false,
+    "installed" : true,
+    "loadSeconds" : 2.0009249448776245,
+    "model" : "Qwen3.5-0.8B",
+    "modelBytes" : 628067584,
+    "ok" : true,
+    "parsedFromJSON" : true,
+    "promptTokens" : 669,
+    "promptTokensPerSecond" : 101.84386090159271,
+    "requests" : 1,
+    "revision" : "6ab461498e2023f6e3c1baea90a8f0fe38ab64d0",
+    "seconds" : 13.133138060569763,
+    "sha256" : "8408c5c222111cec253682b49eece2a02ed641ded68490001ec4ee160e71098e",
+    "source" : "already-installed",
+    "summary" : {
+      "actionItems" : [
+
+      ],
+      "decisions" : [
+
+      ],
+      "keyPoints" : [
+        "Олег предлагает старт рассылки по ПДС",
+        "Анна согласовала старт 10 ноября",
+        "Олег подготовил тексты писем до пятницы",
+        "Мария проверяет базу сегментов"
+      ],
+      "summary" : "Анна и Олег обсуждают старт рассылки по ПДС. Анна согласовала старт 10 ноября, Олег подготовил тексты писем до пятницы, Мария проверит базу сегментов.",
+      "title" : "Рассылка по ПДС — 29 октября 2026, 11:30"
+    },
+    "tokensPerSecond" : 32.676527628883896,
+    "usesMetal" : false
+  },
+  "ok" : true,
+  "playback" : {
+    "audio-only.webm" : {
+      "advancedTo" : 0.60017979200000005,
+      "duration" : 12.007999999999999
+    },
+    "slides.webm" : {
+      "advancedTo" : 1.400083542,
+      "duration" : 40.008000000000003
+    },
+    "speech.m4a" : {
+      "advancedTo" : 1.400073041,
+      "duration" : 11.289999999999999
+    }
+  },
+  "seconds" : 109.79858303070068,
+  "speakers" : {
+    "error" : "",
+    "seconds" : 3.5615570545196533,
+    "speakers" : [
+      "Спикер 1"
+    ]
+  },
+  "summaryOnPoem" : {
+    "refused" : true,
+    "seconds" : 27.8455730676651
+  }
+}

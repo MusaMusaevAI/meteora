@@ -1,0 +1,287 @@
+{
+  "format" : "meteora.transcript",
+  "frames" : [
+    {
+      "id" : 1,
+      "text" : "Итоги квартала: ПДС\nНовых договоров: 12 480\nПервые взносы: 64%\nАвтоплатёж подключили: 3 115\nСредний взнос: 4 200 руб.",
+      "time" : 0
+    },
+    {
+      "id" : 2,
+      "text" : "",
+      "time" : 85
+    },
+    {
+      "id" : 3,
+      "text" : "",
+      "time" : 102
+    },
+    {
+      "id" : 4,
+      "text" : "Воронка конверсии\nЗаявка → договор: 41%\nДоговор - первый взнос: 58%\nПовторный взнос через 90 дней: 33%",
+      "time" : 115
+    },
+    {
+      "id" : 5,
+      "text" : "Next steps / Следующие шаги\n1. Обновить лендинг до 15 ноября\n2. А/В-тест письма\n3. Отчёт для правления",
+      "time" : 210
+    },
+    {
+      "id" : 6,
+      "text" : "Сравнение каналов\nМобильное приложение — 52%\nСайт — 31%\nОфисы — 17%",
+      "time" : 272
+    },
+    {
+      "id" : 7,
+      "text" : "Риски и ограничения\nСезонность в декабре\nНагрузка на колл-центр\nСроки разработки",
+      "time" : 289
+    },
+    {
+      "id" : 8,
+      "text" : "",
+      "time" : 408
+    }
+  ],
+  "meta" : {
+    "created" : "2026-10-31T13:14:58Z",
+    "duration" : 600.008,
+    "engine" : "GigaAM-v3 e2e RNN-T",
+    "sourceName" : "long-1920.webm",
+    "title" : "long-1920"
+  },
+  "options" : {
+    "includeFrameText" : true,
+    "includeFrames" : true,
+    "maxParagraphSeconds" : 75,
+    "paragraphs" : true,
+    "pauseForParagraph" : 1.6,
+    "timestamps" : "paragraph"
+  },
+  "paragraphs" : [
+    {
+      "end" : 9.096,
+      "phrases" : [
+        {
+          "end" : 9.096,
+          "speaker" : "Спикер 1",
+          "start" : 5.19,
+          "text" : "Weard Discucing the Pancion Savings Program& the Next Cempain"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 5.19,
+      "text" : "Weard Discucing the Pancion Savings Program& the Next Cempain"
+    },
+    {
+      "end" : 46.088,
+      "phrases" : [
+        {
+          "end" : 46.088,
+          "speaker" : "Спикер 1",
+          "start" : 42.214,
+          "text" : "We ard Discuting the Panchin Savings Program& the Next Cent Pan"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 42.214,
+      "text" : "We ard Discuting the Panchin Savings Program& the Next Cent Pan"
+    },
+    {
+      "end" : 83.08,
+      "phrases" : [
+        {
+          "end" : 83.08,
+          "speaker" : "Спикер 1",
+          "start" : 79.238,
+          "text" : "We ard Discucing the Pancion Savings Program& the Next CamPan"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 79.238,
+      "text" : "We ard Discucing the Pancion Savings Program& the Next CamPan"
+    },
+    {
+      "end" : 120.104,
+      "phrases" : [
+        {
+          "end" : 120.104,
+          "speaker" : "Спикер 1",
+          "start" : 116.23,
+          "text" : "Weard Discucing the Pancion Savings Program& the Next CemPan"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 116.23,
+      "text" : "Weard Discucing the Pancion Savings Program& the Next CemPan"
+    },
+    {
+      "end" : 157.096,
+      "phrases" : [
+        {
+          "end" : 157.096,
+          "speaker" : "Спикер 1",
+          "start" : 153.222,
+          "text" : "Weard Discucing the Pancion Savings Program& the Next Cempain"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 153.222,
+      "text" : "Weard Discucing the Pancion Savings Program& the Next Cempain"
+    },
+    {
+      "end" : 194.088,
+      "phrases" : [
+        {
+          "end" : 194.088,
+          "speaker" : "Спикер 1",
+          "start" : 190.214,
+          "text" : "We ard Discuting the Panchin Savings Program& the Next Cempain"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 190.214,
+      "text" : "We ard Discuting the Panchin Savings Program& the Next Cempain"
+    },
+    {
+      "end" : 231.112,
+      "phrases" : [
+        {
+          "end" : 231.112,
+          "speaker" : "Спикер 1",
+          "start" : 227.238,
+          "text" : "We ard Discusing the Pancion Savings Program& the Next CemPain"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 227.238,
+      "text" : "We ard Discusing the Pancion Savings Program& the Next CemPain"
+    },
+    {
+      "end" : 268.104,
+      "phrases" : [
+        {
+          "end" : 268.104,
+          "speaker" : "Спикер 1",
+          "start" : 264.23,
+          "text" : "We ard Discucing the Pancion Savings Program& the Next Cempain"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 264.23,
+      "text" : "We ard Discucing the Pancion Savings Program& the Next Cempain"
+    },
+    {
+      "end" : 305.096,
+      "phrases" : [
+        {
+          "end" : 305.096,
+          "speaker" : "Спикер 1",
+          "start" : 301.222,
+          "text" : "Weard Discucing the Pancion Savings Program& the Next Cempain"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 301.222,
+      "text" : "Weard Discucing the Pancion Savings Program& the Next Cempain"
+    },
+    {
+      "end" : 342.088,
+      "phrases" : [
+        {
+          "end" : 342.088,
+          "speaker" : "Спикер 1",
+          "start" : 338.214,
+          "text" : "We ard Discuting the Panchin Savings Program& the Next Cempain"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 338.214,
+      "text" : "We ard Discuting the Panchin Savings Program& the Next Cempain"
+    },
+    {
+      "end" : 379.112,
+      "phrases" : [
+        {
+          "end" : 379.112,
+          "speaker" : "Спикер 1",
+          "start" : 375.238,
+          "text" : "We ard Discucing the Pancion Savings Program& he Next CemPan"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 375.238,
+      "text" : "We ard Discucing the Pancion Savings Program& he Next CemPan"
+    },
+    {
+      "end" : 416.104,
+      "phrases" : [
+        {
+          "end" : 416.104,
+          "speaker" : "Спикер 1",
+          "start" : 412.23,
+          "text" : "Weard Discucing the Pancion Savings Program& the Next Cempain"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 412.23,
+      "text" : "Weard Discucing the Pancion Savings Program& the Next Cempain"
+    },
+    {
+      "end" : 453.096,
+      "phrases" : [
+        {
+          "end" : 453.096,
+          "speaker" : "Спикер 1",
+          "start" : 449.222,
+          "text" : "We ard Discuting the Pancion Savings Program& the Next Cent Pain"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 449.222,
+      "text" : "We ard Discuting the Pancion Savings Program& the Next Cent Pain"
+    },
+    {
+      "end" : 490.088,
+      "phrases" : [
+        {
+          "end" : 490.088,
+          "speaker" : "Спикер 1",
+          "start" : 486.214,
+          "text" : "We ard Discuting the Panchin Savings Program& the Next Cempain"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 486.214,
+      "text" : "We ard Discuting the Panchin Savings Program& the Next Cempain"
+    },
+    {
+      "end" : 527.112,
+      "phrases" : [
+        {
+          "end" : 527.112,
+          "speaker" : "Спикер 1",
+          "start" : 523.238,
+          "text" : "We ard Discucing the Pancion Savings Program& he Next CemPan"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 523.238,
+      "text" : "We ard Discucing the Pancion Savings Program& he Next CemPan"
+    },
+    {
+      "end" : 564.104,
+      "phrases" : [
+        {
+          "end" : 564.104,
+          "speaker" : "Спикер 1",
+          "start" : 560.23,
+          "text" : "Weard Discucing the Pancion Savings Program& the Next Cempain"
+        }
+      ],
+      "speaker" : "Спикер 1",
+      "start" : 560.23,
+      "text" : "Weard Discucing the Pancion Savings Program& the Next Cempain"
+    }
+  ],
+  "version" : 1
+}

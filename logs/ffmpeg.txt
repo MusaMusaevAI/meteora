@@ -1,0 +1,2 @@
+ffmpeg 7.1.5 already built (Vendor/ffmpeg/bin/ffmpeg)
+Architectures in the fat file: Vendor/ffmpeg/bin/ffmpeg are: x86_64 arm64 
