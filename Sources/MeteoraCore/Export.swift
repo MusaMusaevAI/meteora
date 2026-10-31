@@ -545,7 +545,7 @@ extension TranscriptExporter {
     // MARK: File names
 
     /// A single safe path component (no extension handling), via `sanitizedBaseName`.
-    static func safeFileName(_ raw: String) -> String {
+    public static func safeFileName(_ raw: String) -> String {
         let chars: [Character] = raw.unicodeScalars.map { (u: Unicode.Scalar) -> Character in
             if u == "/" || u.properties.generalCategory == .control { return " " }
             return Character(u)
@@ -572,7 +572,7 @@ extension TranscriptExporter {
         return name + " — кадры"
     }
 
-    static func requireInside(_ url: URL, _ dir: URL) throws {
+    public static func requireInside(_ url: URL, _ dir: URL) throws {
         let name = url.lastPathComponent
         let parent = url.standardizedFileURL.deletingLastPathComponent().standardizedFileURL.path
         guard name != "..", name != ".", !name.isEmpty, !name.contains("/"),

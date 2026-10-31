@@ -189,4 +189,25 @@ final class MeetingMailTests: XCTestCase {
         XCTAssertEqual(LinkDefang.defang("www.a.ru"), "www[.]a.ru")
         XCTAssertEqual(LinkDefang.defang("ftp://a"), "ftp[:]//a")
     }
+
+    func testHeaderLineBreaksNeverReachRawHeaders() {
+        // "\r\n" is one Character in Swift: the check must look at scalars.
+        for raw in ["Hi\r\nBcc: x@example.com", "A\u{2028}B", "plain\u{85}x", "tab\tx"] {
+            let w = MeetingMail.encodedWord(raw)
+            XCTAssertTrue(w.hasPrefix("=?UTF-8?B?"), w)
+            XCTAssertFalse(w.contains("\r") || w.contains("\n"), w)
+        }
+        XCTAssertEqual(MeetingMail.encodedWord("Plain subject"), "Plain subject")
+    }
+
+    func testTitleFromModelIsOneSafeFileName() {
+        let dir = URL(fileURLWithPath: "/tmp/Meteora", isDirectory: true)
+        for title in ["../../Library/x", "a/b", "..", "\u{202E}gpj.exe", "line\nbreak"] {
+            let name = TranscriptExporter.safeFileName(title)
+            XCTAssertFalse(name.contains("/"), name)
+            XCTAssertNotEqual(name, "..")
+            XCTAssertNoThrow(try TranscriptExporter.requireInside(dir.appendingPathComponent(name + " — звук.m4a"), dir), name)
+        }
+        XCTAssertThrowsError(try TranscriptExporter.requireInside(dir.appendingPathComponent("../x.m4a"), dir))
+    }
 }

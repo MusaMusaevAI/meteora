@@ -142,6 +142,22 @@ final class MeetingModel: ObservableObject {
     }
 
     var title: String { customTitle ?? url.map { sanitizedBaseName($0) } ?? "Meteora" }
+    /// The title as one safe file-name component: it may come from a model's
+    /// summary, so "/", "..", control and invisible characters never reach a path.
+    var fileTitle: String { TranscriptExporter.safeFileName(title) }
+
+    /// A meeting name as typed or suggested: one line, no control characters,
+    /// of reasonable length.
+    static func cleanTitle(_ raw: String) -> String {
+        var v = String.UnicodeScalarView()
+        for u in raw.unicodeScalars {
+            let breaks = u.properties.generalCategory == .control || u.properties.generalCategory == .format
+                || [0x85, 0x2028, 0x2029].contains(u.value)
+            v.append(breaks ? " " : u)
+        }
+        let one = String(v).split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        return String(one.prefix(200))
+    }
     var hasVideo: Bool { info?.video != nil }
     var canExportAudio: Bool { audioOrigin != nil && exportProgress == nil }
     var isBusy: Bool { exportProgress != nil || sceneProgress != nil }
@@ -319,7 +335,7 @@ final class MeetingModel: ObservableObject {
     /// Renames the meeting in Meteora (list, window, exports). The file
     /// itself is not renamed: the sandbox only lets us read it.
     func rename(_ name: String) {
-        let t = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let t = Self.cleanTitle(name)
         guard let url, !t.isEmpty else { return }
         customTitle = t
         MeetingJournal.shared.setTitle(t, for: url)
@@ -534,7 +550,7 @@ final class MeetingModel: ObservableObject {
         }
     }
 
-    var suggestedAudioName: String { "\(title) — звук (\(quality.title.lowercased())).m4a" }
+    var suggestedAudioName: String { "\(fileTitle) — звук (\(quality.title.lowercased())).m4a" }
 
     var estimatedAudioSize: String {
         guard let d = info?.duration else { return "" }
@@ -603,7 +619,9 @@ final class MeetingModel: ObservableObject {
         guard canExportAudio, let src = url else { return }
         let dest: URL
         do {
-            dest = try Folders.ensureExports().appendingPathComponent(suggestedAudioName)
+            let dir = try Folders.ensureExports()
+            dest = dir.appendingPathComponent(suggestedAudioName)
+            try TranscriptExporter.requireInside(dest, dir)
         } catch {
             toast = Toast(message: "Нет доступа к папке «Загрузки».", isError: true)
             return
@@ -725,7 +743,7 @@ final class MeetingModel: ObservableObject {
             body = TranscriptExporter.markdown(tr, frames: frames.map(\.frame), meta: reportMeta)
         }
         panel.allowedContentTypes = [UTType(filenameExtension: ext) ?? .plainText]
-        panel.nameFieldStringValue = "\(title) — расшифровка.\(ext)"
+        panel.nameFieldStringValue = "\(fileTitle) — расшифровка.\(ext)"
         guard panel.runModal() == .OK, let dest = panel.url else { return }
         do {
             try Data(body.utf8).write(to: dest, options: .atomic)
@@ -889,7 +907,7 @@ final class MeetingModel: ObservableObject {
         guard !frames.isEmpty else { return }
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.pdf]
-        panel.nameFieldStringValue = "\(title) — кадры.pdf"
+        panel.nameFieldStringValue = "\(fileTitle) — кадры.pdf"
         guard panel.runModal() == .OK, let dest = panel.url else { return }
         let frames = self.frames.map(\.frame), meta = reportMeta
         Task {
@@ -906,7 +924,7 @@ final class MeetingModel: ObservableObject {
     func presentSaveFolderPanel() {
         guard !frames.isEmpty else { return }
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = "\(title) — кадры"
+        panel.nameFieldStringValue = "\(fileTitle) — кадры"
         panel.message = "Будет создана папка с кадрами (PNG) и файлом кадры.md"
         panel.prompt = "Создать"
         guard panel.runModal() == .OK, let dest = panel.url else { return }

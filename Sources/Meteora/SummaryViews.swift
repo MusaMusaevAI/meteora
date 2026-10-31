@@ -89,7 +89,7 @@ extension MeetingModel {
     /// exported files. The recording file itself is not renamed.
     func useSummaryTitle() {
         guard let url, let s = summary else { return }
-        let topic = s.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let topic = MeetingModel.cleanTitle(s.title)
         guard !topic.isEmpty else { return }
         customTitle = topic
         MeetingJournal.shared.setTitle(topic, for: url)
@@ -106,7 +106,7 @@ extension MeetingModel {
     // MARK: Mail
 
     /// The meeting title made safe for a file name (it may come from the model).
-    var mailFileBase: String { sanitizedBaseName(URL(fileURLWithPath: "/").appendingPathComponent(title + ".x")) }
+    var mailFileBase: String { fileTitle }
 
     /// A fresh temporary folder named so the storage cleanup finds it.
     static func mailTempDir() -> URL {
@@ -187,7 +187,7 @@ extension MeetingModel {
         guard let s = summary else { return }
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.init(filenameExtension: "md") ?? .plainText]
-        panel.nameFieldStringValue = "\(title) — итоги.md"
+        panel.nameFieldStringValue = "\(fileTitle) — итоги.md"
         guard panel.runModal() == .OK, let dest = panel.url else { return }
         do {
             try Data(s.markdown().utf8).write(to: dest, options: .atomic)

@@ -153,10 +153,16 @@ public struct MeetingMail: Sendable {
     }
 
     /// RFC 2047 encoded-word for non-ASCII header text.
+    /// Checked scalar by scalar: "\r\n" is a single Character, so a check on
+    /// Characters would let a line break through into the header.
     static func encodedWord(_ s: String) -> String {
-        if s.allSatisfy({ $0.isASCII && $0 != "\"" && $0 != "\r" && $0 != "\n" }) { return s }
-        let clean = s.replacingOccurrences(of: "\r", with: " ").replacingOccurrences(of: "\n", with: " ")
-        return "=?UTF-8?B?\(Data(clean.utf8).base64EncodedString())?="
+        func lineBreaking(_ u: Unicode.Scalar) -> Bool {
+            u.properties.generalCategory == .control || [0x85, 0x2028, 0x2029].contains(u.value)
+        }
+        if s.unicodeScalars.allSatisfy({ $0.isASCII && $0 != "\"" && !lineBreaking($0) }) { return s }
+        var clean = String.UnicodeScalarView()
+        for u in s.unicodeScalars { clean.append(lineBreaking(u) ? " " : u) }
+        return "=?UTF-8?B?\(Data(String(clean).utf8).base64EncodedString())?="
     }
 
     static func rfc2231(_ s: String) -> String {

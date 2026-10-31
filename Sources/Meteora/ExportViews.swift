@@ -248,7 +248,7 @@ extension MeetingModel {
             let panel = NSSavePanel()
             let f = formats[0]
             if let t = UTType(filenameExtension: f.fileExtension) { panel.allowedContentTypes = [t] }
-            panel.nameFieldStringValue = "\(title).\(f.fileExtension)"
+            panel.nameFieldStringValue = "\(TranscriptExporter.safeFileName(title)).\(f.fileExtension)"
             panel.canCreateDirectories = true
             guard panel.runModal() == .OK, let dest = panel.url else { return }
             directory = dest.deletingLastPathComponent()
