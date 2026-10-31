@@ -20,6 +20,11 @@ on:
       budget:
         description: "Spending limit for this run, USD"
         default: "8"
+      focus:
+        description: "full = whole review; followup = only areas a previous run did not finish"
+        default: full
+        type: choice
+        options: [full, followup]
 permissions:
   contents: read
 concurrency:
@@ -37,6 +42,7 @@ jobs:
       STRIX_COMMIT: f7a32ae62d94872631bc8415073868d02a6ffdaf
       SCAN_MODE: ${{ inputs.mode || 'standard' }}
       SCAN_BUDGET: ${{ inputs.budget || '8' }}
+      SCAN_INSTRUCTIONS: ${{ inputs.focus == 'followup' && 'docs/security/strix-instructions-followup.md' || 'docs/security/strix-instructions.md' }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -75,7 +81,7 @@ jobs:
         run: |
           PYTHONPATH=/tmp/strix-src /tmp/strix/bin/python -c 'import sys; sys.argv[0] = "strix"; from strix.interface.main import main; main()' \
             --target ./ --non-interactive --scan-mode "$SCAN_MODE" --scope-mode full \
-            --instruction-file docs/security/strix-instructions.md --max-budget-usd "$SCAN_BUDGET" > strix.log 2>&1
+            --instruction-file "$SCAN_INSTRUCTIONS" --max-budget-usd "$SCAN_BUDGET" > strix.log 2>&1
           echo "Scan finished (exit $?). Output is in the encrypted report only."
       - name: Collect
         if: always() && steps.keys.outputs.ready == 'true'
