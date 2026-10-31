@@ -21,7 +21,7 @@ on:
         description: "Spending limit for this run, USD"
         default: "8"
       focus:
-        description: "full = whole review; followup = only areas a previous run did not finish"
+        description: "full = whole repository, MASVS matrix, AI-era threats, hardening; followup = only areas a previous run did not finish"
         default: full
         type: choice
         options: [full, followup]
