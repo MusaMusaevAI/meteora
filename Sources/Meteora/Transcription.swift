@@ -171,6 +171,8 @@ enum TranscriptStore {
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let enc = JSONEncoder()
         enc.dateEncodingStrategy = .iso8601
-        if let data = try? enc.encode(tr) { try? data.write(to: file(for: url), options: .atomic) }
+        let storeKey = Self.key(for: url)
+        if let data = try? enc.encode(tr) { try? data.write(to: directory.appendingPathComponent(storeKey + ".json"), options: .atomic) }
+        Task { @MainActor in MeetingJournal.shared.rememberStoreKey(storeKey, for: url) }
     }
 }

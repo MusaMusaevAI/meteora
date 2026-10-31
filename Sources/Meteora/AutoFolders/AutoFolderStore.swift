@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 import AppKit
 import MeteoraCore
 
@@ -623,10 +624,16 @@ final class AutoFolderStore: ObservableObject {
         return v.ubiquitousItemDownloadingStatus != .current
     }
 
+    /// Non-blocking: a file swapped for a FIFO or a device after the scan
+    /// must not stall the main thread.
     private static func canRead(_ path: String) -> Bool {
-        guard let h = FileHandle(forReadingAtPath: path) else { return false }
-        defer { try? h.close() }
-        return ((try? h.read(upToCount: 16))?.count ?? 0) > 0
+        let fd = Darwin.open(path, O_RDONLY | O_NONBLOCK | O_CLOEXEC | O_NOFOLLOW)
+        guard fd >= 0 else { return false }
+        defer { Darwin.close(fd) }
+        var st = stat()
+        guard fstat(fd, &st) == 0, (st.st_mode & S_IFMT) == S_IFREG else { return false }
+        var buf = [UInt8](repeating: 0, count: 16)
+        return Darwin.read(fd, &buf, 16) > 0
     }
 
     private func isBeingRecordedHere(_ path: String) -> Bool {

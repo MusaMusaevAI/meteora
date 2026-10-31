@@ -17,6 +17,10 @@ struct JournalEntry: Codable, Identifiable, Equatable {
     var pinned: Bool?
     /// When the meeting first appeared in Meteora (never changes).
     var addedAt: Date?
+    /// Names (keys) of the transcript and summary files saved for this
+    /// meeting, so they are deleted with it even after the recording was
+    /// moved, renamed, edited or is offline.
+    var storeKeys: [String]?
 
     var isPinned: Bool { pinned ?? false }
     var added: Date { addedAt ?? openedAt }
@@ -168,13 +172,27 @@ final class MeetingJournal: ObservableObject {
     /// Forgets the meeting, its saved transcript and summary. Never touches the
     /// recording itself.
     func remove(_ entry: JournalEntry) {
+        var keys = Set(entry.storeKeys ?? [])
         if let url = resolve(entry) {
             let scoped = url.startAccessingSecurityScopedResource()
-            try? FileManager.default.removeItem(at: TranscriptStore.file(for: url))
-            SummaryStore.remove(for: url)
+            keys.insert(TranscriptStore.key(for: url))
             if scoped { url.stopAccessingSecurityScopedResource() }
         }
+        for key in keys where key.count == 64 && key.allSatisfy(\.isHexDigit) {
+            try? FileManager.default.removeItem(at: TranscriptStore.directory.appendingPathComponent(key + ".json"))
+            try? FileManager.default.removeItem(at: SummaryStore.directory.appendingPathComponent(key + ".json"))
+        }
         entries.removeAll { $0.id == entry.id }
+        save()
+    }
+
+    /// Notes which stored files belong to the meeting at `url`.
+    func rememberStoreKey(_ key: String, for url: URL) {
+        guard let i = entries.firstIndex(where: { $0.path == url.path }) else { return }
+        var e = entries[i]
+        guard !(e.storeKeys ?? []).contains(key) else { return }
+        e.storeKeys = (e.storeKeys ?? []) + [key]
+        entries[i] = e
         save()
     }
 

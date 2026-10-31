@@ -415,6 +415,9 @@ final class ServiceDelegate: NSObject, NSXPCListenerDelegate {
         connection.exportedObject = job
         connection.remoteObjectInterface = NSXPCInterface(with: ConverterClientProtocol.self)
         // The app went away (quit, crash, invalidated): stop FFmpeg.
+        // Only Meteora itself may talk to the converter (the service is
+        // private to the app bundle anyway; this is a second lock).
+        connection.setCodeSigningRequirement("identifier \"com.musamusaev.meteora\"")
         connection.invalidationHandler = { job.cancel() }
         connection.interruptionHandler = { job.cancel() }
         connection.resume()

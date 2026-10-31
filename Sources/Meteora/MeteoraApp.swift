@@ -159,6 +159,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         if !quietStart { showMainWindow() }
         UpdateChecker.shared.checkOnLaunchIfNeeded()
+        if !isSelfTest { Task.detached(priority: .background) { TempCleanup.run() } }
         TermDictionaryStore.shared.onChange = { [weak self] in self?.model.reapplyDictionary() }
         // A finished recording opens right away and is transcribed.
         MeetingRecorder.shared.onFinished = { [weak self] url in

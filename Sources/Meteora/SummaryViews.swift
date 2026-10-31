@@ -20,6 +20,8 @@ enum SummaryStore {
     static func save(_ s: MeetingSummary, for url: URL) {
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         if let data = try? JSONEncoder().encode(s) { try? data.write(to: file(for: url), options: .atomic) }
+        let storeKey = TranscriptStore.key(for: url)
+        Task { @MainActor in MeetingJournal.shared.rememberStoreKey(storeKey, for: url) }
     }
 
     static func remove(for url: URL) { try? FileManager.default.removeItem(at: file(for: url)) }

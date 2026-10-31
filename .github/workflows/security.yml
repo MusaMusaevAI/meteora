@@ -40,6 +40,8 @@ jobs:
       LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
       STRIX_TELEMETRY: "0"
       STRIX_COMMIT: f7a32ae62d94872631bc8415073868d02a6ffdaf
+      # The agents' tool sandbox, pinned by digest (Strix reads STRIX_IMAGE).
+      STRIX_IMAGE: ghcr.io/usestrix/strix-sandbox@sha256:f6906c3114e504fd1a218fcf028d7a0e46851118403a438b63956de6ea7c4331
       SCAN_MODE: ${{ inputs.mode || 'standard' }}
       SCAN_BUDGET: ${{ inputs.budget || '8' }}
       SCAN_INSTRUCTIONS: ${{ inputs.focus == 'followup' && 'docs/security/strix-instructions-followup.md' || 'docs/security/strix-instructions.md' }}
@@ -69,12 +71,12 @@ jobs:
           test "$(git -C /tmp/strix-src rev-parse HEAD)" = "$STRIX_COMMIT"
           /tmp/strix/bin/pip check
           /tmp/strix/bin/pip show litellm | head -2
-      - name: Sandbox image (recorded for the report)
+      - name: Sandbox image (pinned by digest)
         if: steps.keys.outputs.ready == 'true'
         run: |
           # The sandbox runs the agents' tools; it never receives the API key.
-          docker pull -q ghcr.io/usestrix/strix-sandbox:1.3.0
-          docker inspect --format '{{index .RepoDigests 0}}' ghcr.io/usestrix/strix-sandbox:1.3.0 > sandbox-image.txt
+          docker pull -q "$STRIX_IMAGE"
+          echo "$STRIX_IMAGE" > sandbox-image.txt
       - name: Scan
         if: steps.keys.outputs.ready == 'true'
         continue-on-error: true
