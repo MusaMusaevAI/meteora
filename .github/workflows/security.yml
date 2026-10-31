@@ -79,24 +79,32 @@ jobs:
         if: steps.keys.outputs.ready == 'true'
         continue-on-error: true
         run: |
+          # Strix keeps its run state (an SQLite database) under ./strix_runs.
+          # The repository is mounted read-write into the agents' sandbox, so
+          # the state must live outside it: a tool run there once deleted it
+          # and crashed the scan.
+          mkdir -p /tmp/strix-work && cd /tmp/strix-work
+          # The encryption certificate is taken before the agents get write
+          # access to the checkout.
+          cp "$GITHUB_WORKSPACE/.github/security-report-cert.pem" /tmp/report-cert.pem
           PYTHONPATH=/tmp/strix-src /tmp/strix/bin/python -c 'import sys; sys.argv[0] = "strix"; from strix.interface.main import main; main()' \
-            --target ./ --non-interactive --scan-mode "$SCAN_MODE" --scope-mode full \
-            --instruction-file "$SCAN_INSTRUCTIONS" --max-budget-usd "$SCAN_BUDGET" > strix.log 2>&1
+            --target "$GITHUB_WORKSPACE" --non-interactive --scan-mode "$SCAN_MODE" --scope-mode full \
+            --instruction-file "$GITHUB_WORKSPACE/$SCAN_INSTRUCTIONS" --max-budget-usd "$SCAN_BUDGET" > "$GITHUB_WORKSPACE/strix.log" 2>&1
           echo "Scan finished (exit $?). Output is in the encrypted report only."
       - name: Collect
         if: always() && steps.keys.outputs.ready == 'true'
         run: |
           mkdir -p out-security
           cp strix.log sandbox-image.txt out-security/ 2>/dev/null || true
-          [ -d strix_runs ] && find strix_runs -type f \( -name '*.md' -o -name '*.json' -o -name '*.txt' \) -size -4M -print0 \
-            | xargs -0 -I{} cp --parents {} out-security/ || true
+          [ -d /tmp/strix-work/strix_runs ] && (cd /tmp/strix-work && find strix_runs -type f \( -name '*.md' -o -name '*.json' -o -name '*.txt' \) -size -4M -print0 \
+            | xargs -0 -I{} cp --parents {} "$GITHUB_WORKSPACE/out-security/") || true
           # Keys never leave the runner: drop anything that might echo them.
           grep -rlF "$LLM_API_KEY" out-security 2>/dev/null | xargs -r rm -f
           # Encrypted for the owner only; nothing readable leaves the runner.
           tar czf report.tgz out-security
           openssl cms -encrypt -binary -aes256 -in report.tgz -outform DER \
-            -out "strix-report-${GITHUB_RUN_NUMBER}.tgz.cms" .github/security-report-cert.pem
-          rm -rf out-security report.tgz strix.log strix_runs
+            -out "strix-report-${GITHUB_RUN_NUMBER}.tgz.cms" /tmp/report-cert.pem
+          rm -rf out-security report.tgz strix.log /tmp/strix-work
           ls -l "strix-report-${GITHUB_RUN_NUMBER}.tgz.cms"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always() && steps.keys.outputs.ready == 'true'
